@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>PD Measure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{max-width:100vw;overflow-x:hidden;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 40px;}
+h1{font-size:24px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.06em;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:18px;margin-bottom:13px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:13px;}
+.field{margin-bottom:12px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:5px;}
+.field input{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:11px 13px;font-size:17px;font-family:inherit;outline:none;}
+.hint{font-size:10px;color:#383848;margin-top:3px;line-height:1.5;}
+.btn{width:100%;max-width:460px;padding:14px 0;border-radius:10px;font-size:13px;letter-spacing:.18em;cursor:pointer;font-family:inherit;border:none;display:block;}
+.btn+.btn{margin-top:9px;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff15,#a78bfa15);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-primary:disabled{background:#111;border:1px solid #1e1e1e!important;color:#333;cursor:default;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+.vwrap{position:relative;border-radius:12px;overflow:hidden;margin-bottom:12px;width:100%;max-width:460px;background:#000;aspect-ratio:4/3;}
+#livevid{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+#overlaycv{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;transform:scaleX(-1);}
+.badge{position:absolute;top:9px;left:9px;border-radius:6px;padding:3px 9px;font-size:11px;font-family:'Courier New',monospace;pointer-events:none;z-index:10;}
+.ibar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);padding:9px 12px;font-size:11px;text-align:center;z-index:10;}
+.rw{position:relative;width:110px;height:110px;margin:0 auto 13px;}
+.ri{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.rn{font-size:26px;font-weight:900;color:#00e5ff;line-height:1;}
+.rs{font-size:10px;color:#444;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:9px 13px;}
+.ml{font-size:10px;color:#444;margin-bottom:1px;}
+.mv{font-size:21px;font-weight:700;line-height:1.1;}
+.mv span{font-size:11px;color:#555;margin-left:3px;}
+.srow{display:flex;gap:7px;margin-bottom:11px;width:100%;max-width:460px;}
+.stag{flex:1;border-radius:6px;padding:6px 4px;font-size:10px;text-align:center;font-family:'Courier New',monospace;}
+.good{background:#002212;border:1px solid #00e055;color:#00e055;}
+.bad{background:#1a0000;border:1px solid #e03333;color:#e03333;}
+.warn{background:#181000;border:1px solid #cc8800;color:#cc8800;}
+.dbg{background:#0a0a00;border:1px solid #2a2a00;border-radius:8px;padding:8px 12px;margin-bottom:11px;font-size:10px;color:#666;width:100%;max-width:460px;}
+.result-img{width:100%;border-radius:10px;border:1px solid #1e1e2e;display:block;}
+.dl-btn{display:block;margin-top:9px;padding:11px 0;text-align:center;background:#0a0a14;border:1px solid #222;border-radius:8px;color:#666;font-size:12px;text-decoration:none;font-family:inherit;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:13px;margin-bottom:13px;font-size:12px;color:#2a5a2a;line-height:1.8;width:100%;max-width:460px;}
+.ot{color:#3a7a3a;margin-bottom:5px;font-size:11px;letter-spacing:.15em;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sr:last-child{margin-bottom:0;}
+.sr label{font-size:11px;color:#666;width:78px;flex-shrink:0;}
+.sr input[type=range]{flex:1;accent-color:#00e5ff;}
+.sv{font-size:13px;color:#00e5ff;width:54px;text-align:right;flex-shrink:0;}
+#fc{width:100%;max-width:460px;border-radius:10px;border:1px solid #1e1e2e;display:block;margin-bottom:13px;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;line-height:1.7;}
+#eb{background:#1a0000;border:1px solid #ff4444;border-radius:8px;padding:11px;margin-bottom:12px;font-size:12px;color:#ff8888;width:100%;max-width:460px;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:20px;">
+  <div style="font-size:10px;letter-spacing:.28em;color:#444;margin-bottom:5px;">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>PD + SEG HEIGHT</h1>
+</div>
+
+<!-- SETUP -->
+<div id="ss">
+  <div class="card">
+    <div class="clabel">FRAME SPECIFICATIONS</div>
+    <div class="field"><label>LENS WIDTH (mm)</label><input type="number" id="lw" placeholder="e.g. 47" inputmode="decimal"/><div class="hint">First number: <b style="color:#555">47</b> □ 22 · 40</div></div>
+    <div class="field"><label>BRIDGE WIDTH (mm)</label><input type="number" id="bw" placeholder="e.g. 22" inputmode="decimal"/><div class="hint">Second: 47 □ <b style="color:#555">22</b> · 40</div></div>
+    <div class="field"><label>LENS HEIGHT (mm)</label><input type="number" id="lh" placeholder="e.g. 40" inputmode="decimal"/><div class="hint">Third: 47 □ 22 · <b style="color:#555">40</b></div></div>
+  </div>
+  <div class="card">
+    <div class="clabel">CALIBRATION</div>
+    <div class="field" style="margin-bottom:0"><label>IRIS DIAMETER (mm)</label><input type="number" id="ir" value="11.65" inputmode="decimal"/><div class="hint">Default 11.65mm — leave unless adjusted</div></div>
+  </div>
+  <div style="background:#0a0a14;border:1px solid #1a1a2a;border-radius:10px;padding:14px;margin-bottom:13px;font-size:11px;color:#444;line-height:1.9;width:100%;max-width:460px;">
+    <div style="color:#555;margin-bottom:4px;letter-spacing:.15em;">INSTRUCTIONS</div>
+    · Glasses on · Hold phone ~30cm away<br/>
+    · <b style="color:#666">Look above the phone</b> at a distant point<br/>
+    · Keep still — auto-captures at 150 samples
+  </div>
+  <div id="eb" class="hidden"></div>
+  <button class="btn btn-primary" id="bs">START MEASURING</button>
+</div>
+
+<!-- MEASURING -->
+<div id="sm" class="hidden">
+  <div class="vwrap">
+    <video id="vid" playsinline muted autoplay></video>
+    <canvas id="ov"></canvas>
+    <div class="badge" id="mb" style="background:rgba(26,0,0,.9);border:1px solid #e03333;color:#e03333;">LOADING AI…</div>
+    <div class="ibar" id="ib" style="color:#ffaa00;">👆 Look above the phone at a distant point</div>
+  </div>
+  <div class="rw">
+    <svg style="transform:rotate(-90deg)" width="110" height="110" viewBox="0 0 110 110">
+      <circle fill="none" stroke="#1e1e2e" stroke-width="8" cx="55" cy="55" r="47"/>
+      <circle fill="none" stroke="#00e5ff" stroke-width="8" stroke-linecap="round" id="rf" cx="55" cy="55" r="47" stroke-dasharray="295" stroke-dashoffset="295" style="transition:stroke-dashoffset .25s"/>
+    </svg>
+    <div class="ri"><div class="rn" id="rn">0</div><div class="rs">/ 150</div></div>
+  </div>
+  <div class="dbg" id="dbg">Waiting for face detection…</div>
+  <div id="lm" class="hidden">
+    <div class="grid2">
+      <div class="metric"><div class="ml">PD TOTAL</div><div class="mv" id="lpd" style="color:#00e5ff">--<span>mm</span></div></div>
+      <div class="metric"><div class="ml">PD L / R</div><div class="mv" style="font-size:14px!important;color:#a78bfa"><span id="lpl">--</span>/<span id="lpr">--</span><span>mm</span></div></div>
+      <div class="metric"><div class="ml">SEG LEFT</div><div class="mv" id="lsl" style="color:#ff6b35">--<span>mm</span></div></div>
+      <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv" id="lsr" style="color:#ff6b35">--<span>mm</span></div></div>
+    </div>
+    <div class="srow">
+      <div class="stag bad" id="sta">CENTER</div>
+      <div class="stag bad" id="stt">LEVEL</div>
+      <div class="stag bad" id="std">IRIS</div>
+    </div>
+  </div>
+  <button class="btn btn-primary" id="capbtn">📸 CAPTURE NOW</button>
+  <button class="btn btn-ghost" style="margin-top:9px;" onclick="rst()">CANCEL</button>
+</div>
+
+<!-- RESULT -->
+<div id="sr" class="hidden">
+  <div class="card">
+    <div class="clabel">PATIENT RECORD</div>
+    <div class="field"><label>PATIENT NAME</label><input type="text" id="pn" placeholder="e.g. John Smith" style="width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:11px 13px;font-size:15px;font-family:inherit;outline:none;"/></div>
+    <div class="field" style="margin-bottom:0"><label>NOTES</label><input type="text" id="pnt" placeholder="e.g. progressive, first pair..." style="width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:11px 13px;font-size:15px;font-family:inherit;outline:none;"/></div>
+  </div>
+  <div class="card">
+    <div class="clabel" id="rl">RESULTS</div>
+    <div class="grid2" style="margin-bottom:10px;">
+      <div class="metric"><div class="ml">TOTAL PD</div><div class="mv" id="rpd" style="color:#00e5ff;font-size:28px!important;">--<span>mm</span></div></div>
+      <div class="metric"><div class="ml">PD L / R</div><div class="mv" style="font-size:14px!important;color:#a78bfa"><span id="rpl">--</span> / <span id="rpr">--</span><span>mm</span></div></div>
+      <div class="metric"><div class="ml">SEG LEFT</div><div class="mv" id="rsl" style="color:#ff6b35;font-size:22px!important;">--<span>mm</span></div></div>
+      <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv" id="rsr" style="color:#ff6b35;font-size:22px!important;">--<span>mm</span></div></div>
+    </div>
+    <div style="font-size:11px;color:#333;border-top:1px solid #1a1a2a;padding-top:9px;" id="fi"></div>
+  </div>
+  <div class="card">
+    <div class="clabel">MANUAL FINE-TUNE</div>
+    <div class="sr"><label>PD TOTAL</label><input type="range" id="spd" oninput="usl()"/><div class="sv" id="vpd">--</div></div>
+    <div class="sr"><label>PD LEFT</label><input type="range" id="spl" oninput="usl()"/><div class="sv" id="vpl">--</div></div>
+    <div class="sr"><label>PD RIGHT</label><input type="range" id="spr" oninput="usl()"/><div class="sv" id="vpr">--</div></div>
+    <div class="sr"><label>SEG L</label><input type="range" id="ssl" oninput="usl()"/><div class="sv" id="vsl">--</div></div>
+    <div class="sr"><label>SEG R</label><input type="range" id="ssr" oninput="usl()"/><div class="sv" id="vsr">--</div></div>
+  </div>
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:8px;width:100%;max-width:460px;">OPTICAL CENTER DIAGRAM</div>
+  <canvas id="fc" height="200"></canvas>
+  <div id="riw" class="hidden" style="width:100%;max-width:460px;margin-bottom:13px;">
+    <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:7px;">ANNOTATED PHOTO</div>
+    <img id="ri" class="result-img"/>
+    <a id="dl" class="dl-btn" download="pd.png">↓ SAVE IMAGE</a>
+  </div>
+  <div class="optbox"><div class="ot">FOR YOUR OPTICIAN</div><span id="ot"></span></div>
+  <button class="btn btn-primary" onclick="rst()">MEASURE AGAIN</button>
+</div>
+<canvas id="sn" style="display:none"></canvas>
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE · VERIFY WITH A LICENSED OPTICIAN</div>
+
+<script>
+const TARGET=150,CIRC=295;
+let fm=null,stream=null,af=null;
+let smp=[],cnt=0,done=false;
+let LW=0,BW=0,LH=0,IR=11.65;
+let rL=0,rR=0,sL=0,sR=0;
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+
+function ipx(lm,c,t,r,b,l,W,H){
+  const pc={x:lm[c].x*W,y:lm[c].y*H};
+  const vt={x:lm[t].x*W,y:lm[t].y*H},vb={x:lm[b].x*W,y:lm[b].y*H};
+  const vr={x:lm[r].x*W,y:lm[r].y*H},vl={x:lm[l].x*W,y:lm[l].y*H};
+  return{d:(Math.hypot(vt.x-vb.x,vt.y-vb.y)+Math.hypot(vr.x-vl.x,vr.y-vl.y))/2,x:pc.x,y:pc.y};
+}
+
+async function go(){
+  LW=parseFloat($('lw').value)||0;
+  BW=parseFloat($('bw').value)||0;
+  LH=parseFloat($('lh').value)||0;
+  IR=parseFloat($('ir').value)||11.65;
+  if(!LW||!BW||!LH){alert('Please fill all three frame measurements');return;}
+  hide('eb');$('bs').textContent='LOADING…';$('bs').disabled=true;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}});
+    const vid=$('vid');
+    vid.srcObject=stream;
+    await new Promise(r=>{vid.onloadedmetadata=r;});
+    await vid.play();
+    smp=[];cnt=0;done=false;
+    hide('ss');show('sm');
+    // Load MediaPipe dynamically and wait for it
+    $('mb').textContent='LOADING AI…';
+    loadFaceMesh();
+  }catch(e){
+    $('eb').textContent='Camera error: '+e.message;show('eb');
+    $('bs').textContent='START MEASURING';$('bs').disabled=false;
+  }
+}
+
+function loadFaceMesh(){
+  if(typeof FaceMesh!=='undefined'){
+    initFM();return;
+  }
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js';
+  s.onload=()=>setTimeout(initFM,500); // wait 500ms after load
+  s.onerror=()=>{$('mb').textContent='AI LOAD FAILED';};
+  document.head.appendChild(s);
+}
+
+function initFM(){
+  try{
+    fm=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+    fm.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.75,minTrackingConfidence:0.75});
+    fm.onResults(onR);
+    // Warm up FaceMesh before starting loop
+    fm.initialize().then(()=>{
+      $('mb').textContent='DETECTING…';
+      loop();
+    }).catch(()=>{
+      // initialize() may not exist in all versions — just start loop
+      $('mb').textContent='DETECTING…';
+      loop();
+    });
+  }catch(e){
+    $('eb').textContent='AI init error: '+e.message;show('eb');
+  }
+}
+
+function loop(){
+  const vid=$('vid');
+  const tick=async()=>{
+    if(vid.readyState>=2&&fm){
+      try{await fm.send({image:vid});}catch(e){}
+    }
+    af=requestAnimationFrame(tick);
+  };tick();
+}
+
+function onR(res){
+  const vid=$('vid'),cv=$('ov');
+  // Use displayed size so overlay aligns perfectly with video
+  const W=vid.clientWidth||vid.videoWidth||640;
+  const H=vid.clientHeight||vid.videoHeight||480;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  if(!res.multiFaceLandmarks||!res.multiFaceLandmarks.length){
+    $('mb').textContent='NO FACE';hide('lm');return;
+  }
+  show('lm');
+  const lm=res.multiFaceLandmarks[0];
+  const L=ipx(lm,468,469,470,471,472,W,H);
+  const R=ipx(lm,473,474,475,476,477,W,H);
+  const avg=(L.d+R.d)/2;
+  const ppm=avg/IR;
+  const pt=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const Ri=pt(133),Li=pt(362);
+  const nmx=(Ri.x+Li.x)/2,nmy=(Ri.y+Li.y)/2;
+  const pdT=Math.hypot(R.x-L.x,R.y-L.y)/ppm;
+  const pdL=Math.hypot(L.x-nmx,L.y-nmy)/ppm;
+  const pdR=Math.hypot(R.x-nmx,R.y-nmy)/ppm;
+  const yd=(R.y-L.y)/ppm;
+  const base=LH*0.680;
+  const sgL=base+yd*0.25,sgR=base-yd*0.25;
+  const spL=sgL*ppm,spR=sgR*ppm;
+  const nt=pt(1);
+  const pmx=(L.x+R.x)/2;
+  const nd=Math.abs(nt.x-pmx)/ppm;
+  const td=Math.abs(L.y-R.y)/ppm;
+  const iok=avg>14,aok=nd<6,tok=td<4,ok=iok&&aok&&tok;
+  if(ok){
+    smp.push({pdT,pdL,pdR,sgL,sgR,ppm,yd});
+    if(smp.length>TARGET*2)smp.shift();
+    cnt=smp.length;
+  }
+  $('dbg').textContent='iris L:'+L.d.toFixed(1)+'px R:'+R.d.toFixed(1)+'px | px/mm:'+ppm.toFixed(2)+' | PD:'+pdT.toFixed(1)+'mm | nose:'+nd.toFixed(1)+(aok?'✓':'✗')+' tilt:'+td.toFixed(1)+(tok?'✓':'✗');
+  // Draw
+  ctx.strokeStyle=aok?'#00e57766':'#ff333366';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(nt.x,nt.y,5,0,Math.PI*2);ctx.stroke();
+  ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(nt.x,nt.y);ctx.lineTo(pmx,nt.y);ctx.stroke();ctx.setLineDash([]);
+  [[L,'#00e5ff'],[R,'#00e5ff']].forEach(([info,col])=>{
+    ctx.strokeStyle=col;ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(info.x,info.y,info.d/2,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(info.x,info.y,3,0,Math.PI*2);ctx.fill();
+    const rr=info.d/2+8;
+    ctx.beginPath();ctx.moveTo(info.x-rr,info.y);ctx.lineTo(info.x+rr,info.y);ctx.moveTo(info.x,info.y-rr);ctx.lineTo(info.x,info.y+rr);ctx.stroke();
+  });
+  ctx.strokeStyle='#00e5ffaa';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(L.x,L.y);ctx.lineTo(R.x,R.y);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='#ffea0077';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(nmx,nmy-50);ctx.lineTo(nmx,nmy+spL+15);ctx.stroke();ctx.setLineDash([]);
+  [[L,spL],[R,spR]].forEach(([iris,sp])=>{
+    ctx.strokeStyle='#ff6b35';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(iris.x,iris.y);ctx.lineTo(iris.x,iris.y+sp);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(iris.x-9,iris.y+sp);ctx.lineTo(iris.x+9,iris.y+sp);ctx.stroke();
+  });
+  ctx.strokeStyle='#a78bfa77';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(L.x,L.y);ctx.lineTo(nmx,L.y);ctx.moveTo(R.x,R.y);ctx.lineTo(nmx,R.y);ctx.stroke();ctx.setLineDash([]);
+  ctx.font='bold 15px Courier New';ctx.fillStyle='#00e5ffcc';ctx.fillText('PD '+(pdL+pdR).toFixed(1)+'mm',10,22);
+  $('lpd').innerHTML=(pdL+pdR).toFixed(1)+'<span>mm</span>';
+  $('lpl').textContent=pdL.toFixed(1);$('lpr').textContent=pdR.toFixed(1);
+  $('lsl').innerHTML=sgL.toFixed(1)+'<span>mm</span>';$('lsr').innerHTML=sgR.toFixed(1)+'<span>mm</span>';
+  const sa=$('sta'),st=$('stt'),sd=$('std');
+  sa.textContent=aok?'✓ CENTERED':'FACE STRAIGHT';sa.className='stag '+(aok?'good':'bad');
+  st.textContent=tok?'✓ LEVEL':'LEVEL HEAD';st.className='stag '+(tok?'good':'bad');
+  sd.textContent=iok?'✓ IRIS OK':'MOVE CLOSER';sd.className='stag '+(iok?'good':'warn');
+  const pct=Math.min(cnt/TARGET,1);
+  $('rf').style.strokeDashoffset=(CIRC*(1-pct)).toFixed(1);
+  $('rf').style.stroke=pct>=1?'#00e577':'#00e5ff';
+  $('rn').textContent=cnt;
+  const mb=$('mb');
+  if(cnt>=TARGET){mb.textContent='✓ READY';mb.style.cssText='background:rgba(0,34,15,.9);border:1px solid #00e577;color:#00e5a0;';}
+  else{mb.textContent='COLLECTING '+cnt+'/'+TARGET;mb.style.cssText='background:rgba(18,0,0,.9);border:1px solid #e03333;color:#e05555;';}
+  const ib=$('ib');
+  if(cnt>=TARGET&&!done){
+    ib.textContent='✓ Complete — capturing…';ib.style.color='#00e577';
+    done=true;setTimeout(fin,700);
+  }else if(!ok){
+    ib.textContent=(!aok?'Face camera straight  ':'')+(!tok?'Level head  ':'')+(!iok?'Move closer':'');
+    ib.style.color='#ffaa00';
+  }else{
+    ib.textContent='👆 Look above the phone at a distant point';ib.style.color='#00e5ff88';
+  }
+}
+
+function fin(){
+  if(!smp.length)return;
+  const avg=k=>smp.reduce((s,m)=>s+m[k],0)/smp.length;
+  rL=avg('pdL');rR=avg('pdR');
+  const ayd=avg('yd');
+  sL=LH*0.680+ayd*0.25;sR=LH*0.680-ayd*0.25;
+  const sn=$('sn'),vid=$('vid'),cv=$('ov');
+  sn.width=vid.videoWidth||640;sn.height=vid.videoHeight||480;
+  const ctx=sn.getContext('2d');
+  ctx.drawImage(vid,0,0);ctx.drawImage(cv,0,0);
+  const nm=$('pn').value||'',nt=$('pnt').value||'';
+  const dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});
+  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,sn.width,130);
+  ctx.font='bold 22px Courier New';ctx.fillStyle='#00e5ff';ctx.fillText('PD: '+(rL+rR).toFixed(1)+' mm',14,30);
+  ctx.font='15px Courier New';ctx.fillStyle='#a78bfa';ctx.fillText('L: '+rL.toFixed(1)+'  R: '+rR.toFixed(1)+' mm',14,52);
+  ctx.fillStyle='#ff6b35';ctx.fillText('Seg L: '+sL.toFixed(1)+'  R: '+sR.toFixed(1)+' mm',14,74);
+  if(nm){ctx.fillStyle='#00e577';ctx.font='bold 14px Courier New';ctx.fillText(nm,14,96);}
+  if(nt){ctx.fillStyle='#888';ctx.font='12px Courier New';ctx.fillText(nt,14,114);}
+  ctx.fillStyle='#ffea0099';ctx.font='11px Courier New';
+  ctx.fillText(dt+' | Frame '+LW+'x'+LH+' br:'+BW+' | '+smp.length+' samples',14,sn.height-12);
+  const img=sn.toDataURL('image/png');
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(af)cancelAnimationFrame(af);
+  hide('sm');
+  $('rl').textContent='RESULTS · '+smp.length+' SAMPLES';
+  $('rpd').innerHTML=(rL+rR).toFixed(1)+'<span>mm</span>';
+  $('rsl').innerHTML=sL.toFixed(1)+'<span>mm</span>';$('rsr').innerHTML=sR.toFixed(1)+'<span>mm</span>';
+  $('rpl').textContent=rL.toFixed(1);$('rpr').textContent=rR.toFixed(1);
+  $('fi').textContent='Lens: '+LW+'mm · Bridge: '+BW+'mm · Height: '+LH+'mm · Iris: '+IR+'mm';
+  uot();
+  ss('spd','vpd',rL+rR,50,80);ss('spl','vpl',rL,24,42);ss('spr','vpr',rR,24,42);
+  ss('ssl','vsl',sL,10,45);ss('ssr','vsr',sR,10,45);
+  $('ri').src=img;
+  const fn=(($('pn').value)||'pd').replace(/\s+/g,'-').toLowerCase();
+  $('dl').href=img;$('dl').download=fn+'-'+new Date().toISOString().slice(0,10)+'.png';
+  show('riw');dfc();show('sr');
+  $('pn').oninput=uot;$('pnt').oninput=uot;
+}
+
+function ss(sid,vid,val,mn,mx){
+  const s=$(sid);s.min=mn;s.max=mx;s.step=0.5;s.value=val.toFixed(1);
+  $(vid).textContent=val.toFixed(1)+'mm';
+}
+function usl(){
+  rL=+$('spl').value;rR=+$('spr').value;sL=+$('ssl').value;sR=+$('ssr').value;
+  $('vpd').textContent=(rL+rR).toFixed(1)+'mm';$('vpl').textContent=rL.toFixed(1)+'mm';$('vpr').textContent=rR.toFixed(1)+'mm';
+  $('vsl').textContent=sL.toFixed(1)+'mm';$('vsr').textContent=sR.toFixed(1)+'mm';
+  $('rpd').innerHTML=(rL+rR).toFixed(1)+'<span>mm</span>';
+  $('rsl').innerHTML=sL.toFixed(1)+'<span>mm</span>';$('rsr').innerHTML=sR.toFixed(1)+'<span>mm</span>';
+  $('rpl').textContent=rL.toFixed(1);$('rpr').textContent=rR.toFixed(1);
+  uot();dfc();
+}
+function uot(){
+  const nm=$('pn').value||'—',nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});
+  $('ot').innerHTML='<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>Monocular PD — R: '+rR.toFixed(1)+' / L: '+rL.toFixed(1)+' mm<br/>Binocular PD: '+(rL+rR).toFixed(1)+' mm<br/>Seg height — L: '+sL.toFixed(1)+' / R: '+sR.toFixed(1)+' mm<br/><span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+function dfc(){
+  const fc=$('fc');const W=fc.offsetWidth||460;fc.width=W;fc.height=200;
+  const ctx=fc.getContext('2d');ctx.fillStyle='#0a0a14';ctx.fillRect(0,0,W,200);
+  const sc=W/160,cx=W/2,fy=28;
+  const lWp=LW*sc,lHp=LH*sc*0.55,brP=BW*sc;
+  ctx.strokeStyle='#2a2a4a';ctx.lineWidth=2;
+  ctx.strokeRect(cx-brP/2-lWp,fy,lWp,lHp);ctx.strokeRect(cx+brP/2,fy,lWp,lHp);
+  ctx.beginPath();ctx.moveTo(cx-brP/2,fy+lHp*0.3);ctx.lineTo(cx+brP/2,fy+lHp*0.3);ctx.stroke();
+  const lp=cx-rL*sc,rp=cx+rR*sc;
+  const oL=fy+sL*sc*0.55,oR=fy+sR*sc*0.55;
+  [[lp,oL],[rp,oR]].forEach(([px,oy])=>{
+    ctx.strokeStyle='#ff6b3555';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(px,fy);ctx.lineTo(px,fy+lHp);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ff6b35';ctx.beginPath();ctx.arc(px,oy,5,0,Math.PI*2);ctx.fill();
+  });
+  ctx.strokeStyle='#00e5ff44';ctx.lineWidth=1;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(lp,oL);ctx.lineTo(rp,oR);ctx.stroke();ctx.setLineDash([]);
+  ctx.textAlign='center';
+  ctx.fillStyle='#00e5ffaa';ctx.font='bold 12px Courier New';ctx.fillText('PD '+(rL+rR).toFixed(1)+'mm',cx,fy+lHp+20);
+  ctx.fillStyle='#a78bfaaa';ctx.font='10px Courier New';
+  ctx.fillText('L '+rL.toFixed(1),lp,fy+lHp+36);ctx.fillText('R '+rR.toFixed(1),rp,fy+lHp+36);
+  ctx.fillStyle='#ff6b35aa';ctx.fillText('Seg L:'+sL.toFixed(1)+' R:'+sR.toFixed(1),cx,fy+lHp+52);
+  ctx.fillStyle='#ff6b35cc';ctx.font='9px Courier New';ctx.fillText('● = optical centre',cx,185);
+  ctx.textAlign='left';
+}
+// Event listeners - fixes CodePen iframe onclick issues
+document.addEventListener("DOMContentLoaded",function(){
+  var b=document.getElementById("bs");if(b)b.addEventListener("click",go);
+  var c=document.getElementById("capbtn");if(c)c.addEventListener("click",fin);
+  var x=document.getElementById("cancelbtn");if(x)x.addEventListener("click",rst);
+  var a=document.getElementById("againbtn");if(a)a.addEventListener("click",rst);
+  ["spd","spl","spr","ssl","ssr"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener("input",usl);});
+});
+function rst(){
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(af)cancelAnimationFrame(af);
+  smp=[];cnt=0;done=false;
+  $('bs').textContent='START MEASURING';$('bs').disabled=false;
+  $('pn').value='';$('pnt').value='';
+  ['sm','sr','eb'].forEach(hide);show('ss');
+}
+</script>
+</body>
+</html>
