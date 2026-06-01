@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<title>PD Measure v3</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px;}
+h1{font-size:22px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.06em;margin-bottom:4px;}
+.sub{font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:20px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input[type=number]{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px 0;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff15,#a78bfa15);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.btn-orange{background:transparent;border:1px solid #ff6b3566!important;color:#ff6b35;}
+.hidden{display:none!important;}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.photo-slot{border:2px dashed #1e1e2e;border-radius:8px;overflow:hidden;aspect-ratio:3/4;background:#0a0a14;position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.photo-slot.done{border-color:#00e57766;}
+.photo-slot img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;}
+.photo-slot .lbl{font-size:9px;color:#444;letter-spacing:.1em;text-align:center;padding:4px;position:relative;z-index:1;}
+.photo-slot .tick{position:absolute;top:4px;right:4px;background:#00e577;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:11px;z-index:2;}
+.photo-slot input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:3;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:9px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;}
+.mv{font-size:22px;font-weight:700;color:#00e5ff;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.mv.org{color:#ff6b35;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sr:last-child{margin-bottom:0;}
+.sr label{font-size:11px;color:#666;width:72px;flex-shrink:0;}
+.sr input[type=range]{flex:1;accent-color:#00e5ff;}
+.sv{font-size:12px;color:#00e5ff;width:52px;text-align:right;}
+.result-wrap{width:100%;max-width:460px;margin-bottom:12px;}
+.result-wrap canvas{width:100%;border-radius:10px;display:block;border:1px solid #1e1e2e;}
+#focal-canvas{width:100%;max-width:460px;border-radius:10px;border:1px solid #1e1e2e;display:block;margin-bottom:12px;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.ot{color:#3a7a3a;margin-bottom:4px;font-size:10px;letter-spacing:.15em;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;}
+.hint{font-size:11px;color:#555;line-height:1.8;margin-bottom:12px;width:100%;max-width:460px;}
+.err{color:#ff6b35;font-size:12px;margin-bottom:10px;width:100%;max-width:460px;text-align:center;display:none;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:16px;">
+  <div class="sub">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>PD + SEG HEIGHT</h1>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup">
+  <div class="card">
+    <div class="clabel">FRAME SPECIFICATIONS</div>
+    <div class="field"><label>LENS WIDTH (mm)</label><input type="number" id="f-lw" placeholder="e.g. 47" inputmode="decimal"/></div>
+    <div class="field"><label>BRIDGE WIDTH (mm)</label><input type="number" id="f-bw" placeholder="e.g. 22" inputmode="decimal"/></div>
+    <div class="field"><label>LENS HEIGHT (mm)</label><input type="number" id="f-lh" placeholder="e.g. 40" inputmode="decimal"/></div>
+  </div>
+  <div id="setup-err" class="err"></div>
+  <button class="btn btn-primary" id="btn-next">NEXT — TAKE PHOTOS →</button>
+</div>
+
+<!-- PHOTOS -->
+<div id="s-photos" class="hidden">
+  <div class="hint">
+    Take 3 photos wearing the glasses:<br/>
+    <b style="color:#777">CENTRE</b> — both eyes, straight on (for PD)<br/>
+    <b style="color:#777">RIGHT EYE</b> — close up right eye (for seg R)<br/>
+    <b style="color:#777">LEFT EYE</b> — close up left eye (for seg L)
+  </div>
+  <div class="photo-grid">
+    <div class="photo-slot" id="slot-c"><div class="lbl">📷<br/>CENTRE</div><input type="file" accept="image/*" capture="user" id="inp-c"/></div>
+    <div class="photo-slot" id="slot-r"><div class="lbl">📷<br/>RIGHT EYE</div><input type="file" accept="image/*" capture="user" id="inp-r"/></div>
+    <div class="photo-slot" id="slot-l"><div class="lbl">📷<br/>LEFT EYE</div><input type="file" accept="image/*" capture="user" id="inp-l"/></div>
+  </div>
+  <button class="btn btn-primary" id="btn-analyse" disabled>ANALYSE PHOTOS</button>
+  <button class="btn btn-ghost" id="btn-back">← BACK</button>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="hidden">
+  <div class="card">
+    <div class="clabel">PATIENT RECORD</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name..." style="width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes..." style="width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;"/></div>
+  </div>
+  <div class="grid2">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">PD R / L</div><div class="mv" style="font-size:15px"><span id="r-pdr" style="color:#ff6b35">--</span> / <span id="r-pdl" style="color:#00e5ff">--</span><span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:8px;width:100%;max-width:460px;">ANNOTATED PHOTOS</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;width:100%;max-width:460px;">
+    <div><div style="font-size:9px;color:#aaa;text-align:center;margin-bottom:3px;">CENTRE</div><canvas id="cv-c" style="width:100%;border-radius:6px;border:1px solid #1e1e2e;display:block;"></canvas></div>
+    <div><div style="font-size:9px;color:#ff6b35;text-align:center;margin-bottom:3px;">RIGHT EYE</div><canvas id="cv-r" style="width:100%;border-radius:6px;border:1px solid #1e1e2e;display:block;"></canvas></div>
+    <div><div style="font-size:9px;color:#00e5ff;text-align:center;margin-bottom:3px;">LEFT EYE</div><canvas id="cv-l" style="width:100%;border-radius:6px;border:1px solid #1e1e2e;display:block;"></canvas></div>
+  </div>
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:8px;width:100%;max-width:460px;">MEASUREMENT DIAGRAM</div>
+  <div class="result-wrap"><canvas id="cv-main"></canvas></div>
+  <div class="card">
+    <div class="clabel">FINE-TUNE</div>
+    <div class="sr"><label>PD TOTAL</label><input type="range" id="sl-pd"/><div class="sv" id="sv-pd">--</div></div>
+    <div class="sr"><label>PD RIGHT</label><input type="range" id="sl-pdr"/><div class="sv" id="sv-pdr">--</div></div>
+    <div class="sr"><label>PD LEFT</label><input type="range" id="sl-pdl"/><div class="sv" id="sv-pdl">--</div></div>
+    <div class="sr"><label>SEG R</label><input type="range" id="sl-segr"/><div class="sv" id="sv-segr">--</div></div>
+    <div class="sr"><label>SEG L</label><input type="range" id="sl-segl"/><div class="sv" id="sv-segl">--</div></div>
+  </div>
+  <canvas id="focal-canvas" height="180"></canvas>
+  <div class="optbox"><div class="ot">FOR YOUR OPTICIAN</div><span id="opt-text"></span></div>
+  <button class="btn btn-orange" id="btn-save">↓ SAVE DIAGRAM</button>
+  <button class="btn btn-primary" id="btn-again">MEASURE AGAIN</button>
+</div>
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+let lensW=0,bridgeW=0,lensH=0;
+let rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let imgs={c:null,r:null,l:null};
+let fm=null,ppmMain=null,lmCentre=null;
+
+function loadFM(){
+  return new Promise(res=>{
+    if(typeof FaceMesh!=='undefined'){initFM(res);return;}
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js';
+    s.onload=()=>setTimeout(()=>initFM(res),600);s.onerror=res;
+    document.head.appendChild(s);
+  });
+}
+function initFM(resolve){
+  fm=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+  fm.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+  fm.initialize().then(resolve).catch(resolve);
+}
+function processImg(imgEl){
+  return new Promise(res=>{
+    fm.onResults(r=>res(r.multiFaceLandmarks&&r.multiFaceLandmarks.length?r.multiFaceLandmarks[0]:null));
+    fm.send({image:imgEl}).catch(()=>res(null));
+  });
+}
+function loadImg(file){
+  return new Promise(res=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{URL.revokeObjectURL(url);res(img);};img.src=url;
+  });
+}
+function irisXY(lm,c,t,r,b,l,W,H){
+  const p=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const pc=p(c),pt=p(t),pr=p(r),pb=p(b),pl=p(l);
+  return{cx:pc.x,cy:pc.y,diam:(Math.hypot(pt.x-pb.x,pt.y-pb.y)+Math.hypot(pr.x-pl.x,pr.y-pl.y))/2};
+}
+
+// ── Annotate ─────────────────────────────────────────────────────────────────
+function annotate(cvs,img,lm,ppm,mode,frameDot){
+  const W=img.naturalWidth,H=img.naturalHeight;
+  cvs.width=W;cvs.height=H;
+  const c=cvs.getContext('2d');
+  c.drawImage(img,0,0);
+  if(!lm||!ppm){
+    c.fillStyle='rgba(0,0,0,.7)';c.fillRect(0,0,W,50);
+    c.fillStyle='#ff4444';c.font='bold 16px Courier New';
+    c.fillText('NO FACE DETECTED',10,30);return;
+  }
+  const pt=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const iR=irisXY(lm,473,474,475,476,477,W,H); // right iris
+  const iL=irisXY(lm,468,469,470,471,472,W,H); // left iris
+  const nose=pt(168);
+  const lHpx=lensH*ppm,lWpx=lensW*ppm;
+  const frameTopY=Math.min(iR.cy,iL.cy)-lHpx*0.31;
+  const fBot=frameTopY+lHpx;
+  const fs=Math.max(10,Math.min(20,lWpx*0.1));
+  const tk=lHpx*0.06;
+
+  // ── Draw iris(es) ──
+  const drawIris=(ir,col)=>{
+    c.strokeStyle=col;c.lineWidth=Math.max(1.5,ir.diam*0.06);
+    c.beginPath();c.arc(ir.cx,ir.cy,ir.diam/2,0,Math.PI*2);c.stroke();
+    c.fillStyle=col;c.beginPath();c.arc(ir.cx,ir.cy,3,0,Math.PI*2);c.fill();
+    const cr=ir.diam/2+8;c.strokeStyle=col;c.lineWidth=1.5;
+    c.beginPath();c.moveTo(ir.cx-cr,ir.cy);c.lineTo(ir.cx+cr,ir.cy);
+    c.moveTo(ir.cx,ir.cy-cr);c.lineTo(ir.cx,ir.cy+cr);c.stroke();
+  };
+  if(mode==='centre'||mode==='main'||mode==='right') drawIris(iR,'#ff6b35');
+  if(mode==='centre'||mode==='main'||mode==='left')  drawIris(iL,'#00e5ff');
+
+  // ── PD line (centre/main) ──
+  if(mode==='centre'||mode==='main'){
+    c.strokeStyle='#ffffffaa';c.lineWidth=1.5;c.setLineDash([5,4]);
+    c.beginPath();c.moveTo(iR.cx,iR.cy);c.lineTo(iL.cx,iL.cy);c.stroke();
+    c.setLineDash([]);
+    // Nose marker
+    c.strokeStyle='#ffffff44';c.lineWidth=1;c.setLineDash([3,3]);
+    c.beginPath();c.moveTo(nose.x,iR.cy-15);c.lineTo(nose.x,iR.cy+20);c.stroke();
+    c.setLineDash([]);
+  }
+
+  // ── Seg line per eye ──
+  const drawSeg=(ir,seg,col,showRuler)=>{
+    const sp=seg*ppm;
+    const fs2=Math.max(16,ir.diam*0.5);
+    // Seg line
+    c.strokeStyle=col;c.lineWidth=3;
+    c.beginPath();c.moveTo(ir.cx,ir.cy);c.lineTo(ir.cx,ir.cy+sp);c.stroke();
+    // End bar
+    c.beginPath();c.moveTo(ir.cx-15,ir.cy+sp);c.lineTo(ir.cx+15,ir.cy+sp);c.stroke();
+    // Frame bottom dot
+    if(frameDot){
+      c.fillStyle='#ffff00';c.strokeStyle='#000';c.lineWidth=2;
+      c.beginPath();c.arc(frameDot.x,frameDot.y,8,0,Math.PI*2);c.fill();c.stroke();
+    }
+    // Seg ruler alongside the line
+    if(showRuler&&ppm){
+      const rx=ir.cx+ir.diam*0.7;
+      const tk2=Math.max(6,ir.diam*0.2);
+      // Ruler line
+      c.strokeStyle=col;c.lineWidth=2;
+      c.beginPath();c.moveTo(rx,ir.cy);c.lineTo(rx,ir.cy+sp);c.stroke();
+      // Ticks every 5mm
+      for(let mm=0;mm<=Math.ceil(seg);mm+=5){
+        const y=ir.cy+mm*ppm;const big=mm%10===0;
+        c.lineWidth=big?2:1;
+        c.beginPath();c.moveTo(rx-tk2*(big?1.3:0.7),y);c.lineTo(rx+tk2*(big?1.3:0.7),y);c.stroke();
+        if(big){
+          // White background behind number
+          const numW=fs2*1.8,numH=fs2*1.2;
+          c.fillStyle='rgba(0,0,0,0.7)';
+          c.fillRect(rx+tk2*1.5,y-numH*0.6,numW,numH);
+          c.fillStyle=col;c.font=`bold ${fs2}px Courier New`;c.textAlign='left';
+          c.fillText(mm,rx+tk2*1.8,y+fs2*0.35);
+        }
+      }
+      // Total label with background
+      const lbl=seg.toFixed(1)+'mm';
+      const lblW=fs2*lbl.length*0.65;
+      c.fillStyle='rgba(0,0,0,0.8)';c.fillRect(rx-lblW/2,ir.cy+sp+tk2*1.5,lblW+8,fs2*1.4);
+      c.fillStyle=col;c.font=`bold ${fs2*1.1}px Courier New`;c.textAlign='center';
+      c.fillText(lbl,rx+lblW/2,ir.cy+sp+tk2*1.5+fs2*1.1);
+      // Zero at top
+      c.fillStyle='rgba(0,0,0,0.7)';c.fillRect(rx-tk2,ir.cy-fs2*1.3,fs2*1.2,fs2*1.2);
+      c.fillStyle=col;c.font=`bold ${fs2}px Courier New`;c.textAlign='center';
+      c.fillText('0',rx,ir.cy-tk2*0.5);
+    }
+  };
+  if(mode==='right'||mode==='main') drawSeg(iR,rSegR,'#ff6b35',mode==='right');
+  if(mode==='left'||mode==='main')  drawSeg(iL,rSegL,'#00e5ff',mode==='left');
+
+  // ── Rulers (main only) ──
+  if(mode==='main'){
+    const Rrx=iR.cx-lWpx/2,Rlx=iR.cx+lWpx/2;
+    const Llx=iL.cx-lWpx/2,Lrx=iL.cx+lWpx/2;
+    const rulerY=fBot+lHpx*0.12;
+    const maxPd=Math.max(rPdR,rPdL);
+
+    // ── Horizontal PD ruler: zero at nose bridge, outward ──
+    c.strokeStyle='#ff2222';c.lineWidth=2.5;
+    c.beginPath();c.moveTo(nose.x-maxPd*ppm*1.1,rulerY);c.lineTo(nose.x+maxPd*ppm*1.1,rulerY);c.stroke();
+    const maxMm=Math.ceil(maxPd/5+1)*5;
+    for(let mm=0;mm<=maxMm;mm+=5){
+      const big=mm%10===0;
+      [nose.x+mm*ppm,nose.x-mm*ppm].forEach(x=>{
+        c.strokeStyle='#ff2222';c.lineWidth=big?2:1;
+        c.beginPath();c.moveTo(x,rulerY-tk*(big?1.3:0.7));c.lineTo(x,rulerY+tk*(big?1.3:0.7));c.stroke();
+        if(big&&mm>0){
+          c.fillStyle='#ff2222';c.font=`bold ${fs*0.85}px Courier New`;c.textAlign='center';
+          c.fillText(mm,x,rulerY+tk*3);
+        }
+      });
+    }
+    // Zero marker
+    c.strokeStyle='#ffffff66';c.lineWidth=1.5;
+    c.beginPath();c.moveTo(nose.x,rulerY-tk*1.5);c.lineTo(nose.x,rulerY+tk*1.5);c.stroke();
+    c.fillStyle='#ffffff66';c.font=`${fs*0.8}px Courier New`;c.textAlign='center';
+    c.fillText('0',nose.x,rulerY-tk*2.5);
+    // PD markers
+    [[nose.x+rPdR*ppm,'#ff6b35','R:'+rPdR.toFixed(1)],[nose.x-rPdL*ppm,'#00e5ff','L:'+rPdL.toFixed(1)]].forEach(([x,col,lbl])=>{
+      c.strokeStyle=col;c.lineWidth=2.5;
+      c.beginPath();c.moveTo(x,rulerY-tk*2.5);c.lineTo(x,rulerY+tk*2.5);c.stroke();
+      c.fillStyle=col;c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+      c.fillText(lbl,x,rulerY-tk*4);
+    });
+    c.fillStyle='#ff222288';c.font=`${fs*0.9}px Courier New`;c.textAlign='center';
+    c.fillText('← PD ruler (mm from nose) →',nose.x,rulerY+tk*5);
+
+    // ── Vertical seg rulers: zero at iris, down ──
+    [[iR,rSegR,'#ff6b35',Rlx+lWpx*0.08,true],[iL,rSegL,'#00e5ff',Llx-lWpx*0.08,false]].forEach(([ir,seg,col,vx,right])=>{
+      const segPx=seg*ppm;
+      c.strokeStyle=col;c.lineWidth=2.5;
+      c.beginPath();c.moveTo(vx,ir.cy);c.lineTo(vx,ir.cy+segPx);c.stroke();
+      const maxMm2=Math.ceil(seg/5)*5;
+      for(let mm=0;mm<=maxMm2;mm+=5){
+        const y=ir.cy+mm*ppm,big=mm%5===0;
+        c.lineWidth=big?1.5:1;
+        c.beginPath();c.moveTo(vx-tk*(big?1.2:0.7),y);c.lineTo(vx+tk*(big?1.2:0.7),y);c.stroke();
+        if(mm%10===0){
+          c.fillStyle=col;c.font=`bold ${fs*0.85}px Courier New`;
+          c.textAlign=right?'left':'right';
+          c.fillText(mm,vx+(right?tk*1.8:-tk*1.8),y+fs*0.35);
+        }
+      }
+      // End marker and label
+      c.strokeStyle=col;c.lineWidth=2;
+      c.beginPath();c.moveTo(vx-tk*2,ir.cy+segPx);c.lineTo(vx+tk*2,ir.cy+segPx);c.stroke();
+      c.fillStyle=col;c.font=`bold ${fs*1.1}px Courier New`;
+      c.textAlign=right?'left':'right';
+      c.fillText(seg.toFixed(1)+'mm',vx+(right?tk*2.5:-tk*2.5),ir.cy+segPx+fs*1.2);
+      c.fillStyle=col;c.font=`${fs*0.75}px Courier New`;c.textAlign='center';
+      c.fillText('0',vx,ir.cy-tk*1.5);
+    });
+
+    // Bridge ruler
+    c.strokeStyle='#ff222299';c.lineWidth=1.5;c.setLineDash([3,3]);
+    c.beginPath();c.moveTo(Rlx,iR.cy);c.lineTo(Llx,iR.cy);c.stroke();
+    c.setLineDash([]);
+    c.fillStyle='#ff222299';c.font=`${fs*0.85}px Courier New`;c.textAlign='center';
+    c.fillText(bridgeW+'mm',(Rlx+Llx)/2,iR.cy-tk);
+  }
+
+  // ── Bottom bar ──
+  const bh=Math.max(60,H*0.07);
+  c.fillStyle='rgba(0,0,0,.82)';c.fillRect(0,H-bh,W,bh);
+  const bf=Math.max(12,H*0.022);
+  c.font=`bold ${bf}px Courier New`;c.fillStyle='#00e5ff';c.textAlign='left';
+  c.fillText('PD '+(rPdR+rPdL).toFixed(1)+'mm  R:'+rPdR.toFixed(1)+' L:'+rPdL.toFixed(1),8,H-bh+bf+4);
+  c.font=`${bf*0.8}px Courier New`;c.fillStyle='#ff6b35';
+  c.fillText('Seg R:'+rSegR.toFixed(1)+'  L:'+rSegL.toFixed(1)+'mm',8,H-bh+bf*2+8);
+  c.font=`${bf*0.6}px Courier New`;c.fillStyle='#ffffff33';
+  c.fillText(new Date().toLocaleDateString('en-GB')+' | '+lensW+'×'+lensH+' br:'+bridgeW,8,H-6);
+}
+
+// ── Analyse ───────────────────────────────────────────────────────────────────
+async function analyse(){
+  $('btn-analyse').textContent='ANALYSING…';$('btn-analyse').disabled=true;
+  await loadFM();
+  const res={};
+  for(const k of ['c','r','l']) if(imgs[k]) res[k]=await processImg(imgs[k]);
+
+  // PD from centre photo
+  rPdR=0;rPdL=0;ppmMain=null;lmCentre=null;
+  if(res.c&&imgs.c){
+    const W=imgs.c.naturalWidth,H=imgs.c.naturalHeight;
+    const iR=irisXY(res.c,473,474,475,476,477,W,H);
+    const iL=irisXY(res.c,468,469,470,471,472,W,H);
+    ppmMain=(iR.diam+iL.diam)/2/11.74;
+    lmCentre=res.c;
+    const nose={x:res.c[168].x*W,y:res.c[168].y*H};
+    const pdTot=Math.hypot(iR.cx-iL.cx,iR.cy-iL.cy)/ppmMain;
+    const pR=Math.hypot(iR.cx-nose.x,iR.cy-nose.y)/ppmMain;
+    const pL=Math.hypot(iL.cx-nose.x,iL.cy-nose.y)/ppmMain;
+    rPdR=pdTot*(pR/(pR+pL));
+    rPdL=pdTot*(pL/(pR+pL));
+  }
+
+  let fbR=null,fbL=null;
+
+  // ── Seg: scan pixels downward from iris to find dark frame bottom rim ────
+  function findFrameBottom(img,iris,ppm){
+    // Draw image to temp canvas and scan pixels
+    const tc=document.createElement('canvas');
+    tc.width=img.naturalWidth;tc.height=img.naturalHeight;
+    const tx=tc.getContext('2d');
+    tx.drawImage(img,0,0);
+    const W=tc.width,H=tc.height;
+
+    // Scan a vertical strip (iris width) downward from iris centre
+    const stripW=Math.max(4,Math.round(iris.diam*0.3));
+    const x1=Math.max(0,Math.round(iris.cx-stripW/2));
+    const x2=Math.min(W,Math.round(iris.cx+stripW/2));
+    const startY=Math.round(iris.cy+iris.diam*0.3);
+    const maxY=Math.min(H,Math.round(iris.cy+lensH*ppm*1.1));
+
+    // Look for darkest horizontal line (frame rim)
+    let darkestY=null,darkestVal=255;
+    for(let y=startY;y<maxY;y++){
+      const px=tx.getImageData(x1,y,x2-x1,1).data;
+      let sum=0,cnt=0;
+      for(let i=0;i<px.length;i+=4){
+        sum+=(px[i]+px[i+1]+px[i+2])/3;cnt++;
+      }
+      const avg=sum/cnt;
+      if(avg<darkestVal){darkestVal=avg;darkestY=y;}
+    }
+    return darkestY&&darkestVal<80?{x:iris.cx,y:darkestY}:null;
+  }
+
+  // Seg from right eye photo
+  rSegR=lensH*0.69;
+  if(imgs.r){
+    const W=imgs.r.naturalWidth,H=imgs.r.naturalHeight;
+    const lm=res.r;
+    if(lm){
+      const iR=irisXY(lm,473,474,475,476,477,W,H);
+      const ppm=iR.diam/11.74;
+      const fb=findFrameBottom(imgs.r,iR,ppm);
+      if(fb){
+        const sm=(fb.y-iR.cy)/ppm;
+        rSegR=(sm>8&&sm<lensH*1.2)?sm:lensH*0.69;
+        fbR=fb;
+      }
+    }
+  }
+
+  // Seg from left eye photo
+  rSegL=lensH*0.69;
+  if(imgs.l){
+    const W=imgs.l.naturalWidth,H=imgs.l.naturalHeight;
+    const lm=res.l;
+    if(lm){
+      const iL=irisXY(lm,468,469,470,471,472,W,H);
+      const ppm=iL.diam/11.74;
+      const fb=findFrameBottom(imgs.l,iL,ppm);
+      if(fb){
+        const sm=(fb.y-iL.cy)/ppm;
+        rSegL=(sm>8&&sm<lensH*1.2)?sm:lensH*0.69;
+        fbL=fb;
+      }
+    }
+  }
+
+  // Draw thumbnails
+  if(imgs.c) annotate($('cv-c'),imgs.c,res.c,ppmMain,'centre',null);
+  if(imgs.r){
+    const W=imgs.r.naturalWidth,H=imgs.r.naturalHeight;
+    const iR=res.r?irisXY(res.r,473,474,475,476,477,W,H):null;
+    annotate($('cv-r'),imgs.r,res.r,iR?iR.diam/11.74:null,'right',fbR);
+  }
+  if(imgs.l){
+    const W=imgs.l.naturalWidth,H=imgs.l.naturalHeight;
+    const iL=res.l?irisXY(res.l,468,469,470,471,472,W,H):null;
+    annotate($('cv-l'),imgs.l,res.l,iL?iL.diam/11.74:null,'left',fbL);
+  }
+  // Main diagram
+  if(imgs.c) annotate($('cv-main'),imgs.c,lmCentre,ppmMain,'main',null);
+
+  showResults();
+}
+
+function showResults(){
+  $('r-pd').innerHTML=((rPdR+rPdL)||0).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=(rPdR||0).toFixed(1);
+  $('r-pdl').textContent=(rPdL||0).toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  setSlider('sl-pd','sv-pd',rPdR+rPdL,40,80);
+  setSlider('sl-pdr','sv-pdr',rPdR,20,45);
+  setSlider('sl-pdl','sv-pdl',rPdL,20,45);
+  setSlider('sl-segr','sv-segr',rSegR,10,45);
+  setSlider('sl-segl','sv-segl',rSegL,10,45);
+  updateOpt();drawFocal();
+  hide('s-photos');show('s-result');
+  $('btn-analyse').textContent='ANALYSE PHOTOS';$('btn-analyse').disabled=false;
+}
+function setSlider(sid,vid,val,mn,mx){
+  const s=$(sid);s.min=mn;s.max=mx;s.step=0.5;s.value=val.toFixed(1);
+  $(vid).textContent=val.toFixed(1)+'mm';
+}
+function updateSliders(){
+  rPdR=+$('sl-pdr').value;rPdL=+$('sl-pdl').value;
+  rSegR=+$('sl-segr').value;rSegL=+$('sl-segl').value;
+  const tot=rPdR+rPdL;
+  $('sv-pd').textContent=tot.toFixed(1)+'mm';$('sv-pdr').textContent=rPdR.toFixed(1)+'mm';
+  $('sv-pdl').textContent=rPdL.toFixed(1)+'mm';$('sv-segr').textContent=rSegR.toFixed(1)+'mm';
+  $('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  $('r-pd').innerHTML=tot.toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  updateOpt();drawFocal();
+  if(imgs.c&&lmCentre&&ppmMain) annotate($('cv-main'),imgs.c,lmCentre,ppmMain,'main',null);
+}
+function updateOpt(){
+  const nm=$('pn').value||'—',nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});
+  $('opt-text').innerHTML='<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>Monocular PD — R: '+rPdR.toFixed(1)+' / L: '+rPdL.toFixed(1)+' mm<br/>Binocular PD: '+(rPdR+rPdL).toFixed(1)+' mm<br/>Seg — R: '+rSegR.toFixed(1)+' / L: '+rSegL.toFixed(1)+' mm<br/><span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+function drawFocal(){
+  const fc=$('focal-canvas'),W=fc.offsetWidth||460;fc.width=W;fc.height=180;
+  const c=fc.getContext('2d');c.fillStyle='#0a0a14';c.fillRect(0,0,W,180);
+  const sc=W/130,cx=W/2,fy=18;
+  const lWp=lensW*sc,lHp=Math.min(lensH*sc*0.72,130),brP=bridgeW*sc;
+  c.strokeStyle='#2a2a4a';c.lineWidth=2;
+  c.strokeRect(cx-brP/2-lWp,fy,lWp,lHp);c.strokeRect(cx+brP/2,fy,lWp,lHp);
+  c.beginPath();c.moveTo(cx-brP/2,fy+lHp*0.3);c.lineTo(cx+brP/2,fy+lHp*0.3);c.stroke();
+  const rp=cx+rPdR*sc/2,lp=cx-rPdL*sc/2;
+  const sRy=fy+rSegR*sc*0.72,sLy=fy+rSegL*sc*0.72;
+  [[rp,sRy,'#ff6b35'],[lp,sLy,'#00e5ff']].forEach(([x,y,col])=>{
+    c.strokeStyle=col+'44';c.lineWidth=1;c.setLineDash([2,2]);
+    c.beginPath();c.moveTo(x,fy);c.lineTo(x,fy+lHp);c.stroke();
+    c.beginPath();c.moveTo(cx-brP/2-lWp,y);c.lineTo(cx+brP/2+lWp,y);c.stroke();
+    c.setLineDash([]);c.fillStyle=col;c.beginPath();c.arc(x,y,5,0,Math.PI*2);c.fill();
+  });
+  c.textAlign='center';
+  c.fillStyle='#00e5ffaa';c.font='bold 11px Courier New';c.fillText('PD '+(rPdR+rPdL).toFixed(1)+'mm',cx,fy+lHp+18);
+  c.font='10px Courier New';
+  c.fillStyle='#ff6b35aa';c.fillText('R '+rPdR.toFixed(1),rp,fy+lHp+32);
+  c.fillStyle='#00e5ffaa';c.fillText('L '+rPdL.toFixed(1),lp,fy+lHp+32);
+  c.fillStyle='#ff6b3566';c.fillText('Seg R:'+rSegR.toFixed(1)+' L:'+rSegL.toFixed(1),cx,fy+lHp+46);
+}
+function handlePhoto(key,file){
+  if(!file)return;
+  loadImg(file).then(img=>{
+    imgs[key]=img;
+    const slot=$('slot-'+key);slot.classList.add('done');
+    let im=slot.querySelector('img');
+    if(!im){im=document.createElement('img');slot.appendChild(im);}
+    im.src=img.src;
+    slot.querySelector('.lbl').style.display='none';
+    let tk=slot.querySelector('.tick');
+    if(!tk){tk=document.createElement('div');tk.className='tick';tk.textContent='✓';slot.appendChild(tk);}
+    if(imgs.c)$('btn-analyse').disabled=false;
+  });
+}
+function rst(){
+  imgs={c:null,r:null,l:null};ppmMain=null;lmCentre=null;
+  ['inp-c','inp-r','inp-l'].forEach(id=>$(id).value='');
+  ['slot-c','slot-r','slot-l'].forEach(id=>{
+    const s=$(id);s.classList.remove('done');
+    const im=s.querySelector('img');if(im)im.remove();
+    const tk=s.querySelector('.tick');if(tk)tk.remove();
+    s.querySelector('.lbl').style.display='';
+  });
+  $('btn-analyse').disabled=true;
+  hide('s-result');hide('s-photos');show('s-setup');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  $('btn-next').addEventListener('click',function(){
+    lensW=parseFloat($('f-lw').value)||0;
+    bridgeW=parseFloat($('f-bw').value)||0;
+    lensH=parseFloat($('f-lh').value)||0;
+    if(!lensW||!bridgeW||!lensH){
+      $('setup-err').textContent='⚠ Please enter all three measurements';
+      $('setup-err').style.display='block';return;
+    }
+    $('setup-err').style.display='none';
+    hide('s-setup');show('s-photos');
+  });
+  $('btn-back').addEventListener('click',function(){hide('s-photos');show('s-setup');});
+  $('btn-analyse').addEventListener('click',analyse);
+  $('btn-again').addEventListener('click',rst);
+  $('inp-c').addEventListener('change',function(){handlePhoto('c',this.files[0]);});
+  $('inp-r').addEventListener('change',function(){handlePhoto('r',this.files[0]);});
+  $('inp-l').addEventListener('change',function(){handlePhoto('l',this.files[0]);});
+  ['sl-pd','sl-pdr','sl-pdl','sl-segr','sl-segl'].forEach(id=>$(id).addEventListener('input',updateSliders));
+  $('pn').addEventListener('input',updateOpt);$('pnt').addEventListener('input',updateOpt);
+  $('btn-save').addEventListener('click',function(){
+    const a=document.createElement('a');a.download='pd-measurement.png';
+    a.href=$('cv-main').toDataURL('image/png');a.click();
+  });
+});
+</script>
+</body>
+</html>
