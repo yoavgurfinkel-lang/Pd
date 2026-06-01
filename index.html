@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>PD Measure v4</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px;}
+h1{font-size:22px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.06em;margin-bottom:4px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input[type=number],.field input[type=text]{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px 0;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff15,#a78bfa15);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+.photo-slot{border:2px dashed #2a2a3e;border-radius:10px;overflow:hidden;background:#0a0a14;position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:120px;margin-bottom:10px;width:100%;max-width:460px;}
+.photo-slot img{width:100%;display:block;}
+.photo-slot .lbl{font-size:11px;color:#444;letter-spacing:.12em;padding:8px;}
+.photo-slot input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.tick{position:absolute;top:8px;right:8px;background:#00e577;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;font-weight:bold;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:9px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;}
+.mv{font-size:22px;font-weight:700;color:#00e5ff;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.mv.org{color:#ff6b35;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sr:last-child{margin-bottom:0;}
+.sr label{font-size:11px;color:#666;width:72px;flex-shrink:0;}
+.sr input[type=range]{flex:1;accent-color:#00e5ff;}
+.sv{font-size:12px;color:#00e5ff;width:52px;text-align:right;}
+canvas.main{width:100%;max-width:460px;border-radius:10px;display:block;margin-bottom:12px;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;line-height:1.7;width:100%;max-width:460px;}
+#err{color:#ff6b35;font-size:12px;text-align:center;margin-bottom:10px;width:100%;max-width:460px;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:16px;">
+  <div style="font-size:10px;letter-spacing:.28em;color:#444;margin-bottom:4px;">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>PD + SEG HEIGHT</h1>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup">
+  <div class="card">
+    <div class="clabel">FRAME SPECIFICATIONS</div>
+    <div class="field"><label>LENS WIDTH (mm)</label><input type="number" id="f-lw" placeholder="e.g. 47" inputmode="decimal"/></div>
+    <div class="field"><label>BRIDGE WIDTH (mm)</label><input type="number" id="f-bw" placeholder="e.g. 22" inputmode="decimal"/></div>
+    <div class="field"><label>LENS HEIGHT (mm)</label><input type="number" id="f-lh" placeholder="e.g. 40" inputmode="decimal"/></div>
+  </div>
+  <div id="err"></div>
+  <button class="btn btn-primary" id="btn-next">NEXT →</button>
+</div>
+
+<!-- PHOTOS -->
+<div id="s-photos" class="hidden">
+  <div style="font-size:11px;color:#555;line-height:1.9;margin-bottom:12px;width:100%;max-width:460px;">
+    Take 1 photo of patient facing straight — both eyes visible with glasses on.
+    <br/>For seg height, take close-up photos of each eye separately.
+  </div>
+
+  <div style="font-size:10px;color:#00e5ff88;letter-spacing:.15em;margin-bottom:6px;width:100%;max-width:460px;">CENTRE PHOTO (required — for PD)</div>
+  <div class="photo-slot" id="slot-c">
+    <div class="lbl">📷 TAP TO TAKE CENTRE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp-c"/>
+  </div>
+
+  <div style="font-size:10px;color:#ff6b3588;letter-spacing:.15em;margin-bottom:6px;width:100%;max-width:460px;">RIGHT EYE (optional — for seg R)</div>
+  <div class="photo-slot" id="slot-r">
+    <div class="lbl">📷 TAP TO TAKE RIGHT EYE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp-r"/>
+  </div>
+
+  <div style="font-size:10px;color:#a78bfa88;letter-spacing:.15em;margin-bottom:6px;width:100%;max-width:460px;">LEFT EYE (optional — for seg L)</div>
+  <div class="photo-slot" id="slot-l">
+    <div class="lbl">📷 TAP TO TAKE LEFT EYE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp-l"/>
+  </div>
+
+  <button class="btn btn-primary" id="btn-analyse" disabled>ANALYSE →</button>
+  <button class="btn btn-ghost" id="btn-back">← BACK</button>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="hidden">
+  <div class="card">
+    <div class="clabel">PATIENT</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name…"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes…"/></div>
+  </div>
+  <div class="grid2">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">PD R / L</div><div class="mv" style="font-size:14px"><span id="r-pdr" style="color:#ff6b35">--</span>/<span id="r-pdl" style="color:#a78bfa">--</span><span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:6px;width:100%;max-width:460px;">MEASUREMENT DIAGRAM</div>
+  <canvas id="cv-main" class="main"></canvas>
+
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:6px;width:100%;max-width:460px;">EYE PHOTOS WITH RULERS</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;">
+    <div><div style="font-size:9px;color:#ff6b3588;text-align:center;margin-bottom:3px;">RIGHT EYE</div><canvas id="cv-r" style="width:100%;border-radius:6px;border:1px solid #1e1e2e;display:block;"></canvas></div>
+    <div><div style="font-size:9px;color:#a78bfa88;text-align:center;margin-bottom:3px;">LEFT EYE</div><canvas id="cv-l" style="width:100%;border-radius:6px;border:1px solid #1e1e2e;display:block;"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">FINE-TUNE</div>
+    <div class="sr"><label>PD TOTAL</label><input type="range" id="sl-pd"/><div class="sv" id="sv-pd">--</div></div>
+    <div class="sr"><label>PD RIGHT</label><input type="range" id="sl-pdr"/><div class="sv" id="sv-pdr">--</div></div>
+    <div class="sr"><label>PD LEFT</label><input type="range" id="sl-pdl"/><div class="sv" id="sv-pdl">--</div></div>
+    <div class="sr"><label>SEG R</label><input type="range" id="sl-segr"/><div class="sv" id="sv-segr">--</div></div>
+    <div class="sr"><label>SEG L</label><input type="range" id="sl-segl"/><div class="sv" id="sv-segl">--</div></div>
+  </div>
+
+  <canvas id="cv-focal" style="width:100%;max-width:460px;border-radius:10px;border:1px solid #1e1e2e;display:block;margin-bottom:12px;" height="160"></canvas>
+  <div class="optbox"><div style="color:#3a7a3a;font-size:10px;letter-spacing:.15em;margin-bottom:4px;">FOR YOUR OPTICIAN</div><span id="opt-text"></span></div>
+  <button class="btn btn-primary" id="btn-save">↓ SAVE IMAGE</button>
+  <button class="btn btn-ghost" id="btn-again">MEASURE AGAIN</button>
+</div>
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE · VERIFY WITH A LICENSED OPTICIAN</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+
+let lensW=0,bridgeW=0,lensH=0;
+let rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let imgs={c:null,r:null,l:null};
+
+// ── MediaPipe ────────────────────────────────────────────────────────────────
+let fm=null;
+function initFM(){
+  return new Promise(res=>{
+    fm=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+    fm.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+    fm.initialize().then(res).catch(res);
+  });
+}
+
+// Process ONE image — simple, reliable
+function detect(imgEl){
+  return new Promise(res=>{
+    let done=false;
+    const t=setTimeout(()=>{if(!done){done=true;res(null);}},7000);
+    fm.onResults(r=>{
+      if(done)return;
+      done=true;clearTimeout(t);
+      res(r.multiFaceLandmarks?.[0]||null);
+    });
+    fm.send({image:imgEl}).catch(()=>{if(!done){done=true;clearTimeout(t);res(null);}});
+  });
+}
+
+function irisXY(lm,c,t,r,b,l,W,H){
+  const p=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const pc=p(c),vt=p(t),vr=p(r),vb=p(b),vl=p(l);
+  return{cx:pc.x,cy:pc.y,diam:(Math.hypot(vt.x-vb.x,vt.y-vb.y)+Math.hypot(vr.x-vl.x,vr.y-vl.y))/2};
+}
+
+function loadImg(file){
+  return new Promise(res=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{URL.revokeObjectURL(url);res(img);};
+    img.onerror=()=>res(null);
+    img.src=url;
+  });
+}
+
+// ── Draw with rulers ─────────────────────────────────────────────────────────
+function drawCentre(canvas,img,lm,ppm){
+  const W=img.naturalWidth,H=img.naturalHeight;
+  canvas.width=W;canvas.height=H;
+  const c=canvas.getContext('2d');
+  c.drawImage(img,0,0);
+  if(!lm){noFace(c,W,H);return;}
+
+  const iR=irisXY(lm,473,474,475,476,477,W,H);
+  const iL=irisXY(lm,468,469,470,471,472,W,H);
+  const nose={x:lm[168].x*W,y:lm[168].y*H};
+  const fs=Math.max(14,iR.diam*0.5);
+  const tk=Math.max(8,iR.diam*0.25);
+
+  // Iris circles
+  [[iR,'#ff6b35'],[iL,'#00e5ff']].forEach(([ir,col])=>{
+    c.strokeStyle=col;c.lineWidth=3;
+    c.beginPath();c.arc(ir.cx,ir.cy,ir.diam/2,0,Math.PI*2);c.stroke();
+    c.fillStyle=col;c.beginPath();c.arc(ir.cx,ir.cy,4,0,Math.PI*2);c.fill();
+    c.beginPath();c.moveTo(ir.cx-ir.diam*0.8,ir.cy);c.lineTo(ir.cx+ir.diam*0.8,ir.cy);
+    c.moveTo(ir.cx,ir.cy-ir.diam*0.8);c.lineTo(ir.cx,ir.cy+ir.diam*0.8);c.stroke();
+  });
+
+  // PD dashed line
+  c.strokeStyle='#ffffff88';c.lineWidth=2;c.setLineDash([6,4]);
+  c.beginPath();c.moveTo(iR.cx,iR.cy);c.lineTo(iL.cx,iL.cy);c.stroke();
+  c.setLineDash([]);
+
+  // Horizontal ruler: zero at nose, going out both sides
+  const rulerY=Math.max(iR.cy,iL.cy)+Math.max(iR.diam,iL.diam)*2.5;
+  const maxMm=Math.ceil(Math.max(rPdR,rPdL)/5+1)*5;
+  c.strokeStyle='#ff2222';c.lineWidth=2.5;
+  c.beginPath();c.moveTo(nose.x-maxMm*ppm,rulerY);c.lineTo(nose.x+maxMm*ppm,rulerY);c.stroke();
+  for(let mm=0;mm<=maxMm;mm+=5){
+    const big=mm%10===0;
+    [nose.x+mm*ppm,nose.x-mm*ppm].forEach(x=>{
+      c.strokeStyle='#ff2222';c.lineWidth=big?2:1;
+      c.beginPath();c.moveTo(x,rulerY-tk*(big?1.2:0.7));c.lineTo(x,rulerY+tk*(big?1.2:0.7));c.stroke();
+      if(big&&mm>0){
+        c.fillStyle='#ff2222';c.font=`bold ${fs*0.85}px Courier New`;c.textAlign='center';
+        c.fillText(mm,x,rulerY+tk*2.8);
+      }
+    });
+  }
+  // Zero
+  c.fillStyle='#ffffff66';c.font=`${fs*0.8}px Courier New`;c.textAlign='center';
+  c.fillText('0',nose.x,rulerY-tk*2);
+  // PD markers
+  [[nose.x+rPdR*ppm,'#ff6b35','R:'+rPdR.toFixed(1)],[nose.x-rPdL*ppm,'#a78bfa','L:'+rPdL.toFixed(1)]].forEach(([x,col,lbl])=>{
+    c.strokeStyle=col;c.lineWidth=3;
+    c.beginPath();c.moveTo(x,rulerY-tk*2);c.lineTo(x,rulerY+tk*2);c.stroke();
+    c.fillStyle=col;c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+    c.fillText(lbl,x,rulerY-tk*3);
+  });
+
+  // Bottom bar
+  const bh=Math.max(60,H*0.07);
+  c.fillStyle='rgba(0,0,0,.82)';c.fillRect(0,H-bh,W,bh);
+  const bf=Math.max(14,H*0.025);
+  c.font=`bold ${bf}px Courier New`;c.fillStyle='#00e5ff';c.textAlign='left';
+  c.fillText('PD '+(rPdR+rPdL).toFixed(1)+'mm  R:'+rPdR.toFixed(1)+' L:'+rPdL.toFixed(1),8,H-bh+bf+4);
+  c.font=`${bf*0.7}px Courier New`;c.fillStyle='#ffffff33';
+  c.fillText(new Date().toLocaleDateString('en-GB')+' | '+lensW+'×'+lensH+' br:'+bridgeW,8,H-6);
+}
+
+function drawEye(canvas,img,lm,irisLM,col,seg,label){
+  if(!img){canvas.width=1;canvas.height=1;return;}
+  const W=img.naturalWidth,H=img.naturalHeight;
+  canvas.width=W;canvas.height=H;
+  const c=canvas.getContext('2d');
+  c.drawImage(img,0,0);
+  if(!lm){noFace(c,W,H);return;}
+
+  const ir=irisXY(lm,...irisLM,W,H);
+  const ppm=ir.diam/11.38;
+  const segPx=seg*ppm;
+  const fs=Math.max(16,ir.diam*0.55);
+  const tk=Math.max(8,ir.diam*0.3);
+  const rx=ir.cx+ir.diam*0.9; // ruler x position
+
+  // Iris
+  c.strokeStyle=col;c.lineWidth=3;
+  c.beginPath();c.arc(ir.cx,ir.cy,ir.diam/2,0,Math.PI*2);c.stroke();
+  c.fillStyle=col;c.beginPath();c.arc(ir.cx,ir.cy,4,0,Math.PI*2);c.fill();
+  c.beginPath();c.moveTo(ir.cx-ir.diam*0.8,ir.cy);c.lineTo(ir.cx+ir.diam*0.8,ir.cy);
+  c.moveTo(ir.cx,ir.cy-ir.diam*0.8);c.lineTo(ir.cx,ir.cy+ir.diam*0.8);c.stroke();
+
+  // Seg line from iris to frame bottom
+  c.strokeStyle=col;c.lineWidth=3;
+  c.beginPath();c.moveTo(ir.cx,ir.cy);c.lineTo(ir.cx,ir.cy+segPx);c.stroke();
+  c.beginPath();c.moveTo(ir.cx-15,ir.cy+segPx);c.lineTo(ir.cx+15,ir.cy+segPx);c.stroke();
+
+  // Vertical ruler alongside
+  c.strokeStyle=col;c.lineWidth=2;
+  c.beginPath();c.moveTo(rx,ir.cy);c.lineTo(rx,ir.cy+segPx);c.stroke();
+  for(let mm=0;mm<=Math.ceil(seg);mm+=5){
+    const y=ir.cy+mm*ppm;const big=mm%10===0;
+    c.lineWidth=big?2:1;
+    c.beginPath();c.moveTo(rx-tk*(big?1.3:0.7),y);c.lineTo(rx+tk*(big?1.3:0.7),y);c.stroke();
+    if(big){
+      c.fillStyle='rgba(0,0,0,0.7)';c.fillRect(rx+tk*1.5,y-fs*0.7,fs*2.2,fs*1.1);
+      c.fillStyle=col;c.font=`bold ${fs}px Courier New`;c.textAlign='left';
+      c.fillText(mm,rx+tk*1.8,y+fs*0.35);
+    }
+  }
+  // Zero at top
+  c.fillStyle='rgba(0,0,0,0.7)';c.fillRect(rx-fs*0.4,ir.cy-fs*1.4,fs*1.5,fs*1.1);
+  c.fillStyle=col;c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+  c.fillText('0',rx,ir.cy-tk*0.3);
+  // Total label
+  c.fillStyle='rgba(0,0,0,0.8)';c.fillRect(rx-fs*0.3,ir.cy+segPx+tk,fs*4.5,fs*1.3);
+  c.fillStyle=col;c.font=`bold ${fs*1.1}px Courier New`;c.textAlign='left';
+  c.fillText(label+':'+seg.toFixed(1)+'mm',rx,ir.cy+segPx+tk+fs*1.0);
+
+  // Bottom bar
+  const bh=Math.max(40,H*0.06);
+  c.fillStyle='rgba(0,0,0,.82)';c.fillRect(0,H-bh,W,bh);
+  const bf=Math.max(14,H*0.022);
+  c.font=`bold ${bf}px Courier New`;c.fillStyle=col;c.textAlign='left';
+  c.fillText('Seg '+label+': '+seg.toFixed(1)+'mm',8,H-bh+bf+4);
+}
+
+function noFace(c,W,H){
+  c.fillStyle='rgba(0,0,0,.7)';c.fillRect(0,0,W,50);
+  c.fillStyle='#ff4444';c.font='bold 18px Courier New';c.textAlign='left';
+  c.fillText('NO FACE DETECTED',10,32);
+}
+
+function drawFocal(){
+  const fc=$('cv-focal');
+  const W=fc.offsetWidth||460;fc.width=W;fc.height=160;
+  const c=fc.getContext('2d');
+  c.fillStyle='#0a0a14';c.fillRect(0,0,W,160);
+  const sc=W/130,cx=W/2,fy=16;
+  const lWp=lensW*sc,lHp=Math.min(lensH*sc*0.7,110),brP=bridgeW*sc;
+  c.strokeStyle='#2a2a4a';c.lineWidth=2;
+  c.strokeRect(cx-brP/2-lWp,fy,lWp,lHp);c.strokeRect(cx+brP/2,fy,lWp,lHp);
+  c.beginPath();c.moveTo(cx-brP/2,fy+lHp*0.35);c.lineTo(cx+brP/2,fy+lHp*0.35);c.stroke();
+  const rp=cx+rPdR*sc/2,lp=cx-rPdL*sc/2;
+  const ry=fy+rSegR*sc*0.7,ly=fy+rSegL*sc*0.7;
+  [[rp,ry,'#ff6b35'],[lp,ly,'#a78bfa']].forEach(([px,py,col])=>{
+    c.strokeStyle=col+'44';c.lineWidth=1;c.setLineDash([2,2]);
+    c.beginPath();c.moveTo(px,fy);c.lineTo(px,fy+lHp);c.stroke();c.setLineDash([]);
+    c.fillStyle=col;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fill();
+  });
+  c.textAlign='center';
+  c.fillStyle='#00e5ffaa';c.font='bold 11px Courier New';
+  c.fillText('PD '+(rPdR+rPdL).toFixed(1)+'mm',cx,fy+lHp+18);
+  c.fillStyle='#ff6b35aa';c.font='10px Courier New';
+  c.fillText('R '+rPdR.toFixed(1),rp,fy+lHp+32);
+  c.fillStyle='#a78bfaaa';c.fillText('L '+rPdL.toFixed(1),lp,fy+lHp+32);
+  c.fillStyle='#ff6b3566';c.fillText('Seg R:'+rSegR.toFixed(1)+' L:'+rSegL.toFixed(1),cx,fy+lHp+46);
+  c.textAlign='left';
+}
+
+function setSlider(id,vid,val,mn,mx){
+  const s=$(id);s.min=mn;s.max=mx;s.step=0.5;s.value=val.toFixed(1);
+  $(vid).textContent=val.toFixed(1)+'mm';
+}
+function updateSliders(){
+  rPdR=+$('sl-pdr').value;rPdL=+$('sl-pdl').value;
+  rSegR=+$('sl-segr').value;rSegL=+$('sl-segl').value;
+  const tot=rPdR+rPdL;
+  $('sv-pd').textContent=tot.toFixed(1)+'mm';$('sv-pdr').textContent=rPdR.toFixed(1)+'mm';
+  $('sv-pdl').textContent=rPdL.toFixed(1)+'mm';$('sv-segr').textContent=rSegR.toFixed(1)+'mm';
+  $('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  $('r-pd').innerHTML=tot.toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  updateOpt();drawFocal();
+  // Redraw eye canvases with new seg values
+  if(imgs.r) drawEye($('cv-r'),imgs.r,resR,[473,474,475,476,477],'#ff6b35',rSegR,'R');
+  if(imgs.l) drawEye($('cv-l'),imgs.l,resL,[468,469,470,471,472],'#a78bfa',rSegL,'L');
+}
+function updateOpt(){
+  const nm=$('pn').value||'—',nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});
+  $('opt-text').innerHTML='<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>Monocular PD — R: '+rPdR.toFixed(1)+' / L: '+rPdL.toFixed(1)+' mm<br/>Binocular PD: '+(rPdR+rPdL).toFixed(1)+' mm<br/>Seg — R: '+rSegR.toFixed(1)+' / L: '+rSegL.toFixed(1)+' mm<br/><span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+
+let resC=null,resR=null,resL=null;
+
+async function analyse(){
+  if(!imgs.c){$('err').textContent='⚠ Centre photo required';return;}
+  $('btn-analyse').textContent='INITIALISING AI…';$('btn-analyse').disabled=true;
+
+  // Init MediaPipe once
+  await initFM();
+  await new Promise(r=>setTimeout(r,400));
+
+  // Process centre photo for PD
+  $('btn-analyse').textContent='ANALYSING…';
+  resC=await detect(imgs.c);
+
+  // Process right eye if provided
+  if(imgs.r){
+    // Wait for FM to settle
+    await new Promise(r=>setTimeout(r,500));
+    resR=await detect(imgs.r);
+  }
+
+  // Process left eye if provided
+  if(imgs.l){
+    await new Promise(r=>setTimeout(r,500));
+    resL=await detect(imgs.l);
+  }
+
+  // Calculate PD from centre
+  if(resC){
+    const W=imgs.c.naturalWidth,H=imgs.c.naturalHeight;
+    const iR=irisXY(resC,473,474,475,476,477,W,H);
+    const iL=irisXY(resC,468,469,470,471,472,W,H);
+    const ppm=(iR.diam+iL.diam)/2/11.38;
+    const nose={x:resC[168].x*W,y:resC[168].y*H};
+    const pdTot=Math.hypot(iR.cx-iL.cx,iR.cy-iL.cy)/ppm;
+    const pR=Math.hypot(iR.cx-nose.x,iR.cy-nose.y)/ppm;
+    const pL=Math.hypot(iL.cx-nose.x,iL.cy-nose.y)/ppm;
+    rPdR=pdTot*(pR/(pR+pL));
+    rPdL=pdTot*(pL/(pR+pL));
+  }
+
+  // Seg: measure from iris to lower frame using landmarks
+  // Use multiple lower eyelid/cheek landmarks and pick the one that gives
+  // a realistic seg value (between lensH*0.5 and lensH*0.95)
+  function measureSeg(lm,irisLM,W,H){
+    if(!lm) return lensH*0.69;
+    const ir=irisXY(lm,...irisLM,W,H);
+    const ppm=ir.diam/11.38;
+    // Try landmarks below the eye — lower eyelid and cheek area
+    const candidates=[152,177,137,123,50,147,187,207,205,36,
+                      374,401,366,352,280,376,411,427,425,266];
+    let bestSeg=lensH*0.69;
+    let bestScore=999;
+    const target=lensH*0.69; // expected seg
+    candidates.forEach(i=>{
+      if(i>=lm.length) return;
+      const y=lm[i].y*H;
+      if(y<=ir.cy) return; // must be below iris
+      const seg=(y-ir.cy)/ppm;
+      if(seg>lensH*0.5&&seg<lensH*0.95){
+        const score=Math.abs(seg-target);
+        if(score<bestScore){bestScore=score;bestSeg=seg;}
+      }
+    });
+    return bestSeg;
+  }
+
+  rSegR=imgs.r&&resR?measureSeg(resR,[473,474,475,476,477],imgs.r.naturalWidth,imgs.r.naturalHeight):lensH*0.69;
+  rSegL=imgs.l&&resL?measureSeg(resL,[468,469,470,471,472],imgs.l.naturalWidth,imgs.l.naturalHeight):lensH*0.69;
+
+  // Draw everything
+  if(imgs.c){
+    const W=imgs.c.naturalWidth,H=imgs.c.naturalHeight;
+    const iR=resC?irisXY(resC,473,474,475,476,477,W,H):null;
+    const ppm=iR?(iR.diam+irisXY(resC,468,469,470,471,472,W,H).diam)/2/11.38:null;
+    drawCentre($('cv-main'),imgs.c,resC,ppm);
+  }
+  if(imgs.r) drawEye($('cv-r'),imgs.r,resR,[473,474,475,476,477],'#ff6b35',rSegR,'R');
+  else{$('cv-r').width=1;$('cv-r').height=1;}
+  if(imgs.l) drawEye($('cv-l'),imgs.l,resL,[468,469,470,471,472],'#a78bfa',rSegL,'L');
+  else{$('cv-l').width=1;$('cv-l').height=1;}
+
+  // Show results
+  $('r-pd').innerHTML=((rPdR+rPdL)||0).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=(rPdR||0).toFixed(1);$('r-pdl').textContent=(rPdL||0).toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  setSlider('sl-pd','sv-pd',rPdR+rPdL,40,80);
+  setSlider('sl-pdr','sv-pdr',rPdR,20,45);setSlider('sl-pdl','sv-pdl',rPdL,20,45);
+  setSlider('sl-segr','sv-segr',rSegR,10,45);setSlider('sl-segl','sv-segl',rSegL,10,45);
+  updateOpt();drawFocal();
+  hide('s-photos');show('s-result');
+  $('btn-analyse').textContent='ANALYSE →';$('btn-analyse').disabled=false;
+}
+
+function rst(){
+  imgs={c:null,r:null,l:null};resC=null;resR=null;resL=null;fm=null;
+  ['inp-c','inp-r','inp-l'].forEach(id=>$(id).value='');
+  ['slot-c','slot-r','slot-l'].forEach(id=>{
+    const s=$(id),im=s.querySelector('img'),tk=s.querySelector('.tick');
+    if(im)im.remove();if(tk)tk.remove();
+    s.querySelector('.lbl').style.display='';
+  });
+  $('btn-analyse').disabled=true;
+  hide('s-result');hide('s-photos');show('s-setup');
+}
+
+function handlePhoto(key,file){
+  if(!file)return;
+  loadImg(file).then(img=>{
+    if(!img)return;
+    imgs[key]=img;
+    const slot=$('slot-'+key);
+    let im=slot.querySelector('img');
+    if(!im){im=document.createElement('img');slot.insertBefore(im,slot.firstChild);}
+    im.src=img.src||URL.createObjectURL(file);
+    slot.querySelector('.lbl').style.display='none';
+    let tk=slot.querySelector('.tick');
+    if(!tk){tk=document.createElement('div');tk.className='tick';tk.textContent='✓';slot.appendChild(tk);}
+    if(imgs.c)$('btn-analyse').disabled=false;
+  });
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  $('btn-next').addEventListener('click',function(){
+    lensW=parseFloat($('f-lw').value)||0;
+    bridgeW=parseFloat($('f-bw').value)||0;
+    lensH=parseFloat($('f-lh').value)||0;
+    if(!lensW||!bridgeW||!lensH){$('err').textContent='⚠ Please fill all three measurements';return;}
+    $('err').textContent='';hide('s-setup');show('s-photos');
+  });
+  $('btn-back').addEventListener('click',function(){hide('s-photos');show('s-setup');});
+  $('btn-analyse').addEventListener('click',analyse);
+  $('btn-again').addEventListener('click',rst);
+  $('btn-save').addEventListener('click',function(){
+    const a=document.createElement('a');a.download='pd-measurement.png';
+    a.href=$('cv-main').toDataURL('image/png');a.click();
+  });
+  ['inp-c','inp-r','inp-l'].forEach(k=>
+    $(k).addEventListener('change',function(){handlePhoto(k.replace('inp-',''),this.files[0]);})
+  );
+  ['sl-pd','sl-pdr','sl-pdl','sl-segr','sl-segl'].forEach(id=>$(id).addEventListener('input',updateSliders));
+  $('pn').addEventListener('input',updateOpt);
+  $('pnt').addEventListener('input',updateOpt);
+});
+</script>
+</body>
+</html>
