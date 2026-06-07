@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>PD Measure v7</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px;}
+h1{font-size:22px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.06em;}
+.sub{font-size:10px;color:#444;letter-spacing:.25em;margin-bottom:20px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;text-align:center;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff18,#a78bfa18);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-capture{background:#00e5ff22;border:2px solid #00e5ff!important;color:#00e5ff;font-size:16px;padding:18px;letter-spacing:.2em;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+#err{color:#ff6b35;font-size:12px;text-align:center;margin-bottom:8px;width:100%;max-width:460px;min-height:16px;}
+#cam-wrap{position:relative;width:100%;max-width:460px;margin-bottom:12px;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:3/4;}
+#cam-video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;}
+#cam-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.cam-label{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:14px;font-weight:bold;letter-spacing:.2em;text-shadow:0 0 8px #000;z-index:10;}
+.cam-hint{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:11px;color:#ffffffcc;text-shadow:0 0 6px #000;z-index:10;padding:0 12px;line-height:1.6;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:10px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;letter-spacing:.1em;}
+.mv{font-size:24px;font-weight:700;color:#00e5ff;}
+.mv.org{color:#ff6b35;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.eyegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.eyegrid canvas{width:100%;border-radius:8px;display:block;border:1px solid #1e1e2e;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sr:last-child{margin-bottom:0;}
+.sr label{font-size:11px;color:#666;width:72px;flex-shrink:0;}
+.sr input[type=range]{flex:1;accent-color:#00e5ff;}
+.sv{font-size:12px;color:#00e5ff;width:52px;text-align:right;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;width:100%;max-width:460px;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:16px;">
+  <div class="sub">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>PD + SEG HEIGHT</h1>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup">
+  <div class="card">
+    <div class="clabel">FRAME SPECIFICATIONS</div>
+    <div class="field"><label>LENS WIDTH (mm)</label><input type="number" id="f-lw" placeholder="e.g. 47" inputmode="decimal"/></div>
+    <div class="field"><label>BRIDGE WIDTH (mm)</label><input type="number" id="f-bw" placeholder="e.g. 22" inputmode="decimal"/></div>
+    <div class="field"><label>LENS HEIGHT (mm)</label><input type="number" id="f-lh" placeholder="e.g. 40" inputmode="decimal"/></div>
+  </div>
+  <div id="err"></div>
+  <button class="btn btn-primary" id="btn-start">START → RIGHT EYE</button>
+</div>
+
+<!-- CAMERA -->
+<div id="s-camera" class="hidden">
+  <div id="cam-wrap">
+    <video id="cam-video" autoplay playsinline muted></video>
+    <canvas id="cam-overlay"></canvas>
+    <div class="cam-label" id="cam-label">RIGHT EYE</div>
+    <div class="cam-hint" id="cam-hint">Align the glasses lens inside the rectangle<br/>Outer &amp; top edges touching the frame lines</div>
+  </div>
+  <button class="btn btn-capture" id="btn-capture">📷 CAPTURE</button>
+  <button class="btn btn-ghost" id="btn-cam-back">← BACK</button>
+</div>
+
+<!-- RESULTS -->
+<div id="s-result" class="hidden">
+  <div class="card">
+    <div class="clabel">PATIENT</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name…"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes…"/></div>
+  </div>
+  <div class="grid2">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">PD R / L</div><div class="mv" style="font-size:15px"><span id="r-pdr" style="color:#ff6b35">--</span>/<span id="r-pdl" style="color:#a78bfa">--</span><span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:6px;width:100%;max-width:460px;">ANNOTATED PHOTOS</div>
+  <div class="eyegrid">
+    <div><div style="font-size:9px;color:#ff6b3588;text-align:center;margin-bottom:3px;">RIGHT EYE</div><canvas id="cv-r"></canvas></div>
+    <div><div style="font-size:9px;color:#a78bfa88;text-align:center;margin-bottom:3px;">LEFT EYE</div><canvas id="cv-l"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="clabel">FINE-TUNE</div>
+    <div class="sr"><label>PD RIGHT</label><input type="range" id="sl-pdr"/><div class="sv" id="sv-pdr">--</div></div>
+    <div class="sr"><label>PD LEFT</label><input type="range" id="sl-pdl"/><div class="sv" id="sv-pdl">--</div></div>
+    <div class="sr"><label>SEG R</label><input type="range" id="sl-segr"/><div class="sv" id="sv-segr">--</div></div>
+    <div class="sr"><label>SEG L</label><input type="range" id="sl-segl"/><div class="sv" id="sv-segl">--</div></div>
+  </div>
+  <canvas id="cv-focal" style="width:100%;max-width:460px;border-radius:10px;border:1px solid #1e1e2e;display:block;margin-bottom:12px;" height="160"></canvas>
+  <div class="optbox"><div style="color:#3a7a3a;font-size:10px;letter-spacing:.15em;margin-bottom:4px;">FOR YOUR OPTICIAN</div><span id="opt-text"></span></div>
+  <button class="btn btn-primary" id="btn-save">↓ SAVE IMAGE</button>
+  <button class="btn btn-ghost" id="btn-again">MEASURE AGAIN</button>
+</div>
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+
+let lensW=0,bridgeW=0,lensH=0;
+let rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let capturedR=null,capturedL=null;
+let currentEye='r';
+let stream=null,animId=null,fm=null;
+
+// Guide rectangle in screen pixels (set by drawGuide each frame)
+let guide={x:0,y:0,w:0,h:0};
+
+// ── MediaPipe ─────────────────────────────────────────────────────────────────
+function initFM(){
+  return new Promise(res=>{
+    if(fm){res();return;}
+    fm=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+    fm.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+    fm.initialize().then(res).catch(res);
+  });
+}
+function detect(imgEl){
+  return new Promise(res=>{
+    let done=false;
+    const t=setTimeout(()=>{if(!done){done=true;res(null);}},8000);
+    fm.onResults(r=>{
+      if(done)return;done=true;clearTimeout(t);
+      res(r.multiFaceLandmarks?.[0]||null);
+    });
+    fm.send({image:imgEl}).catch(()=>{if(!done){done=true;clearTimeout(t);res(null);}});
+  });
+}
+function irisXY(lm,c,t,r,b,l,W,H){
+  const p=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const pc=p(c),vt=p(t),vr=p(r),vb=p(b),vl=p(l);
+  return{cx:pc.x,cy:pc.y,diam:(Math.hypot(vt.x-vb.x,vt.y-vb.y)+Math.hypot(vr.x-vl.x,vr.y-vl.y))/2};
+}
+
+// ── Map screen coords → video pixel coords ────────────────────────────────────
+// video uses object-fit:cover inside the cam-wrap element
+function screenToVideo(sx,sy,vidW,vidH){
+  const elemW=$('cam-overlay').offsetWidth;
+  const elemH=$('cam-overlay').offsetHeight;
+  const vidAsp=vidW/vidH,elemAsp=elemW/elemH;
+  let scale,offX,offY;
+  if(vidAsp>elemAsp){
+    // video wider — height fits, width cropped
+    scale=elemH/vidH;
+    offX=(vidW*scale-elemW)/2;offY=0;
+  } else {
+    // video taller — width fits, height cropped
+    scale=elemW/vidW;
+    offX=0;offY=(vidH*scale-elemH)/2;
+  }
+  return{vx:(sx*scale+offX)/scale/1, // simplified: (sx + offX/scale)
+         vy:(sy*scale+offY)/scale/1,
+         ppm:(guide.w*scale/scale)/lensW}; // guide.w screen px / lensW mm... wait
+  // Actually: guide.w screen pixels represents lensW mm
+  // 1 screen px = (1/scale) video px... no:
+  // scale = elemPx/vidPx → 1 vidPx = scale elemPx → 1 elemPx = (1/scale) vidPx... no
+  // scale = elemH/vidH means elemH = scale*vidH → vidH = elemH/scale
+  // So 1 screen px = vidH/elemH = 1/scale video px? No...
+  // screen_px * (1/scale) = vid_px... Let me redo:
+}
+
+// Proper coordinate conversion
+function getMapping(vidW,vidH){
+  const elemW=$('cam-overlay').offsetWidth;
+  const elemH=$('cam-overlay').offsetHeight;
+  const vidAsp=vidW/vidH,elemAsp=elemW/elemH;
+  let scale,offX,offY;
+  if(vidAsp>elemAsp){
+    scale=elemH/vidH;
+    offX=(vidW*scale-elemW)/2;offY=0;
+  } else {
+    scale=elemW/vidW;
+    offX=0;offY=(vidH*scale-elemH)/2;
+  }
+  // Convert screen pixel → video pixel
+  // screen_x = vid_x * scale - offX  →  vid_x = (screen_x + offX) / scale
+  const toVx=sx=>(sx+offX)/scale;
+  const toVy=sy=>(sy+offY)/scale;
+  // ppm: guide.w screen px = lensW mm
+  // guide.w screen px in video px = guide.w / scale * ... hmm
+  // guide.w screen px → guide.w/scale * vidW/vidW... 
+  // Actually: 1 screen px = 1/scale video px (since screen_x = vid_x*scale - offX)
+  // So guide.w screen px = guide.w/scale video px = lensW mm
+  const ppm=guide.w/scale/lensW; // video pixels per mm
+  return{toVx,toVy,ppm};
+}
+
+// ── Draw guide rectangle on overlay ──────────────────────────────────────────
+function drawGuide(){
+  const cvs=$('cam-overlay');
+  const W=cvs.offsetWidth,H=cvs.offsetHeight;
+  if(!W||!H){animId=requestAnimationFrame(drawGuide);return;}
+  cvs.width=W;cvs.height=H;
+  const c=cvs.getContext('2d');
+  c.clearRect(0,0,W,H);
+
+  // Rectangle sized to frame proportions, 75% of screen width
+  const gW=Math.round(W*0.75);
+  const gH=Math.round(gW*lensH/lensW);
+  const gx=Math.round((W-gW)/2);
+  const gy=Math.round(H*0.42-gH/2);
+
+  // Store for capture
+  guide={x:gx,y:gy,w:gW,h:gH};
+
+  const col=currentEye==='r'?'#ff6b35':'#a78bfa';
+
+  // Dim outside
+  c.fillStyle='rgba(0,0,0,0.5)';
+  c.fillRect(0,0,W,H);
+  c.clearRect(gx,gy,gW,gH);
+
+  // Border
+  c.strokeStyle=col;c.lineWidth=2.5;
+  c.strokeRect(gx,gy,gW,gH);
+
+  // Corner L-marks (white, thicker)
+  const arm=Math.min(24,gW*0.1);
+  [[gx,gy,1,1],[gx+gW,gy,-1,1],[gx,gy+gH,1,-1],[gx+gW,gy+gH,-1,-1]].forEach(([x,y,dx,dy])=>{
+    c.strokeStyle='#fff';c.lineWidth=3.5;
+    c.beginPath();c.moveTo(x,y);c.lineTo(x+dx*arm,y);
+    c.moveTo(x,y);c.lineTo(x,y+dy*arm);c.stroke();
+  });
+
+  // Centre cross
+  c.strokeStyle='#ffffff66';c.lineWidth=1.5;
+  c.beginPath();
+  c.moveTo(gx+gW/2-14,gy+gH/2);c.lineTo(gx+gW/2+14,gy+gH/2);
+  c.moveTo(gx+gW/2,gy+gH/2-14);c.lineTo(gx+gW/2,gy+gH/2+14);
+  c.stroke();
+
+  // Labels
+  c.fillStyle='#ffffffcc';c.font='bold 13px Courier New';c.textAlign='center';
+  c.fillText(lensW+'mm wide',gx+gW/2,gy-8);
+  c.save();c.translate(gx-8,gy+gH/2);c.rotate(-Math.PI/2);
+  c.fillText(lensH+'mm',0,0);c.restore();
+
+  // Which edge is "outer" label
+  const outerLabel=currentEye==='r'?'← OUTER':'OUTER →';
+  const outerX=currentEye==='r'?gx:gx+gW;
+  c.fillStyle=col;c.font='bold 11px Courier New';
+  c.textAlign=currentEye==='r'?'right':'left';
+  c.fillText(outerLabel,outerX+(currentEye==='r'?-4:4),gy+gH/2);
+
+  animId=requestAnimationFrame(drawGuide);
+}
+
+// ── Camera ────────────────────────────────────────────────────────────────────
+async function startCamera(eye){
+  currentEye=eye;
+  const col=eye==='r'?'#ff6b35':'#a78bfa';
+  $('cam-label').textContent=eye==='r'?'RIGHT EYE':'LEFT EYE';
+  $('cam-label').style.color=col;
+  hide('s-setup');hide('s-result');show('s-camera');
+  try{
+    if(stream){stream.getTracks().forEach(t=>t.stop());}
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1440}},audio:false
+    });
+    $('cam-video').srcObject=stream;
+    await new Promise(res=>{$('cam-video').onloadedmetadata=res;});
+    $('cam-video').play();
+    if(animId)cancelAnimationFrame(animId);
+    drawGuide();
+  }catch(e){alert('Camera: '+e.message);}
+}
+
+function stopCamera(){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+}
+
+// ── Capture & measure ─────────────────────────────────────────────────────────
+async function capture(){
+  const vid=$('cam-video');
+  const VW=vid.videoWidth,VH=vid.videoHeight;
+  if(!VW||!VH||vid.readyState<2){alert('Camera not ready');return;}
+
+  $('btn-capture').textContent='PROCESSING…';$('btn-capture').disabled=true;
+
+  // Snap frame
+  const snap=document.createElement('canvas');
+  snap.width=VW;snap.height=VH;
+  snap.getContext('2d').drawImage(vid,0,0);
+  stopCamera();
+
+  // Get coordinate mapping and calibrated ppm
+  const{toVx,toVy,ppm}=getMapping(VW,VH);
+
+  // Guide edges in VIDEO pixels
+  // Outer edge: LEFT side for right eye (temporal), RIGHT side for left eye
+  const outerVx = currentEye==='r' ? toVx(guide.x) : toVx(guide.x+guide.w);
+  const topVy   = toVy(guide.y);
+
+  // Detect iris
+  await initFM();
+  await new Promise(r=>setTimeout(r,300));
+  const lm=await detect(snap);
+
+  let pd=0,seg=lensH*0.69,iris=null;
+
+  if(lm){
+    const irisLM=currentEye==='r'?[473,474,475,476,477]:[468,469,470,471,472];
+    iris=irisXY(lm,...irisLM,VW,VH);
+
+    // PD = lensW + bridgeW/2 - iris_to_outer_edge_mm
+    const iris_to_outer_mm=Math.abs(iris.cx-outerVx)/ppm;
+    pd=(lensW+bridgeW/2-iris_to_outer_mm)*1.03; // +3% parallax
+
+    // Seg = lensH - iris_to_top_mm
+    const iris_to_top_mm=(iris.cy-topVy)/ppm;
+    seg=lensH-iris_to_top_mm;
+
+    // Clamp to realistic range
+    pd=Math.max(25,Math.min(42,pd));
+    seg=Math.max(lensH*0.45,Math.min(lensH*0.9,seg));
+  }
+
+  const data={snap,lm,iris,ppm,pd,seg,outerVx,topVy};
+  if(currentEye==='r'){capturedR=data;rPdR=pd;rSegR=seg;}
+  else{capturedL=data;rPdL=pd;rSegL=seg;}
+
+  $('btn-capture').textContent='📷 CAPTURE';$('btn-capture').disabled=false;
+  fm=null;
+
+  if(currentEye==='r'){
+    await startCamera('l');
+  } else {
+    showResults();
+  }
+}
+
+// ── Draw result canvas ────────────────────────────────────────────────────────
+function drawResult(canvas,data,col,label){
+  if(!data){canvas.width=100;canvas.height=100;return;}
+  const{snap,iris,ppm,pd,seg,outerVx,topVy}=data;
+  const W=snap.width,H=snap.height;
+  canvas.width=W;canvas.height=H;
+  const c=canvas.getContext('2d');
+  c.drawImage(snap,0,0);
+
+  // Frame edges from guide
+  if(outerVx&&topVy){
+    // Draw top edge line
+    c.strokeStyle='#00e5ff55';c.lineWidth=2;c.setLineDash([8,6]);
+    c.beginPath();c.moveTo(0,topVy);c.lineTo(W,topVy);c.stroke();
+    // Draw outer edge line
+    c.beginPath();c.moveTo(outerVx,0);c.lineTo(outerVx,H);c.stroke();
+    c.setLineDash([]);
+  }
+
+  if(!iris){
+    c.fillStyle='rgba(0,0,0,.8)';c.fillRect(0,0,W,60);
+    c.fillStyle='#f44';c.font='bold 24px Courier New';
+    c.fillText('NO FACE DETECTED',12,40);return;
+  }
+
+  const fs=Math.round(W*0.05);
+  const tk=Math.round(W*0.025);
+  const lw=Math.max(3,Math.round(W*0.005));
+
+  // Iris
+  c.strokeStyle=col;c.lineWidth=lw+1;
+  c.beginPath();c.arc(iris.cx,iris.cy,iris.diam/2,0,Math.PI*2);c.stroke();
+  c.fillStyle=col;c.beginPath();c.arc(iris.cx,iris.cy,lw*2,0,Math.PI*2);c.fill();
+  c.lineWidth=lw;
+  c.beginPath();
+  c.moveTo(iris.cx-iris.diam,iris.cy);c.lineTo(iris.cx+iris.diam,iris.cy);
+  c.moveTo(iris.cx,iris.cy-iris.diam);c.lineTo(iris.cx,iris.cy+iris.diam);
+  c.stroke();
+
+  // PD arrow: iris → outer edge (horizontal)
+  if(outerVx){
+    const pdPx=Math.abs(iris.cx-outerVx);
+    const pdY=iris.cy;
+    c.strokeStyle='#ff2222';c.lineWidth=lw+1;
+    c.beginPath();c.moveTo(iris.cx,pdY);c.lineTo(outerVx,pdY);c.stroke();
+    // Arrow tip at iris
+    const d=label==='R'?-1:1;
+    c.beginPath();c.moveTo(iris.cx,pdY);c.lineTo(iris.cx+d*tk,pdY-tk);
+    c.moveTo(iris.cx,pdY);c.lineTo(iris.cx+d*tk,pdY+tk);c.stroke();
+    // Label
+    const midX=(iris.cx+outerVx)/2;
+    c.fillStyle='rgba(0,0,0,.85)';c.fillRect(midX-fs*2.5,pdY-tk*3.5,fs*5,fs*1.3);
+    c.fillStyle='#ff2222';c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+    c.fillText('PD '+label+': '+pd.toFixed(1)+'mm',midX,pdY-tk*2.5+fs*.9);
+  }
+
+  // Seg arrow: iris → top edge (vertical)
+  if(topVy){
+    const segPx=Math.abs(iris.cy-topVy);
+    c.strokeStyle='#ffff00';c.lineWidth=lw+1;
+    c.beginPath();c.moveTo(iris.cx,iris.cy);c.lineTo(iris.cx,topVy);c.stroke();
+    // Seg line at seg distance below iris
+    const segY=iris.cy+seg*ppm;
+    c.strokeStyle='#ffff00';c.lineWidth=lw;c.setLineDash([6,4]);
+    c.beginPath();c.moveTo(0,segY);c.lineTo(W,segY);c.stroke();c.setLineDash([]);
+    c.fillStyle='rgba(0,0,0,.88)';c.fillRect(iris.cx+tk,segY+lw,fs*5.5,fs*1.3);
+    c.fillStyle='#ffff00';c.font=`bold ${fs}px Courier New`;c.textAlign='left';
+    c.fillText('Seg='+seg.toFixed(1)+'mm',iris.cx+tk*1.5,segY+lw+fs*.95);
+  }
+
+  // VERTICAL RULER right side — 0 at iris, every 1mm
+  const rx=Math.round(W*.78);
+  const totalPx=lensH*ppm;
+  c.fillStyle='rgba(0,0,0,.75)';
+  c.fillRect(rx-tk,iris.cy-fs,tk*2+fs*3.2,totalPx+fs*2.5);
+  c.strokeStyle=col;c.lineWidth=lw;
+  c.beginPath();c.moveTo(rx,iris.cy);c.lineTo(rx,iris.cy+totalPx);c.stroke();
+  for(let mm=0;mm<=lensH;mm++){
+    const y=iris.cy+mm*ppm;if(y>H-4)break;
+    const is10=mm%10===0,is5=mm%5===0;
+    c.strokeStyle=col;c.lineWidth=is10?lw+1:is5?lw:Math.max(1,lw-1);
+    const tw=is10?tk*2:is5?tk*1.3:tk*.65;
+    c.beginPath();c.moveTo(rx-tw,y);c.lineTo(rx+tw,y);c.stroke();
+    if(is5){
+      c.fillStyle=col;c.font=`bold ${is10?fs:Math.round(fs*.78)}px Courier New`;
+      c.textAlign='left';c.fillText(mm,rx+tw+lw*2,y+(is10?fs:fs*.78)*.38);
+    }
+  }
+  c.fillStyle='#fff';c.font=`bold ${fs}px Courier New`;c.textAlign='left';
+  c.fillText('0',rx+tk*2.5,iris.cy-fs*.1);
+
+  // Bottom bar
+  const bh=Math.max(50,Math.round(H*.065));
+  c.fillStyle='rgba(0,0,0,.88)';c.fillRect(0,H-bh,W,bh);
+  const bf=Math.max(16,Math.round(H*.024));
+  c.font=`bold ${bf}px Courier New`;c.fillStyle=col;c.textAlign='left';
+  c.fillText(label+' PD:'+pd.toFixed(1)+'  Seg:'+seg.toFixed(1)+'mm',10,H-bh+bf+6);
+}
+
+function drawFocal(){
+  const fc=$('cv-focal');
+  const W=fc.offsetWidth||460;fc.width=W;fc.height=160;
+  const c=fc.getContext('2d');
+  c.fillStyle='#0a0a14';c.fillRect(0,0,W,160);
+  const sc=W/130,cx=W/2,fy=16;
+  const lWp=lensW*sc,lHp=Math.min(lensH*sc*.7,110),brP=bridgeW*sc;
+  c.strokeStyle='#2a2a4a';c.lineWidth=2;
+  c.strokeRect(cx-brP/2-lWp,fy,lWp,lHp);c.strokeRect(cx+brP/2,fy,lWp,lHp);
+  c.beginPath();c.moveTo(cx-brP/2,fy+lHp*.35);c.lineTo(cx+brP/2,fy+lHp*.35);c.stroke();
+  [[cx+rPdR*sc/2,fy+rSegR*sc*.7,'#ff6b35'],[cx-rPdL*sc/2,fy+rSegL*sc*.7,'#a78bfa']].forEach(([px,py,col])=>{
+    c.strokeStyle=col+'55';c.lineWidth=1;c.setLineDash([2,2]);
+    c.beginPath();c.moveTo(px,fy);c.lineTo(px,fy+lHp);c.stroke();
+    c.beginPath();c.moveTo(cx-brP/2-lWp,py);c.lineTo(cx+brP/2+lWp,py);c.stroke();
+    c.setLineDash([]);c.fillStyle=col;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fill();
+  });
+  c.textAlign='center';c.fillStyle='#00e5ffaa';c.font='bold 11px Courier New';
+  c.fillText('PD '+(rPdR+rPdL).toFixed(1)+'mm',cx,fy+lHp+18);
+  c.fillStyle='#ff6b35aa';c.font='10px Courier New';
+  c.fillText('R '+rPdR.toFixed(1),cx+rPdR*sc/2,fy+lHp+32);
+  c.fillStyle='#a78bfaaa';c.fillText('L '+rPdL.toFixed(1),cx-rPdL*sc/2,fy+lHp+32);
+  c.textAlign='left';
+}
+
+function showResults(){
+  hide('s-camera');
+  drawResult($('cv-r'),capturedR,'#ff6b35','R');
+  drawResult($('cv-l'),capturedL,'#a78bfa','L');
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  const sl=(id,v,mn,mx)=>{const s=$(id);s.min=mn;s.max=mx;s.step=.5;s.value=v.toFixed(1);};
+  sl('sl-pdr',rPdR,20,45);sl('sl-pdl',rPdL,20,45);
+  sl('sl-segr',rSegR,10,45);sl('sl-segl',rSegL,10,45);
+  $('sv-pdr').textContent=rPdR.toFixed(1)+'mm';$('sv-pdl').textContent=rPdL.toFixed(1)+'mm';
+  $('sv-segr').textContent=rSegR.toFixed(1)+'mm';$('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  updateOpt();drawFocal();show('s-result');
+}
+
+function updateSliders(){
+  rPdR=+$('sl-pdr').value;rPdL=+$('sl-pdl').value;
+  rSegR=+$('sl-segr').value;rSegL=+$('sl-segl').value;
+  if(capturedR)capturedR.seg=rSegR;if(capturedL)capturedL.seg=rSegL;
+  $('sv-pdr').textContent=rPdR.toFixed(1)+'mm';$('sv-pdl').textContent=rPdL.toFixed(1)+'mm';
+  $('sv-segr').textContent=rSegR.toFixed(1)+'mm';$('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  drawResult($('cv-r'),capturedR,'#ff6b35','R');
+  drawResult($('cv-l'),capturedL,'#a78bfa','L');
+  updateOpt();drawFocal();
+}
+
+function updateOpt(){
+  const nm=$('pn').value||'—',nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB');
+  $('opt-text').innerHTML='<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>'+
+    'Monocular PD — R: '+rPdR.toFixed(1)+' / L: '+rPdL.toFixed(1)+' mm<br/>'+
+    'Binocular PD: '+(rPdR+rPdL).toFixed(1)+' mm<br/>'+
+    'Seg — R: '+rSegR.toFixed(1)+' / L: '+rSegL.toFixed(1)+' mm<br/>'+
+    '<span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+
+function rst(){
+  stopCamera();capturedR=null;capturedL=null;fm=null;
+  rPdR=0;rPdL=0;rSegR=0;rSegL=0;
+  hide('s-result');hide('s-camera');show('s-setup');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  $('btn-start').addEventListener('click',()=>{
+    lensW=parseFloat($('f-lw').value)||0;
+    bridgeW=parseFloat($('f-bw').value)||0;
+    lensH=parseFloat($('f-lh').value)||0;
+    if(!lensW||!bridgeW||!lensH){$('err').textContent='⚠ Fill all measurements';return;}
+    $('err').textContent='';startCamera('r');
+  });
+  $('btn-capture').addEventListener('click',capture);
+  $('btn-cam-back').addEventListener('click',()=>{stopCamera();hide('s-camera');show('s-setup');});
+  $('btn-again').addEventListener('click',rst);
+  $('btn-save').addEventListener('click',()=>{
+    const a=document.createElement('a');a.download='pd-measurement.png';
+    a.href=$('cv-r').toDataURL();a.click();
+  });
+  ['sl-pdr','sl-pdl','sl-segr','sl-segl'].forEach(id=>$(id).addEventListener('input',updateSliders));
+  $('pn').addEventListener('input',updateOpt);$('pnt').addEventListener('input',updateOpt);
+});
+</script>
+</body>
+</html>
