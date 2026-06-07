@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>PD Measure v13</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px;}
+h1{font-size:22px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.06em;}
+.sub{font-size:10px;color:#444;letter-spacing:.25em;margin-bottom:20px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;text-align:center;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff18,#a78bfa18);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+#err{color:#ff6b35;font-size:12px;text-align:center;margin-bottom:8px;width:100%;max-width:460px;min-height:16px;}
+/* Photo slots */
+.photo-slot{border:2px dashed #2a2a3e;border-radius:10px;overflow:hidden;background:#0a0a14;position:relative;cursor:pointer;width:100%;max-width:460px;margin-bottom:10px;min-height:120px;display:flex;align-items:center;justify-content:center;}
+.photo-slot img{width:100%;display:block;}
+.photo-slot .slot-lbl{font-size:12px;color:#555;text-align:center;padding:12px;}
+.photo-slot input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.photo-slot .tick{position:absolute;top:8px;right:8px;background:#00e577;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#000;}
+.photo-slot.done{border-color:#00e57766;}
+/* Tap screen */
+.tap-step{width:100%;max-width:460px;padding:10px 0 6px;text-align:center;}
+.tap-step .step-num{font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:4px;}
+.tap-step .step-lbl{font-size:15px;font-weight:bold;letter-spacing:.1em;margin-bottom:2px;}
+.tap-step .step-hint{font-size:11px;color:#555;line-height:1.5;}
+.tap-canvas-wrap{position:relative;width:100%;max-width:460px;margin-bottom:10px;touch-action:none;}
+#tap-canvas{display:block;width:100%;border-radius:10px;cursor:crosshair;touch-action:none;}
+.tap-bar{display:flex;gap:8px;margin-bottom:10px;width:100%;max-width:460px;}
+.tap-dot{flex:1;height:8px;border-radius:4px;background:#1e1e2e;transition:background .3s;}
+.tap-dot.done{background:#00e577;}
+.tap-dot.active{background:#00e5ff;}
+/* Results */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:10px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;}
+.mv{font-size:24px;font-weight:700;color:#00e5ff;}
+.mv.org{color:#ff6b35;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.eyegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.eyegrid canvas{width:100%;border-radius:8px;display:block;border:1px solid #1e1e2e;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sr:last-child{margin-bottom:0;}
+.sr label{font-size:11px;color:#666;width:72px;flex-shrink:0;}
+.sr input[type=range]{flex:1;accent-color:#00e5ff;}
+.sv{font-size:12px;color:#00e5ff;width:52px;text-align:right;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;width:100%;max-width:460px;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:16px;">
+  <div class="sub">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>PD + SEG HEIGHT</h1>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup">
+  <div class="card">
+    <div class="clabel">FRAME SPECIFICATIONS</div>
+    <div class="field"><label>LENS WIDTH (mm)</label><input type="number" id="f-lw" placeholder="e.g. 47" inputmode="decimal"/></div>
+    <div class="field"><label>BRIDGE WIDTH (mm)</label><input type="number" id="f-bw" placeholder="e.g. 22" inputmode="decimal"/></div>
+    <div class="field"><label>LENS HEIGHT (mm)</label><input type="number" id="f-lh" placeholder="e.g. 40" inputmode="decimal"/></div>
+  </div>
+  <div id="err"></div>
+  <button class="btn btn-primary" id="btn-next">NEXT — TAKE PHOTOS</button>
+</div>
+
+<!-- PHOTOS -->
+<div id="s-photos" class="hidden">
+  <div style="font-size:11px;color:#555;line-height:1.8;margin-bottom:12px;width:100%;max-width:460px;">
+    Take a close-up of each eye separately.<br/>
+    Full glasses frame must be visible in each photo.
+  </div>
+  <div style="font-size:10px;color:#ff6b3588;letter-spacing:.15em;margin-bottom:6px;width:100%;max-width:460px;">RIGHT EYE</div>
+  <div class="photo-slot" id="slot-r">
+    <div class="slot-lbl">📷 TAP TO TAKE RIGHT EYE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp-r"/>
+  </div>
+  <div style="font-size:10px;color:#a78bfa88;letter-spacing:.15em;margin-bottom:6px;width:100%;max-width:460px;">LEFT EYE</div>
+  <div class="photo-slot" id="slot-l">
+    <div class="slot-lbl">📷 TAP TO TAKE LEFT EYE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp-l"/>
+  </div>
+  <button class="btn btn-primary" id="btn-mark" disabled>MARK POINTS ON PHOTOS →</button>
+  <button class="btn btn-ghost" id="btn-back">← BACK</button>
+</div>
+
+<!-- TAP MARKING -->
+<div id="s-tap" class="hidden">
+  <div class="tap-step">
+    <div class="step-num" id="tap-eye-lbl">RIGHT EYE — STEP 1 OF 4</div>
+    <div class="step-lbl" id="tap-lbl">TAP OUTER EDGE</div>
+    <div class="step-hint" id="tap-hint">Tap the outer (temple) edge of the lens</div>
+  </div>
+  <div class="tap-bar">
+    <div class="tap-dot active" id="dot-0"></div>
+    <div class="tap-dot" id="dot-1"></div>
+    <div class="tap-dot" id="dot-2"></div>
+    <div class="tap-dot" id="dot-3"></div>
+  </div>
+  <div class="tap-canvas-wrap">
+    <canvas id="tap-canvas"></canvas>
+  </div>
+  <button class="btn btn-ghost" id="btn-tap-undo">↩ UNDO LAST TAP</button>
+</div>
+
+<!-- RESULTS -->
+<div id="s-result" class="hidden">
+  <div class="card">
+    <div class="clabel">PATIENT</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name…"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes…"/></div>
+  </div>
+  <div class="grid2">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">PD R / L</div><div class="mv" style="font-size:15px"><span id="r-pdr" style="color:#ff6b35">--</span>/<span id="r-pdl" style="color:#a78bfa">--</span><span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:6px;width:100%;max-width:460px;">ANNOTATED PHOTOS</div>
+  <div class="eyegrid">
+    <div><div style="font-size:9px;color:#ff6b3588;text-align:center;margin-bottom:3px;">RIGHT EYE</div><canvas id="cv-r"></canvas></div>
+    <div><div style="font-size:9px;color:#a78bfa88;text-align:center;margin-bottom:3px;">LEFT EYE</div><canvas id="cv-l"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="clabel">FINE-TUNE</div>
+    <div class="sr"><label>PD RIGHT</label><input type="range" id="sl-pdr"/><div class="sv" id="sv-pdr">--</div></div>
+    <div class="sr"><label>PD LEFT</label><input type="range" id="sl-pdl"/><div class="sv" id="sv-pdl">--</div></div>
+    <div class="sr"><label>SEG R</label><input type="range" id="sl-segr"/><div class="sv" id="sv-segr">--</div></div>
+    <div class="sr"><label>SEG L</label><input type="range" id="sl-segl"/><div class="sv" id="sv-segl">--</div></div>
+  </div>
+  <canvas id="cv-focal" style="width:100%;max-width:460px;border-radius:10px;border:1px solid #1e1e2e;display:block;margin-bottom:12px;" height="160"></canvas>
+  <div class="optbox"><div style="color:#3a7a3a;font-size:10px;letter-spacing:.15em;margin-bottom:4px;">FOR YOUR OPTICIAN</div><span id="opt-text"></span></div>
+  <button class="btn btn-primary" id="btn-save">SAVE IMAGE</button>
+  <button class="btn btn-ghost" id="btn-again">MEASURE AGAIN</button>
+</div>
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+
+let lensW=0,bridgeW=0,lensH=0;
+let rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let imgR=null,imgL=null,dataR=null,dataL=null;
+
+// Tap state
+let tapEye='r';     // 'r' or 'l'
+let tapStep=0;      // 0=outer, 1=inner, 2=iris, 3=bottom
+let tapsR=[],tapsL=[];
+let tapScale=1;     // canvas display / actual image ratio
+
+const STEPS=[
+  {lbl:'TAP OUTER EDGE',    hint:'Tap the OUTER edge of the lens (temple/ear side)',  col:'#888888'},
+  {lbl:'TAP INNER EDGE',    hint:'Tap the INNER edge of the lens (nose bridge side)', col:'#ff2222'},
+  {lbl:'TAP IRIS CENTER',   hint:'Tap the CENTER of the pupil/iris',                  col:'#00e5ff'},
+  {lbl:'TAP FRAME BOTTOM',  hint:'Tap the BOTTOM edge of the lens frame',             col:'#ffff00'}
+];
+
+function loadFile(file){
+  return new Promise(res=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.naturalWidth;c.height=img.naturalHeight;
+      c.getContext('2d').drawImage(img,0,0);
+      URL.revokeObjectURL(url);res(c);
+    };
+    img.onerror=()=>res(null);
+    img.src=url;
+  });
+}
+
+// ── Tap canvas ────────────────────────────────────────────────────────────────
+function startTapEye(eye){
+  tapEye=eye;tapStep=0;
+  const img=eye==='r'?imgR:imgL;
+  const taps=eye==='r'?tapsR:tapsL;
+
+  // Set up canvas
+  const cvs=$('tap-canvas');
+  const maxW=Math.min(460,window.innerWidth-24);
+  tapScale=maxW/img.width;
+  cvs.width=maxW;
+  cvs.height=Math.round(img.height*tapScale);
+  cvs.style.width=maxW+'px';
+  cvs.style.height=cvs.height+'px';
+
+  // Reset taps for this eye
+  if(eye==='r')tapsR=[];else tapsL=[];
+
+  $('tap-eye-lbl').textContent=(eye==='r'?'RIGHT':'LEFT')+' EYE — STEP 1 OF 4';
+  $('tap-eye-lbl').style.color=eye==='r'?'#ff6b35':'#a78bfa';
+  updateTapUI();
+  drawTapCanvas();
+}
+
+function updateTapUI(){
+  const s=STEPS[tapStep];
+  $('tap-lbl').textContent=s.lbl;
+  $('tap-lbl').style.color=s.col;
+  $('tap-hint').textContent=s.hint;
+  $('tap-eye-lbl').textContent=(tapEye==='r'?'RIGHT':'LEFT')+' EYE — STEP '+(tapStep+1)+' OF 4';
+  for(let i=0;i<4;i++){
+    const d=$('dot-'+i);
+    d.className='tap-dot'+(i<tapStep?' done':i===tapStep?' active':'');
+  }
+}
+
+function drawTapCanvas(){
+  const cvs=$('tap-canvas');
+  const c=cvs.getContext('2d');
+  const img=tapEye==='r'?imgR:imgL;
+  const taps=tapEye==='r'?tapsR:tapsL;
+  c.clearRect(0,0,cvs.width,cvs.height);
+  c.drawImage(img,0,0,cvs.width,cvs.height);
+
+  // Draw placed taps
+  taps.forEach((t,i)=>{
+    const s=STEPS[i];
+    const x=t.x*tapScale,y=t.y*tapScale;
+    // Crosshair
+    c.strokeStyle=s.col;c.lineWidth=2.5;
+    c.beginPath();c.moveTo(x-18,y);c.lineTo(x+18,y);c.moveTo(x,y-18);c.lineTo(x,y+18);c.stroke();
+    // Dot
+    c.fillStyle=s.col;c.beginPath();c.arc(x,y,6,0,Math.PI*2);c.fill();
+    // Label
+    const labels=['OUTER','INNER','IRIS','BOTTOM'];
+    c.fillStyle='rgba(0,0,0,.7)';c.fillRect(x+10,y-12,52,16);
+    c.fillStyle=s.col;c.font='bold 11px Courier New';c.textAlign='left';
+    c.fillText(labels[i],x+12,y);
+  });
+
+  // Animate next tap target
+  if(tapStep<4){
+    const s=STEPS[tapStep];
+    c.strokeStyle=s.col;c.lineWidth=2;c.setLineDash([5,4]);
+    c.strokeRect(4,4,cvs.width-8,cvs.height-8);
+    c.setLineDash([]);
+    c.fillStyle='rgba(0,0,0,.65)';c.fillRect(0,cvs.height-28,cvs.width,28);
+    c.fillStyle=s.col;c.font='bold 13px Courier New';c.textAlign='center';
+    c.fillText('👆 '+s.lbl,cvs.width/2,cvs.height-9);
+  }
+}
+
+function handleTap(e){
+  e.preventDefault();
+  if(tapStep>=4)return;
+  const cvs=$('tap-canvas');
+  const rect=cvs.getBoundingClientRect();
+  const touch=e.touches?e.touches[0]:e;
+  const px=(touch.clientX-rect.left)/tapScale;
+  const py=(touch.clientY-rect.top)/tapScale;
+
+  const taps=tapEye==='r'?tapsR:tapsL;
+  taps.push({x:px,y:py});
+  tapStep++;
+  updateTapUI();
+  drawTapCanvas();
+
+  if(tapStep===4){
+    // All 4 points marked for this eye
+    setTimeout(()=>{
+      if(tapEye==='r'){
+        // Move to left eye
+        tapStep=0;
+        startTapEye('l');
+      } else {
+        // Both eyes done — calculate
+        calculateAndShow();
+      }
+    },600);
+  }
+}
+
+function undoTap(){
+  if(tapStep===0)return;
+  const taps=tapEye==='r'?tapsR:tapsL;
+  taps.pop();tapStep--;
+  updateTapUI();drawTapCanvas();
+}
+
+// ── Calculate measurements from taps ─────────────────────────────────────────
+// Taps order: [0]=outer, [1]=inner, [2]=iris, [3]=bottom
+function calcEye(taps,eye,snap){
+  const outer=taps[0],inner=taps[1],iris=taps[2],bottom=taps[3];
+  // ppm from lens width (outer to inner = lensW mm)
+  const ppm=Math.hypot(outer.x-inner.x,outer.y-inner.y)/lensW;
+  // Bridge centre = inner edge + bridgeW/2 inward (toward nose)
+  // For right eye: nose is to the right of inner, so bridgeCx = inner.x + bridgeW/2*ppm
+  // For left eye: nose is to the left of inner, so bridgeCx = inner.x - bridgeW/2*ppm
+  const dir=eye==='r'?1:-1;
+  const bridgeCx=inner.x+dir*(bridgeW/2)*ppm;
+  const bridgeCy=inner.y;
+  // PD = horizontal distance from iris center to bridge center (+3% parallax)
+  const pd=Math.abs(iris.x-bridgeCx)/ppm*1.03;
+  // Seg = vertical distance from iris center to bottom of frame
+  const seg=(bottom.y-iris.y)/ppm;
+  return{
+    pd:Math.max(24,Math.min(44,pd)),
+    seg:Math.max(lensH*.4,Math.min(lensH*.95,seg)),
+    iris:{cx:iris.x,cy:iris.y,diam:ppm*11},
+    ppm,bridgeCx,bridgeCy,bottomVy:bottom.y,
+    vRect:{
+      x:Math.min(outer.x,inner.x),
+      y:iris.y-lensH*.45*ppm,
+      w:Math.abs(outer.x-inner.x),
+      h:lensH*ppm
+    },
+    snap,taps
+  };
+}
+
+function calculateAndShow(){
+  dataR=calcEye(tapsR,'r',imgR);
+  dataL=calcEye(tapsL,'l',imgL);
+  rPdR=dataR.pd;rSegR=dataR.seg;
+  rPdL=dataL.pd;rSegL=dataL.seg;
+  hide('s-tap');
+  drawResult($('cv-r'),dataR,'#ff6b35','R');
+  drawResult($('cv-l'),dataL,'#a78bfa','L');
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  const sl=(id,v,mn,mx)=>{const s=$(id);s.min=mn;s.max=mx;s.step=.5;s.value=v.toFixed(1);};
+  sl('sl-pdr',rPdR,20,45);sl('sl-pdl',rPdL,20,45);
+  sl('sl-segr',rSegR,10,45);sl('sl-segl',rSegL,10,45);
+  $('sv-pdr').textContent=rPdR.toFixed(1)+'mm';$('sv-pdl').textContent=rPdL.toFixed(1)+'mm';
+  $('sv-segr').textContent=rSegR.toFixed(1)+'mm';$('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  updateOpt();drawFocal();show('s-result');
+}
+
+// ── Draw annotated result ─────────────────────────────────────────────────────
+function drawResult(canvas,data,col,label){
+  if(!data){canvas.width=200;canvas.height=150;return;}
+  const{snap,iris,ppm,pd,seg,vRect,bridgeCx,bridgeCy,bottomVy,taps}=data;
+  const W=snap.width,H=snap.height;
+  canvas.width=W;canvas.height=H;
+  const c=canvas.getContext('2d');c.drawImage(snap,0,0);
+  const fs=Math.round(W*.045),tk=Math.round(W*.022),lw=Math.max(3,Math.round(W*.005));
+
+  // Frame rect (estimated from taps)
+  if(vRect){
+    c.strokeStyle=col+'55';c.lineWidth=lw;c.setLineDash([8,5]);
+    c.strokeRect(vRect.x,vRect.y,vRect.w,vRect.h);c.setLineDash([]);
+  }
+
+  // Draw all 4 tap points
+  if(taps){
+    const tcols=['#888','#ff2222',col,'#ffff00'];
+    const tlbls=['OUTER','INNER','IRIS','BTM'];
+    taps.forEach((t,i)=>{
+      c.strokeStyle=tcols[i];c.lineWidth=lw;
+      c.beginPath();c.arc(t.x,t.y,lw*3,0,Math.PI*2);c.stroke();
+      c.fillStyle=tcols[i];c.beginPath();c.arc(t.x,t.y,lw*1.5,0,Math.PI*2);c.fill();
+    });
+  }
+
+  // Iris circle
+  c.strokeStyle=col;c.lineWidth=lw+1;
+  c.beginPath();c.arc(iris.cx,iris.cy,iris.diam/2,0,Math.PI*2);c.stroke();
+  c.lineWidth=lw;c.beginPath();
+  c.moveTo(iris.cx-iris.diam*.7,iris.cy);c.lineTo(iris.cx+iris.diam*.7,iris.cy);
+  c.moveTo(iris.cx,iris.cy-iris.diam*.7);c.lineTo(iris.cx,iris.cy+iris.diam*.7);
+  c.stroke();
+
+  // PD line: iris → bridge centre (RED)
+  c.strokeStyle='#ff3333';c.lineWidth=lw+1;
+  c.beginPath();c.moveTo(iris.cx,iris.cy);c.lineTo(bridgeCx,iris.cy);c.stroke();
+  c.lineWidth=lw;c.beginPath();
+  c.moveTo(bridgeCx,iris.cy-tk*2);c.lineTo(bridgeCx,iris.cy+tk*2);c.stroke();
+  const mx=(iris.cx+bridgeCx)/2;
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(mx-fs*2.5,iris.cy-tk*5,fs*5,fs*1.4);
+  c.fillStyle='#ff3333';c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+  c.fillText(label+' PD='+pd.toFixed(1)+'mm',mx,iris.cy-tk*3.5);
+
+  // Seg line: iris → bottom (YELLOW)
+  c.strokeStyle='#ffff00';c.lineWidth=lw+1;
+  c.beginPath();c.moveTo(iris.cx,iris.cy);c.lineTo(iris.cx,bottomVy);c.stroke();
+  c.beginPath();
+  c.moveTo(iris.cx-tk*3,bottomVy);c.lineTo(iris.cx+tk*3,bottomVy);c.stroke();
+  const sy=(iris.cy+bottomVy)/2;
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(iris.cx+tk,sy-fs*.7,fs*5.5,fs*1.3);
+  c.fillStyle='#ffff00';c.font=`bold ${fs}px Courier New`;c.textAlign='left';
+  c.fillText('Seg='+seg.toFixed(1)+'mm',iris.cx+tk*1.5,sy+fs*.4);
+
+  // Ruler 0=iris, every 1mm
+  const rx=Math.round(W*.82),tp=lensH*ppm;
+  c.fillStyle='rgba(0,0,0,.75)';c.fillRect(rx-tk,iris.cy-fs,tk*2+fs*3,tp+fs*2.5);
+  c.strokeStyle=col;c.lineWidth=lw;
+  c.beginPath();c.moveTo(rx,iris.cy);c.lineTo(rx,iris.cy+tp);c.stroke();
+  for(let mm=0;mm<=lensH;mm++){
+    const y=iris.cy+mm*ppm;if(y>H-4)break;
+    const i10=mm%10===0,i5=mm%5===0;
+    c.strokeStyle=col;c.lineWidth=i10?lw+1:i5?lw:Math.max(1,lw-1);
+    const tw=i10?tk*2:i5?tk*1.3:tk*.65;
+    c.beginPath();c.moveTo(rx-tw,y);c.lineTo(rx+tw,y);c.stroke();
+    if(i5){c.fillStyle=col;c.font=`bold ${i10?fs:Math.round(fs*.78)}px Courier New`;
+      c.textAlign='left';c.fillText(mm,rx+tw+lw*2,y+(i10?fs:fs*.78)*.38);}
+  }
+  c.fillStyle='#fff';c.font=`bold ${fs}px Courier New`;c.textAlign='left';
+  c.fillText('0',rx+tk*2.5,iris.cy-fs*.1);
+
+  // Bottom bar
+  const bh=Math.max(50,Math.round(H*.065));
+  c.fillStyle='rgba(0,0,0,.88)';c.fillRect(0,H-bh,W,bh);
+  c.font=`bold ${Math.max(16,Math.round(H*.024))}px Courier New`;c.fillStyle=col;c.textAlign='left';
+  c.fillText(label+' PD:'+pd.toFixed(1)+'  Seg:'+seg.toFixed(1)+'mm',10,H-bh+Math.max(16,Math.round(H*.024))+6);
+}
+
+function drawFocal(){
+  const fc=$('cv-focal');const W=fc.offsetWidth||460;fc.width=W;fc.height=160;
+  const c=fc.getContext('2d');c.fillStyle='#0a0a14';c.fillRect(0,0,W,160);
+  const sc=W/130,cx=W/2,fy=16;
+  const lWp=lensW*sc,lHp=Math.min(lensH*sc*.7,110),brP=bridgeW*sc;
+  c.strokeStyle='#2a2a4a';c.lineWidth=2;
+  c.strokeRect(cx-brP/2-lWp,fy,lWp,lHp);c.strokeRect(cx+brP/2,fy,lWp,lHp);
+  c.beginPath();c.moveTo(cx-brP/2,fy+lHp*.35);c.lineTo(cx+brP/2,fy+lHp*.35);c.stroke();
+  [[cx+rPdR*sc/2,fy+rSegR*sc*.7,'#ff6b35'],[cx-rPdL*sc/2,fy+rSegL*sc*.7,'#a78bfa']].forEach(([px,py,col])=>{
+    c.strokeStyle=col+'55';c.lineWidth=1;c.setLineDash([2,2]);
+    c.beginPath();c.moveTo(px,fy);c.lineTo(px,fy+lHp);c.stroke();
+    c.beginPath();c.moveTo(cx-brP/2-lWp,py);c.lineTo(cx+brP/2+lWp,py);c.stroke();
+    c.setLineDash([]);c.fillStyle=col;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fill();
+  });
+  c.textAlign='center';c.fillStyle='#00e5ffaa';c.font='bold 11px Courier New';
+  c.fillText('PD '+(rPdR+rPdL).toFixed(1)+'mm',cx,fy+lHp+18);
+  c.fillStyle='#ff6b35aa';c.font='10px Courier New';
+  c.fillText('R '+rPdR.toFixed(1),cx+rPdR*sc/2,fy+lHp+32);
+  c.fillStyle='#a78bfaaa';c.fillText('L '+rPdL.toFixed(1),cx-rPdL*sc/2,fy+lHp+32);
+  c.textAlign='left';
+}
+
+function updateSliders(){
+  rPdR=+$('sl-pdr').value;rPdL=+$('sl-pdl').value;
+  rSegR=+$('sl-segr').value;rSegL=+$('sl-segl').value;
+  if(dataR){dataR.pd=rPdR;dataR.seg=rSegR;}
+  if(dataL){dataL.pd=rPdL;dataL.seg=rSegL;}
+  $('sv-pdr').textContent=rPdR.toFixed(1)+'mm';$('sv-pdl').textContent=rPdL.toFixed(1)+'mm';
+  $('sv-segr').textContent=rSegR.toFixed(1)+'mm';$('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  drawResult($('cv-r'),dataR,'#ff6b35','R');
+  drawResult($('cv-l'),dataL,'#a78bfa','L');
+  updateOpt();drawFocal();
+}
+
+function updateOpt(){
+  const nm=$('pn').value||'—',nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB');
+  $('opt-text').innerHTML='<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>'+
+    'Monocular PD — R: '+rPdR.toFixed(1)+' / L: '+rPdL.toFixed(1)+' mm<br/>'+
+    'Binocular PD: '+(rPdR+rPdL).toFixed(1)+' mm<br/>'+
+    'Seg — R: '+rSegR.toFixed(1)+' / L: '+rSegL.toFixed(1)+' mm<br/>'+
+    '<span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+
+function handlePhoto(key,file){
+  if(!file)return;
+  loadFile(file).then(canvas=>{
+    if(!canvas)return;
+    if(key==='r')imgR=canvas;else imgL=canvas;
+    const slot=$('slot-'+key);
+    let im=slot.querySelector('img');
+    if(!im){im=document.createElement('img');slot.insertBefore(im,slot.firstChild);}
+    im.src=canvas.toDataURL('image/jpeg',.7);
+    slot.querySelector('.slot-lbl').style.display='none';
+    let tk=slot.querySelector('.tick');
+    if(!tk){tk=document.createElement('div');tk.className='tick';tk.textContent='✓';slot.appendChild(tk);}
+    slot.classList.add('done');
+    $('btn-mark').disabled=!(imgR&&imgL);
+  });
+}
+
+function rst(){
+  imgR=null;imgL=null;dataR=null;dataL=null;tapsR=[];tapsL=[];
+  rPdR=0;rPdL=0;rSegR=0;rSegL=0;
+  $('inp-r').value='';$('inp-l').value='';
+  ['slot-r','slot-l'].forEach(id=>{
+    const s=$(id);
+    const im=s.querySelector('img');if(im)im.remove();
+    const tk=s.querySelector('.tick');if(tk)tk.remove();
+    s.querySelector('.slot-lbl').style.display='';s.classList.remove('done');
+  });
+  $('btn-mark').disabled=true;
+  ['s-result','s-tap','s-photos'].forEach(hide);show('s-setup');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  $('btn-next').addEventListener('click',()=>{
+    lensW=parseFloat($('f-lw').value)||0;
+    bridgeW=parseFloat($('f-bw').value)||0;
+    lensH=parseFloat($('f-lh').value)||0;
+    if(!lensW||!bridgeW||!lensH){$('err').textContent='Fill all measurements';return;}
+    $('err').textContent='';hide('s-setup');show('s-photos');
+  });
+  $('btn-back').addEventListener('click',()=>{hide('s-photos');show('s-setup');});
+  $('btn-mark').addEventListener('click',()=>{hide('s-photos');show('s-tap');startTapEye('r');});
+  $('btn-tap-undo').addEventListener('click',undoTap);
+  $('btn-again').addEventListener('click',rst);
+  $('btn-save').addEventListener('click',()=>{
+    const a=document.createElement('a');a.download='pd.png';
+    a.href=$('cv-r').toDataURL();a.click();
+  });
+  $('inp-r').addEventListener('change',function(){handlePhoto('r',this.files[0]);});
+  $('inp-l').addEventListener('change',function(){handlePhoto('l',this.files[0]);});
+  ['sl-pdr','sl-pdl','sl-segr','sl-segl'].forEach(id=>$(id).addEventListener('input',updateSliders));
+  $('pn').addEventListener('input',updateOpt);$('pnt').addEventListener('input',updateOpt);
+
+  // Tap events on canvas
+  const cvs=$('tap-canvas');
+  cvs.addEventListener('touchstart',handleTap,{passive:false});
+  cvs.addEventListener('mousedown',handleTap);
+});
+</script>
+</body>
+</html>
