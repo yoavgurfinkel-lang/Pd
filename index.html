@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>PD Measure v12</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px;}
+h1{font-size:22px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.06em;}
+.sub{font-size:10px;color:#444;letter-spacing:.25em;margin-bottom:20px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input[type=number],.field input[type=text]{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;text-align:center;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff18,#a78bfa18);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-green{background:#00e57718;border:1px solid #00e57766!important;color:#00e577;font-size:15px;padding:16px;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+#err{color:#ff6b35;font-size:12px;text-align:center;margin-bottom:8px;width:100%;max-width:460px;min-height:16px;}
+.photo-slot{border:2px dashed #2a2a3e;border-radius:10px;overflow:hidden;background:#0a0a14;position:relative;cursor:pointer;width:100%;max-width:460px;margin-bottom:10px;min-height:130px;display:flex;align-items:center;justify-content:center;}
+.photo-slot img{width:100%;display:block;}
+.photo-slot .slot-lbl{font-size:12px;color:#555;letter-spacing:.12em;text-align:center;padding:12px;}
+.photo-slot input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.photo-slot .tick{position:absolute;top:8px;right:8px;background:#00e577;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#000;}
+.photo-slot.done{border-color:#00e57766;}
+.proc-box{width:100%;max-width:460px;text-align:center;padding:40px 0;}
+.prog-bar{width:80%;height:4px;background:#1e1e2e;border-radius:2px;margin:12px auto;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#a78bfa);border-radius:2px;transition:width .4s;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:10px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;}
+.mv{font-size:24px;font-weight:700;color:#00e5ff;}
+.mv.org{color:#ff6b35;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.eyegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.eyegrid canvas{width:100%;border-radius:8px;display:block;border:1px solid #1e1e2e;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sr:last-child{margin-bottom:0;}
+.sr label{font-size:11px;color:#666;width:72px;flex-shrink:0;}
+.sr input[type=range]{flex:1;accent-color:#00e5ff;}
+.sv{font-size:12px;color:#00e5ff;width:52px;text-align:right;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;width:100%;max-width:460px;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:16px;">
+  <div class="sub">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>PD + SEG HEIGHT</h1>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup">
+  <div class="card">
+    <div class="clabel">FRAME SPECIFICATIONS</div>
+    <div class="field"><label>LENS WIDTH (mm)</label><input type="number" id="f-lw" placeholder="e.g. 47" inputmode="decimal"/></div>
+    <div class="field"><label>BRIDGE WIDTH (mm)</label><input type="number" id="f-bw" placeholder="e.g. 22" inputmode="decimal"/></div>
+    <div class="field"><label>LENS HEIGHT (mm)</label><input type="number" id="f-lh" placeholder="e.g. 40" inputmode="decimal"/></div>
+  </div>
+  <div id="err"></div>
+  <button class="btn btn-primary" id="btn-next">NEXT — TAKE PHOTOS</button>
+</div>
+
+<!-- PHOTOS -->
+<div id="s-photos" class="hidden">
+  <div style="font-size:11px;color:#555;line-height:1.8;margin-bottom:12px;width:100%;max-width:460px;">
+    Take a close-up photo of each eye separately.<br/>
+    Hold phone ~25cm from eye. Full glasses frame must be visible.
+  </div>
+  <div style="font-size:10px;color:#ff6b3588;letter-spacing:.15em;margin-bottom:6px;width:100%;max-width:460px;">PATIENT RIGHT EYE</div>
+  <div class="photo-slot" id="slot-r">
+    <div class="slot-lbl">📷 TAP TO TAKE RIGHT EYE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp-r"/>
+  </div>
+  <div style="font-size:10px;color:#a78bfa88;letter-spacing:.15em;margin-bottom:6px;width:100%;max-width:460px;">PATIENT LEFT EYE</div>
+  <div class="photo-slot" id="slot-l">
+    <div class="slot-lbl">📷 TAP TO TAKE LEFT EYE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp-l"/>
+  </div>
+  <button class="btn btn-green" id="btn-analyse" disabled>ANALYSE MEASUREMENTS</button>
+  <button class="btn btn-ghost" id="btn-back">← BACK</button>
+</div>
+
+<!-- PROCESSING -->
+<div id="s-processing" class="hidden">
+  <div class="proc-box">
+    <div style="font-size:32px;margin-bottom:16px;">🔍</div>
+    <div id="proc-msg" style="font-size:13px;color:#00e5ff;letter-spacing:.15em;">ANALYSING…</div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div style="font-size:10px;color:#555;margin-top:6px;" id="proc-detail"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="s-result" class="hidden">
+  <div class="card">
+    <div class="clabel">PATIENT</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name…"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes…"/></div>
+  </div>
+  <div class="grid2">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">PD R / L</div><div class="mv" style="font-size:15px"><span id="r-pdr" style="color:#ff6b35">--</span>/<span id="r-pdl" style="color:#a78bfa">--</span><span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+  <div style="font-size:10px;color:#444;letter-spacing:.2em;margin-bottom:6px;width:100%;max-width:460px;">ANNOTATED PHOTOS</div>
+  <div class="eyegrid">
+    <div><div style="font-size:9px;color:#ff6b3588;text-align:center;margin-bottom:3px;">RIGHT EYE</div><canvas id="cv-r"></canvas></div>
+    <div><div style="font-size:9px;color:#a78bfa88;text-align:center;margin-bottom:3px;">LEFT EYE</div><canvas id="cv-l"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="clabel">FINE-TUNE</div>
+    <div class="sr"><label>PD RIGHT</label><input type="range" id="sl-pdr"/><div class="sv" id="sv-pdr">--</div></div>
+    <div class="sr"><label>PD LEFT</label><input type="range" id="sl-pdl"/><div class="sv" id="sv-pdl">--</div></div>
+    <div class="sr"><label>SEG R</label><input type="range" id="sl-segr"/><div class="sv" id="sv-segr">--</div></div>
+    <div class="sr"><label>SEG L</label><input type="range" id="sl-segl"/><div class="sv" id="sv-segl">--</div></div>
+  </div>
+  <canvas id="cv-focal" style="width:100%;max-width:460px;border-radius:10px;border:1px solid #1e1e2e;display:block;margin-bottom:12px;" height="160"></canvas>
+  <div class="optbox"><div style="color:#3a7a3a;font-size:10px;letter-spacing:.15em;margin-bottom:4px;">FOR YOUR OPTICIAN</div><span id="opt-text"></span></div>
+  <button class="btn btn-primary" id="btn-save">SAVE IMAGE</button>
+  <button class="btn btn-ghost" id="btn-again">MEASURE AGAIN</button>
+</div>
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+
+let lensW=0,bridgeW=0,lensH=0;
+let rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let imgR=null,imgL=null,dataR=null,dataL=null;
+
+// ── Load image from file ──────────────────────────────────────────────────────
+function loadFile(file){
+  return new Promise(res=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      // Bake into canvas to fix EXIF orientation
+      const c=document.createElement('canvas');
+      c.width=img.naturalWidth;c.height=img.naturalHeight;
+      c.getContext('2d').drawImage(img,0,0);
+      URL.revokeObjectURL(url);
+      res(c);
+    };
+    img.onerror=()=>res(null);
+    img.src=url;
+  });
+}
+
+// ── MediaPipe — one instance, warm up, then detect ────────────────────────────
+let fm=null,fmReady=false,seq=0;
+
+function buildFM(){
+  return new Promise(res=>{
+    const mesh=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+    mesh.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+    mesh.initialize().then(async()=>{
+      // Warm-up send with blank image
+      const w=document.createElement('canvas');w.width=320;w.height=240;
+      w.getContext('2d').fillStyle='#444';w.getContext('2d').fillRect(0,0,320,240);
+      let fired=false;
+      mesh.onResults(()=>{if(!fired){fired=true;res(mesh);}});
+      await mesh.send({image:w}).catch(()=>{});
+      setTimeout(()=>{if(!fired){fired=true;res(mesh);}},5000);
+    }).catch(()=>res(null));
+  });
+}
+
+function detect(mesh,img){
+  return new Promise(res=>{
+    const s=++seq;
+    let done=false;
+    const t=setTimeout(()=>{if(!done){done=true;res(null);}},12000);
+    mesh.onResults(r=>{
+      if(done||seq!==s)return;
+      done=true;clearTimeout(t);
+      res(r.multiFaceLandmarks?.[0]||null);
+    });
+    setTimeout(()=>{
+      mesh.send({image:img}).catch(()=>{if(!done){done=true;clearTimeout(t);res(null);}});
+    },300);
+  });
+}
+
+function irisXY(lm,c,t,r,b,l,W,H){
+  const p=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const pc=p(c),vt=p(t),vr=p(r),vb=p(b),vl=p(l);
+  return{cx:pc.x,cy:pc.y,diam:(Math.hypot(vt.x-vb.x,vt.y-vb.y)+Math.hypot(vr.x-vl.x,vr.y-vl.y))/2};
+}
+
+// ── Auto-detect frame edges via pixel scanning ────────────────────────────────
+function detectFrame(snap,iris){
+  try{
+    const W=snap.width,H=snap.height;
+    const ppm=iris.diam/11.74;
+    const tc=document.createElement('canvas');tc.width=W;tc.height=H;
+    const ctx=tc.getContext('2d');ctx.drawImage(snap,0,0);
+    const gap=Math.round(iris.diam*.65);
+    const strip=Math.round(iris.diam*.45);
+    const max=Math.round(lensH*ppm*.85);
+
+    function rowB(y){
+      y=Math.round(y);if(y<1||y>=H-1)return 200;
+      const x1=Math.max(0,Math.round(iris.cx-strip)),x2=Math.min(W-1,Math.round(iris.cx+strip));
+      const d=ctx.getImageData(x1,y,x2-x1,1).data;
+      let s=0;for(let i=0;i<d.length;i+=4)s+=(d[i]+d[i+1]+d[i+2])/3;
+      return s/(d.length/4)||200;
+    }
+    function colB(x){
+      x=Math.round(x);if(x<1||x>=W-1)return 200;
+      const y1=Math.max(0,Math.round(iris.cy-strip)),y2=Math.min(H-1,Math.round(iris.cy+strip));
+      const d=ctx.getImageData(x,y1,1,y2-y1).data;
+      let s=0;for(let i=0;i<d.length;i+=4)s+=(d[i]+d[i+1]+d[i+2])/3;
+      return s/(d.length/4)||200;
+    }
+    function dark(start,step,fn){
+      let bp=start+step*gap,bv=255;
+      for(let i=gap;i<max;i++){const p=start+step*i,v=fn(p);if(v<bv){bv=v;bp=p;}}
+      return bp;
+    }
+    const top=dark(iris.cy,-1,rowB),bot=dark(iris.cy,1,rowB);
+    const lft=dark(iris.cx,-1,colB),rgt=dark(iris.cx,1,colB);
+    const vRect={x:lft,y:top,w:rgt-lft,h:bot-top};
+    if(vRect.w>iris.diam*1.5&&vRect.h>iris.diam)return vRect;
+  }catch(e){}
+  // Fallback: estimate from iris + known dimensions
+  const ppm=iris.diam/11.74;
+  return{x:iris.cx-lensW*.5*ppm,y:iris.cy-lensH*.45*ppm,w:lensW*ppm,h:lensH*ppm};
+}
+
+function measure(snap,lm,irisLM,eye){
+  const W=snap.width,H=snap.height;
+  if(!lm)return{pd:lensW/2,seg:lensH*.69,iris:{cx:W/2,cy:H*.4,diam:W*.06},vRect:null,ppm:W*.7/lensW,bridgeCx:W*.55,bottomVy:H*.65};
+  const iris=irisXY(lm,...irisLM,W,H);
+  const vRect=detectFrame(snap,iris);
+  const ppm=vRect.w/lensW;
+  // Bridge centre = inner edge + bridgeW/2 toward nose
+  const innerX=eye==='r'?vRect.x+vRect.w:vRect.x;
+  const bridgeCx=eye==='r'?innerX+(bridgeW/2)*ppm:innerX-(bridgeW/2)*ppm;
+  const bottomVy=vRect.y+vRect.h;
+  const pd=Math.max(24,Math.min(44,Math.abs(iris.cx-bridgeCx)/ppm*1.03));
+  const seg=Math.max(lensH*.4,Math.min(lensH*.95,(bottomVy-iris.cy)/ppm));
+  return{pd,seg,iris,ppm,vRect,bridgeCx,bottomVy};
+}
+
+// ── Analysis ──────────────────────────────────────────────────────────────────
+async function runAnalysis(){
+  hide('s-photos');show('s-processing');
+  const setP=(pct,msg,det)=>{
+    $('prog-fill').style.width=pct+'%';
+    $('proc-msg').textContent=msg;
+    $('proc-detail').textContent=det||'';
+  };
+  setP(5,'LOADING AI MODEL…','Please wait — downloading face detection');
+  const mesh=await buildFM();
+  if(!mesh){
+    $('proc-msg').textContent='ERROR';
+    $('proc-detail').textContent='Could not load AI model. Check internet connection.';
+    return;
+  }
+  setP(30,'ANALYSING RIGHT EYE…','Detecting iris position');
+  const lmR=await detect(mesh,imgR);
+  setP(55,'ANALYSING LEFT EYE…','Detecting iris position');
+  const lmL=await detect(mesh,imgL);
+  setP(80,'CALCULATING…','');
+  dataR=measure(imgR,lmR,[473,474,475,476,477],'r');
+  dataL=measure(imgL,lmL,[468,469,470,471,472],'l');
+  rPdR=dataR.pd;rSegR=dataR.seg;rPdL=dataL.pd;rSegL=dataL.seg;
+  setP(100,'DONE','');
+  await new Promise(r=>setTimeout(r,300));
+  showResults();
+}
+
+// ── Draw ──────────────────────────────────────────────────────────────────────
+function drawResult(canvas,data,col,label){
+  if(!data){canvas.width=200;canvas.height=150;return;}
+  const{snap,iris,ppm,pd,seg,vRect,bridgeCx,bottomVy}=data;
+  const W=snap.width,H=snap.height;
+  canvas.width=W;canvas.height=H;
+  const c=canvas.getContext('2d');c.drawImage(snap,0,0);
+  const fs=Math.round(W*.045),tk=Math.round(W*.022),lw=Math.max(3,Math.round(W*.005));
+
+  if(vRect){
+    c.strokeStyle=col+'55';c.lineWidth=lw;c.setLineDash([8,5]);
+    c.strokeRect(vRect.x,vRect.y,vRect.w,vRect.h);c.setLineDash([]);
+  }
+  // Iris
+  c.strokeStyle=col;c.lineWidth=lw+1;
+  c.beginPath();c.arc(iris.cx,iris.cy,iris.diam/2,0,Math.PI*2);c.stroke();
+  c.fillStyle=col;c.beginPath();c.arc(iris.cx,iris.cy,lw*2,0,Math.PI*2);c.fill();
+  c.lineWidth=lw;c.beginPath();
+  c.moveTo(iris.cx-iris.diam,iris.cy);c.lineTo(iris.cx+iris.diam,iris.cy);
+  c.moveTo(iris.cx,iris.cy-iris.diam);c.lineTo(iris.cx,iris.cy+iris.diam);c.stroke();
+
+  // PD line
+  c.strokeStyle='#ff3333';c.lineWidth=lw+1;
+  c.beginPath();c.moveTo(iris.cx,iris.cy);c.lineTo(bridgeCx,iris.cy);c.stroke();
+  c.lineWidth=lw;c.beginPath();
+  c.moveTo(bridgeCx,iris.cy-tk*2);c.lineTo(bridgeCx,iris.cy+tk*2);c.stroke();
+  const mx=(iris.cx+bridgeCx)/2;
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(mx-fs*2.5,iris.cy-tk*5,fs*5,fs*1.4);
+  c.fillStyle='#ff3333';c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+  c.fillText(label+' PD='+pd.toFixed(1)+'mm',mx,iris.cy-tk*3.5);
+
+  // Seg line
+  c.strokeStyle='#ffff00';c.lineWidth=lw+1;
+  c.beginPath();c.moveTo(iris.cx,iris.cy);c.lineTo(iris.cx,bottomVy);c.stroke();
+  if(vRect){c.beginPath();c.moveTo(vRect.x,bottomVy);c.lineTo(vRect.x+vRect.w,bottomVy);c.stroke();}
+  const sy=(iris.cy+bottomVy)/2;
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(iris.cx+tk,sy-fs*.7,fs*5.5,fs*1.3);
+  c.fillStyle='#ffff00';c.font=`bold ${fs}px Courier New`;c.textAlign='left';
+  c.fillText('Seg='+seg.toFixed(1)+'mm',iris.cx+tk*1.5,sy+fs*.4);
+
+  // Ruler
+  const rx=Math.round(W*.81),tp=lensH*ppm;
+  c.fillStyle='rgba(0,0,0,.75)';c.fillRect(rx-tk,iris.cy-fs,tk*2+fs*3,tp+fs*2.5);
+  c.strokeStyle=col;c.lineWidth=lw;
+  c.beginPath();c.moveTo(rx,iris.cy);c.lineTo(rx,iris.cy+tp);c.stroke();
+  for(let mm=0;mm<=lensH;mm++){
+    const y=iris.cy+mm*ppm;if(y>H-4)break;
+    const i10=mm%10===0,i5=mm%5===0;
+    c.strokeStyle=col;c.lineWidth=i10?lw+1:i5?lw:Math.max(1,lw-1);
+    const tw=i10?tk*2:i5?tk*1.3:tk*.65;
+    c.beginPath();c.moveTo(rx-tw,y);c.lineTo(rx+tw,y);c.stroke();
+    if(i5){c.fillStyle=col;c.font=`bold ${i10?fs:Math.round(fs*.78)}px Courier New`;
+      c.textAlign='left';c.fillText(mm,rx+tw+lw*2,y+(i10?fs:fs*.78)*.38);}
+  }
+  c.fillStyle='#fff';c.font=`bold ${fs}px Courier New`;c.textAlign='left';
+  c.fillText('0',rx+tk*2.5,iris.cy-fs*.1);
+
+  const bh=Math.max(50,Math.round(H*.065));
+  c.fillStyle='rgba(0,0,0,.88)';c.fillRect(0,H-bh,W,bh);
+  c.font=`bold ${Math.max(16,Math.round(H*.024))}px Courier New`;c.fillStyle=col;c.textAlign='left';
+  c.fillText(label+' PD:'+pd.toFixed(1)+'  Seg:'+seg.toFixed(1)+'mm',10,H-bh+Math.max(16,Math.round(H*.024))+6);
+}
+
+function drawFocal(){
+  const fc=$('cv-focal');const W=fc.offsetWidth||460;fc.width=W;fc.height=160;
+  const c=fc.getContext('2d');c.fillStyle='#0a0a14';c.fillRect(0,0,W,160);
+  const sc=W/130,cx=W/2,fy=16;
+  const lWp=lensW*sc,lHp=Math.min(lensH*sc*.7,110),brP=bridgeW*sc;
+  c.strokeStyle='#2a2a4a';c.lineWidth=2;
+  c.strokeRect(cx-brP/2-lWp,fy,lWp,lHp);c.strokeRect(cx+brP/2,fy,lWp,lHp);
+  c.beginPath();c.moveTo(cx-brP/2,fy+lHp*.35);c.lineTo(cx+brP/2,fy+lHp*.35);c.stroke();
+  [[cx+rPdR*sc/2,fy+rSegR*sc*.7,'#ff6b35'],[cx-rPdL*sc/2,fy+rSegL*sc*.7,'#a78bfa']].forEach(([px,py,col])=>{
+    c.strokeStyle=col+'55';c.lineWidth=1;c.setLineDash([2,2]);
+    c.beginPath();c.moveTo(px,fy);c.lineTo(px,fy+lHp);c.stroke();
+    c.beginPath();c.moveTo(cx-brP/2-lWp,py);c.lineTo(cx+brP/2+lWp,py);c.stroke();
+    c.setLineDash([]);c.fillStyle=col;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fill();
+  });
+  c.textAlign='center';c.fillStyle='#00e5ffaa';c.font='bold 11px Courier New';
+  c.fillText('PD '+(rPdR+rPdL).toFixed(1)+'mm',cx,fy+lHp+18);
+  c.fillStyle='#ff6b35aa';c.font='10px Courier New';
+  c.fillText('R '+rPdR.toFixed(1),cx+rPdR*sc/2,fy+lHp+32);
+  c.fillStyle='#a78bfaaa';c.fillText('L '+rPdL.toFixed(1),cx-rPdL*sc/2,fy+lHp+32);
+  c.textAlign='left';
+}
+
+function showResults(){
+  hide('s-processing');
+  drawResult($('cv-r'),dataR,'#ff6b35','R');
+  drawResult($('cv-l'),dataL,'#a78bfa','L');
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  const sl=(id,v,mn,mx)=>{const s=$(id);s.min=mn;s.max=mx;s.step=.5;s.value=v.toFixed(1);};
+  sl('sl-pdr',rPdR,20,45);sl('sl-pdl',rPdL,20,45);
+  sl('sl-segr',rSegR,10,45);sl('sl-segl',rSegL,10,45);
+  $('sv-pdr').textContent=rPdR.toFixed(1)+'mm';$('sv-pdl').textContent=rPdL.toFixed(1)+'mm';
+  $('sv-segr').textContent=rSegR.toFixed(1)+'mm';$('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  updateOpt();drawFocal();show('s-result');
+}
+
+function updateSliders(){
+  rPdR=+$('sl-pdr').value;rPdL=+$('sl-pdl').value;
+  rSegR=+$('sl-segr').value;rSegL=+$('sl-segl').value;
+  if(dataR){dataR.seg=rSegR;dataR.pd=rPdR;}
+  if(dataL){dataL.seg=rSegL;dataL.pd=rPdL;}
+  $('sv-pdr').textContent=rPdR.toFixed(1)+'mm';$('sv-pdl').textContent=rPdL.toFixed(1)+'mm';
+  $('sv-segr').textContent=rSegR.toFixed(1)+'mm';$('sv-segl').textContent=rSegL.toFixed(1)+'mm';
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  drawResult($('cv-r'),dataR,'#ff6b35','R');
+  drawResult($('cv-l'),dataL,'#a78bfa','L');
+  updateOpt();drawFocal();
+}
+
+function updateOpt(){
+  const nm=$('pn').value||'—',nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB');
+  $('opt-text').innerHTML='<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>'+
+    'Monocular PD — R: '+rPdR.toFixed(1)+' / L: '+rPdL.toFixed(1)+' mm<br/>'+
+    'Binocular PD: '+(rPdR+rPdL).toFixed(1)+' mm<br/>'+
+    'Seg — R: '+rSegR.toFixed(1)+' / L: '+rSegL.toFixed(1)+' mm<br/>'+
+    '<span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+
+function rst(){
+  imgR=null;imgL=null;dataR=null;dataL=null;rPdR=0;rPdL=0;rSegR=0;rSegL=0;
+  $('inp-r').value='';$('inp-l').value='';
+  ['slot-r','slot-l'].forEach(id=>{
+    const s=$(id);const im=s.querySelector('img');if(im)im.remove();
+    const tk=s.querySelector('.tick');if(tk)tk.remove();
+    s.querySelector('.slot-lbl').style.display='';s.classList.remove('done');
+  });
+  $('btn-analyse').disabled=true;
+  ['s-result','s-processing','s-photos'].forEach(hide);show('s-setup');
+}
+
+function handlePhoto(key,file){
+  if(!file)return;
+  loadFile(file).then(canvas=>{
+    if(!canvas)return;
+    if(key==='r')imgR=canvas;else imgL=canvas;
+    const slot=$('slot-'+key);
+    let im=slot.querySelector('img');
+    if(!im){im=document.createElement('img');slot.insertBefore(im,slot.firstChild);}
+    im.src=canvas.toDataURL('image/jpeg',.7);
+    slot.querySelector('.slot-lbl').style.display='none';
+    let tk=slot.querySelector('.tick');
+    if(!tk){tk=document.createElement('div');tk.className='tick';tk.textContent='✓';slot.appendChild(tk);}
+    slot.classList.add('done');
+    $('btn-analyse').disabled=!(imgR&&imgL);
+  });
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  $('btn-next').addEventListener('click',()=>{
+    lensW=parseFloat($('f-lw').value)||0;
+    bridgeW=parseFloat($('f-bw').value)||0;
+    lensH=parseFloat($('f-lh').value)||0;
+    if(!lensW||!bridgeW||!lensH){$('err').textContent='Fill all measurements';return;}
+    $('err').textContent='';hide('s-setup');show('s-photos');
+  });
+  $('btn-back').addEventListener('click',()=>{hide('s-photos');show('s-setup');});
+  $('btn-analyse').addEventListener('click',runAnalysis);
+  $('btn-again').addEventListener('click',rst);
+  $('btn-save').addEventListener('click',()=>{
+    const a=document.createElement('a');a.download='pd.png';a.href=$('cv-r').toDataURL();a.click();
+  });
+  $('inp-r').addEventListener('change',function(){handlePhoto('r',this.files[0]);});
+  $('inp-l').addEventListener('change',function(){handlePhoto('l',this.files[0]);});
+  ['sl-pdr','sl-pdl','sl-segr','sl-segl'].forEach(id=>$(id).addEventListener('input',updateSliders));
+  $('pn').addEventListener('input',updateOpt);$('pnt').addEventListener('input',updateOpt);
+});
+</script>
+</body>
+</html>
