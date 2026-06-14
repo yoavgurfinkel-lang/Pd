@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>PD Measure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px;}
+h1{font-size:21px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.05em;}
+.sub{font-size:10px;color:#444;letter-spacing:.25em;margin-bottom:20px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;text-align:center;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff18,#a78bfa18);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-green{background:#00e57718;border:1px solid #00e57766!important;color:#00e577;font-size:15px;padding:16px;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+#err{color:#ff6b35;font-size:12px;text-align:center;margin-bottom:8px;width:100%;max-width:460px;min-height:16px;}
+.photo-slot{border:2px dashed #2a2a3e;border-radius:10px;overflow:hidden;background:#0a0a14;position:relative;cursor:pointer;width:100%;max-width:460px;margin-bottom:10px;min-height:140px;display:flex;align-items:center;justify-content:center;}
+.photo-slot img{width:100%;display:block;}
+.photo-slot .slot-lbl{font-size:12px;color:#555;text-align:center;padding:12px;}
+.photo-slot input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.photo-slot .tick{position:absolute;top:8px;right:8px;background:#00e577;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#000;}
+.photo-slot.done{border-color:#00e57766;}
+.warn{background:#1a1408;border:1px solid #3a2a08;border-radius:8px;padding:10px 12px;font-size:11px;color:#a98a3a;line-height:1.6;width:100%;max-width:460px;margin-bottom:12px;}
+.bigphoto{width:100%;max-width:460px;border-radius:10px;display:block;border:1px solid #1e1e2e;margin-bottom:12px;touch-action:none;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:10px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;}
+.mv{font-size:24px;font-weight:700;color:#00e5ff;}
+.mv.org{color:#ff6b35;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.adjust-hint{font-size:11px;color:#666;text-align:center;margin-bottom:10px;width:100%;max-width:460px;line-height:1.6;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;width:100%;max-width:460px;line-height:1.6;}
+.dragmode{display:flex;gap:6px;margin-bottom:10px;width:100%;max-width:460px;flex-wrap:wrap;}
+.dragbtn{flex:1;min-width:80px;padding:8px 4px;border-radius:8px;font-size:10px;font-family:inherit;border:1px solid #2a2a3e;background:#13131e;color:#666;cursor:pointer;text-align:center;letter-spacing:.05em;}
+.dragbtn.active{border-color:#00e5ff;color:#00e5ff;background:#00e5ff11;}
+.proc-step{font-size:11px;color:#555;margin-top:6px;min-height:16px;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:16px;">
+  <div class="sub">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>MONOCULAR PD + SEG</h1>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup">
+  <div class="card">
+    <div class="clabel">PATIENT BINOCULAR PD</div>
+    <div class="field"><label>BINOCULAR PD (mm)</label><input type="number" id="f-pd" placeholder="e.g. 64" inputmode="decimal"/></div>
+  </div>
+  <div class="warn">
+    📐 The binocular PD sets the scale.<br/>
+    Pupil-to-pupil distance in the photo = this value in mm.<br/>
+    Keep the head <b>straight and level</b>, glasses on.
+  </div>
+  <div id="err"></div>
+  <button class="btn btn-primary" id="btn-next">NEXT — TAKE PHOTO</button>
+</div>
+
+<!-- PHOTO -->
+<div id="s-photo" class="hidden">
+  <div style="font-size:11px;color:#555;line-height:1.8;margin-bottom:12px;width:100%;max-width:460px;">
+    Take <b style="color:#00e5ff">one front photo</b>: both eyes, glasses on, looking straight at camera, head level.
+  </div>
+  <div class="photo-slot" id="slot">
+    <div class="slot-lbl">📷 TAP TO TAKE FRONT PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp"/>
+  </div>
+  <button class="btn btn-green" id="btn-process" disabled>PROCESS PHOTO →</button>
+  <button class="btn btn-ghost" id="btn-back">← BACK</button>
+</div>
+
+<!-- PROCESSING -->
+<div id="s-processing" class="hidden">
+  <div style="width:100%;max-width:460px;text-align:center;padding:50px 0;">
+    <div style="font-size:32px;margin-bottom:16px;">🔍</div>
+    <div style="font-size:13px;color:#00e5ff;letter-spacing:.15em;" id="proc-msg">PROCESSING…</div>
+    <div class="proc-step" id="proc-step"></div>
+  </div>
+</div>
+
+<!-- ADJUST / RESULTS -->
+<div id="s-result" class="hidden">
+  <div class="grid2">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">MONO PD R / L</div><div class="mv" style="font-size:15px"><span id="r-pdr" style="color:#ff6b35">--</span>/<span id="r-pdl" style="color:#a78bfa">--</span><span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+
+  <div class="adjust-hint">✋ Drag any marker to correct it.<br/>Select which point to drag:</div>
+  <div class="dragmode">
+    <button class="dragbtn active" data-pt="rP">R PUPIL</button>
+    <button class="dragbtn" data-pt="lP">L PUPIL</button>
+    <button class="dragbtn" data-pt="bridge">BRIDGE</button>
+    <button class="dragbtn" data-pt="rB">R BTM</button>
+    <button class="dragbtn" data-pt="lB">L BTM</button>
+  </div>
+  <canvas id="cv-main" class="bigphoto"></canvas>
+
+  <div class="card">
+    <div class="clabel">PATIENT</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name…"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes…"/></div>
+  </div>
+  <div class="optbox"><div style="color:#3a7a3a;font-size:10px;letter-spacing:.15em;margin-bottom:4px;">FOR YOUR OPTICIAN</div><span id="opt-text"></span></div>
+  <button class="btn btn-primary" id="btn-save">SAVE IMAGE</button>
+  <button class="btn btn-ghost" id="btn-again">MEASURE AGAIN</button>
+</div>
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE<br/>Image is flipped to examiner's view. Assumes level head.</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+
+let binoPD=0, rawImg=null, procImg=null, pts=null, ppm=1;
+let rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let dragPt='rP';
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function loadFile(file){
+  return new Promise(res=>{
+    const im=new Image(), url=URL.createObjectURL(file);
+    im.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=im.naturalWidth; c.height=im.naturalHeight;
+      c.getContext('2d').drawImage(im,0,0);
+      URL.revokeObjectURL(url); res(c);
+    };
+    im.onerror=()=>res(null);
+    im.src=url;
+  });
+}
+
+function flipH(src){
+  const c=document.createElement('canvas'); c.width=src.width; c.height=src.height;
+  const ctx=c.getContext('2d');
+  ctx.translate(src.width,0); ctx.scale(-1,1);
+  ctx.drawImage(src,0,0); return c;
+}
+
+// Downsample canvas for fast pixel analysis
+function downscale(src, maxW){
+  const sc=Math.min(1, maxW/src.width);
+  const w=Math.round(src.width*sc), h=Math.round(src.height*sc);
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  c.getContext('2d').drawImage(src,0,0,w,h);
+  return {canvas:c, scale:sc};
+}
+
+function getPixels(canvas){
+  return canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+}
+
+function brightness(px, x, y, w){
+  const i=(y*w+x)*4;
+  return (px[i]+px[i+1]+px[i+2])/3;
+}
+
+// ── Step 1: Detect glasses frame bounding box ─────────────────────────────────
+// Strategy: convert to grayscale, find darkest connected horizontal band
+// (the glasses frame sits as two dark ellipses in a band)
+// We scan for the horizontal band with the highest density of dark pixels
+// then find the left/right/top/bottom extent of that band.
+function detectGlassesRegion(canvas){
+  const {canvas:ds, scale} = downscale(canvas, 600);
+  const W=ds.width, H=ds.height;
+  const px=getPixels(ds);
+  const br=(x,y)=>brightness(px,x,y,W);
+
+  // Build per-row dark pixel count (threshold: below 80 brightness)
+  const DARK=80;
+  const rowDark=new Float32Array(H);
+  for(let y=0;y<H;y++){
+    let cnt=0;
+    for(let x=0;x<W;x++) if(br(x,y)<DARK) cnt++;
+    rowDark[y]=cnt/W;
+  }
+
+  // Smooth row darkness
+  const smooth=new Float32Array(H);
+  const KR=8;
+  for(let y=KR;y<H-KR;y++){
+    let s=0; for(let k=-KR;k<=KR;k++) s+=rowDark[y+k];
+    smooth[y]=s/(KR*2+1);
+  }
+
+  // Find the band with peak dark density (glasses frame rows)
+  let peakY=Math.round(H*0.3), peakV=0;
+  // Search in middle vertical range (skip top/bottom 15%)
+  const searchTop=Math.round(H*0.15), searchBot=Math.round(H*0.85);
+  for(let y=searchTop;y<searchBot;y++){
+    if(smooth[y]>peakV){peakV=smooth[y];peakY=y;}
+  }
+
+  // Expand from peakY to find full vertical extent of glasses (threshold: 30% of peak)
+  const thresh=Math.max(0.02, peakV*0.30);
+  let frameTop=peakY, frameBot=peakY;
+  while(frameTop>1 && smooth[frameTop]>thresh) frameTop--;
+  while(frameBot<H-2 && smooth[frameBot]>thresh) frameBot++;
+
+  // Add margin
+  frameTop=Math.max(0, frameTop-Math.round(H*0.03));
+  frameBot=Math.min(H-1, frameBot+Math.round(H*0.08)); // extra below for seg
+
+  // Find horizontal extent: scan the frame band for dark pixels
+  const colDark=new Float32Array(W);
+  for(let x=0;x<W;x++){
+    let cnt=0;
+    for(let y=frameTop;y<=frameBot;y++) if(br(x,y)<DARK) cnt++;
+    colDark[x]=cnt/(frameBot-frameTop+1);
+  }
+
+  // Find leftmost and rightmost col with significant dark content
+  const colThresh=0.02;
+  let frameLeft=Math.round(W*0.05), frameRight=Math.round(W*0.95);
+  for(let x=0;x<W;x++){ if(colDark[x]>colThresh){frameLeft=x;break;} }
+  for(let x=W-1;x>=0;x--){ if(colDark[x]>colThresh){frameRight=x;break;} }
+
+  // Add horizontal margin
+  const hMar=Math.round(W*0.02);
+  frameLeft=Math.max(0,frameLeft-hMar);
+  frameRight=Math.min(W-1,frameRight+hMar);
+
+  // Convert back to full-res coords
+  return {
+    x: Math.round(frameLeft/scale),
+    y: Math.round(frameTop/scale),
+    w: Math.round((frameRight-frameLeft)/scale),
+    h: Math.round((frameBot-frameTop)/scale)
+  };
+}
+
+// ── Step 2: Crop to glasses region ───────────────────────────────────────────
+function cropRegion(canvas, region){
+  const c=document.createElement('canvas');
+  c.width=region.w; c.height=region.h;
+  c.getContext('2d').drawImage(canvas, region.x, region.y, region.w, region.h, 0, 0, region.w, region.h);
+  return c;
+}
+
+// ── Step 3: Find pupils inside the glasses crop ───────────────────────────────
+// Within the cropped frame, pupils are the two darkest compact circular regions
+// in the UPPER half of the crop (lenses sit in upper portion).
+function detectPupilsInCrop(cropCanvas){
+  const {canvas:ds, scale} = downscale(cropCanvas, 400);
+  const W=ds.width, H=ds.height;
+  const px=getPixels(ds);
+  const br=(x,y)=>brightness(px,x,y,W);
+
+  // Search in upper 65% of crop (pupils are in upper part of lens)
+  const searchBot=Math.round(H*0.65);
+  const boxR=Math.round(W*0.04); // ~4% of width radius for neighborhood average
+
+  // Build darkness candidates with box average
+  const cands=[];
+  const step=2;
+  for(let y=boxR;y<searchBot-boxR;y+=step){
+    for(let x=boxR;x<W-boxR;x+=step){
+      let s=0,n=0;
+      for(let dy=-boxR;dy<=boxR;dy+=2){
+        for(let dx=-boxR;dx<=boxR;dx+=2){
+          s+=br(x+dx,y+dy); n++;
+        }
+      }
+      cands.push({x,y,v:s/n});
+    }
+  }
+  cands.sort((a,b)=>a.v-b.v);
+
+  // Take the darkest, then find second darkest that is:
+  // - separated horizontally by at least 20% of width
+  // - within 10% of height from first
+  const first=cands[0];
+  const minSepX=W*0.20;
+  const maxSepY=H*0.12;
+  let second=null;
+  for(const c of cands){
+    if(Math.abs(c.x-first.x)>minSepX && Math.abs(c.y-first.y)<maxSepY){
+      second=c; break;
+    }
+  }
+  if(!second){
+    // Fallback: split image in half and find darkest in each half
+    const leftCands=cands.filter(c=>c.x<W/2);
+    const rightCands=cands.filter(c=>c.x>=W/2);
+    const lBest=leftCands[0]||{x:W*0.3,y:H*0.35,v:0};
+    const rBest=rightCands[0]||{x:W*0.7,y:H*0.35,v:0};
+    return [
+      {x:lBest.x/scale, y:lBest.y/scale},
+      {x:rBest.x/scale, y:rBest.y/scale}
+    ];
+  }
+
+  // Refine to exact darkest pixel in small neighborhood
+  function refine(p){
+    let bx=p.x,by=p.y,bv=255;
+    const r=Math.round(boxR*0.8);
+    for(let y=p.y-r;y<=p.y+r;y++){
+      for(let x=p.x-r;x<=p.x+r;x++){
+        if(x<0||y<0||x>=W||y>=H) continue;
+        const v=br(x,y); if(v<bv){bv=v;bx=x;by=y;}
+      }
+    }
+    return {x:bx/scale, y:by/scale};
+  }
+
+  const p1=refine(first), p2=refine(second);
+  // Order: left in image first
+  return p1.x < p2.x ? [p1,p2] : [p2,p1];
+}
+
+// ── Step 4: Detect lens bottom edges ─────────────────────────────────────────
+// Scan downward from pupil center. Frame bottom = row with highest darkness gradient
+// (dark frame wire crossing our vertical scan line)
+function detectLensBottom(cropCanvas, pupilInCrop, ppmEst){
+  const W=cropCanvas.width, H=cropCanvas.height;
+  const {canvas:ds, scale}=downscale(cropCanvas, 600);
+  const dsW=ds.width;
+  const px=getPixels(ds);
+  const br=(x,y)=>brightness(px,x,y,dsW);
+
+  // Scale pupil to ds coords
+  const px0=Math.round(pupilInCrop.x*scale);
+  const py0=Math.round(pupilInCrop.y*scale);
+  const stripW=Math.round(ppmEst*scale*4); // 4mm strip width
+
+  const x1=Math.max(0, px0-stripW);
+  const x2=Math.min(dsW-1, px0+stripW);
+
+  // Compute average brightness of each row in the strip, from pupil downward
+  const startY=py0+Math.round(ppmEst*scale*4); // start 4mm below pupil
+  const maxY=Math.min(ds.height-2, py0+Math.round(ppmEst*scale*28));
+
+  let darkestY=startY, darkestV=255;
+  for(let y=startY;y<maxY;y++){
+    let s=0,n=0;
+    for(let x=x1;x<=x2;x++){s+=br(x,y);n++;}
+    const avg=s/n;
+    if(avg<darkestV){darkestV=avg;darkestY=y;}
+  }
+
+  return {x:pupilInCrop.x, y:darkestY/scale};
+}
+
+// ── Bridge detection ──────────────────────────────────────────────────────────
+// Bridge is the point between the two lenses at the midpoint horizontally,
+// at roughly the same height as the pupils (slightly above usually).
+// We find the darkest point in a narrow vertical strip at horizontal center.
+function detectBridge(cropCanvas, leftPupil, rightPupil){
+  const midX=(leftPupil.x+rightPupil.x)/2;
+  const midY=(leftPupil.y+rightPupil.y)/2;
+  const {canvas:ds, scale}=downscale(cropCanvas, 400);
+  const W=ds.width, H=ds.height;
+  const px=getPixels(ds);
+  const br=(x,y)=>brightness(px,x,y,W);
+
+  const cx=Math.round(midX*scale);
+  const stripW=Math.round(W*0.06);
+  const x1=Math.max(0,cx-stripW), x2=Math.min(W-1,cx+stripW);
+  // Search vertically around pupil height
+  const searchTop=Math.max(0,Math.round(midY*scale)-Math.round(H*0.15));
+  const searchBot=Math.min(H-1,Math.round(midY*scale)+Math.round(H*0.10));
+
+  let darkY=Math.round(midY*scale), darkV=255;
+  for(let y=searchTop;y<=searchBot;y++){
+    let s=0,n=0;
+    for(let x=x1;x<=x2;x++){s+=br(x,y);n++;}
+    const avg=s/n;
+    if(avg<darkV){darkV=avg;darkY=y;}
+  }
+  return {x:midX, y:darkY/scale};
+}
+
+// ── Main pipeline ─────────────────────────────────────────────────────────────
+async function processPhoto(){
+  hide('s-photo'); show('s-processing');
+  const setMsg=(m,s='')=>{$('proc-msg').textContent=m;$('proc-step').textContent=s;};
+  await tick();
+
+  // 1. Flip to examiner view
+  setMsg('FLIPPING IMAGE…','Mirror → examiner view');
+  await tick();
+  const flipped=flipH(rawImg);
+
+  // 2. Find glasses region automatically
+  setMsg('FINDING GLASSES…','Scanning for dark frame band');
+  await tick();
+  const region=detectGlassesRegion(flipped);
+
+  // 3. Crop to glasses
+  setMsg('CROPPING TO FRAME…',`Region: ${region.w}×${region.h}px`);
+  await tick();
+  const cropped=cropRegion(flipped, region);
+  procImg=cropped; // this is what we display
+
+  // 4. Find pupils inside crop
+  setMsg('LOCATING PUPILS…','Darkest compact regions in lens area');
+  await tick();
+  const [leftP, rightP]=detectPupilsInCrop(cropped);
+
+  // pixels-per-mm from pupil separation
+  const pupilPxDist=Math.hypot(rightP.x-leftP.x, rightP.y-leftP.y);
+  ppm=pupilPxDist/binoPD;
+
+  // 5. Detect lens bottoms
+  setMsg('FINDING LENS EDGES…','Scanning below each pupil');
+  await tick();
+  const rBottom=detectLensBottom(cropped, leftP, ppm);  // left in image = R in examiner
+  const lBottom=detectLensBottom(cropped, rightP, ppm);
+
+  // 6. Bridge
+  setMsg('LOCATING BRIDGE…','');
+  await tick();
+  const bridge=detectBridge(cropped, leftP, rightP);
+
+  // In examiner view: image-left = patient RIGHT
+  pts={
+    rP: leftP,
+    lP: rightP,
+    bridge: bridge,
+    rB: rBottom,
+    lB: lBottom
+  };
+
+  recalc();
+  showResults();
+}
+
+function tick(){ return new Promise(r=>setTimeout(r,40)); }
+
+// ── Recalculate metrics ───────────────────────────────────────────────────────
+function recalc(){
+  const{rP,lP,bridge,rB,lB}=pts;
+  const pupilPx=Math.hypot(rP.x-lP.x,rP.y-lP.y);
+  ppm=pupilPx/binoPD;
+  let pdR=Math.abs(rP.x-bridge.x)/ppm;
+  let pdL=Math.abs(lP.x-bridge.x)/ppm;
+  const sum=pdR+pdL;
+  if(sum>0){pdR=pdR/sum*binoPD;pdL=pdL/sum*binoPD;}
+  rPdR=Math.max(20,Math.min(40,pdR));
+  rPdL=Math.max(20,Math.min(40,pdL));
+  rSegR=Math.max(8,Math.min(45,Math.abs(rB.y-rP.y)/ppm));
+  rSegL=Math.max(8,Math.min(45,Math.abs(lB.y-lP.y)/ppm));
+}
+
+// ── Draw ──────────────────────────────────────────────────────────────────────
+function drawMain(){
+  const cvs=$('cv-main');
+  const W=procImg.width,H=procImg.height;
+  cvs.width=W;cvs.height=H;
+  const c=cvs.getContext('2d');c.drawImage(procImg,0,0);
+  const{rP,lP,bridge,rB,lB}=pts;
+  const fs=Math.round(W*.045),tk=Math.round(W*.020),lw=Math.max(2,Math.round(W*.006));
+
+  // PD lines
+  c.strokeStyle='#ff3333';c.lineWidth=lw+1;
+  c.beginPath();c.moveTo(rP.x,rP.y);c.lineTo(bridge.x,rP.y);c.stroke();
+  c.beginPath();c.moveTo(lP.x,lP.y);c.lineTo(bridge.x,lP.y);c.stroke();
+  // Seg lines
+  c.strokeStyle='#ffaa00';c.lineWidth=lw+1;
+  c.beginPath();c.moveTo(rP.x,rP.y);c.lineTo(rP.x,rB.y);c.stroke();
+  c.strokeStyle='#ffff00';
+  c.beginPath();c.moveTo(lP.x,lP.y);c.lineTo(lP.x,lB.y);c.stroke();
+
+  // Markers
+  const M=[[rP,'#ff6b35'],[lP,'#a78bfa'],[bridge,'#00e5ff'],[rB,'#ffaa00'],[lB,'#ffff00']];
+  M.forEach(([p,col])=>{
+    c.strokeStyle=col;c.lineWidth=lw+1;
+    c.beginPath();c.arc(p.x,p.y,tk*1.6,0,Math.PI*2);c.stroke();
+    c.beginPath();
+    c.moveTo(p.x-tk*2.4,p.y);c.lineTo(p.x+tk*2.4,p.y);
+    c.moveTo(p.x,p.y-tk*2.4);c.lineTo(p.x,p.y+tk*2.4);
+    c.stroke();
+  });
+
+  // Labels
+  c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+  const rmx=(rP.x+bridge.x)/2,lmx=(lP.x+bridge.x)/2;
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(rmx-fs*1.9,rP.y-tk*5,fs*3.8,fs*1.4);
+  c.fillStyle='#ff6b35';c.fillText(rPdR.toFixed(1),rmx,rP.y-tk*3.2);
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(lmx-fs*1.9,lP.y-tk*5,fs*3.8,fs*1.4);
+  c.fillStyle='#a78bfa';c.fillText(rPdL.toFixed(1),lmx,lP.y-tk*3.2);
+  c.textAlign='left';
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(rP.x+tk*2,(rP.y+rB.y)/2-fs*.65,fs*4.2,fs*1.3);
+  c.fillStyle='#ffaa00';c.fillText(rSegR.toFixed(1),rP.x+tk*2.5,(rP.y+rB.y)/2+fs*.4);
+  c.fillStyle='rgba(0,0,0,.85)';c.fillRect(lP.x+tk*2,(lP.y+lB.y)/2-fs*.65,fs*4.2,fs*1.3);
+  c.fillStyle='#ffff00';c.fillText(rSegL.toFixed(1),lP.x+tk*2.5,(lP.y+lB.y)/2+fs*.4);
+
+  // Examiner badge
+  c.fillStyle='rgba(0,229,255,.15)';c.fillRect(0,0,W,fs*1.7);
+  c.fillStyle='#00e5ff';c.font=`bold ${Math.round(fs*.7)}px Courier New`;c.textAlign='center';
+  c.fillText('◄ R          EXAMINER VIEW          L ►',W/2,fs*1.1);
+}
+
+function showResults(){
+  hide('s-processing');
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  updateOpt();drawMain();show('s-result');
+}
+
+// ── Drag to adjust ─────────────────────────────────────────────────────────────
+function canvasPos(e){
+  const cvs=$('cv-main'),rect=cvs.getBoundingClientRect();
+  const t=e.touches?e.touches[0]:e;
+  const sx=cvs.width/rect.width;
+  return{x:(t.clientX-rect.left)*sx,y:(t.clientY-rect.top)*sx};
+}
+function onDrag(e){
+  e.preventDefault();
+  if(!pts)return;
+  const p=canvasPos(e);
+  pts[dragPt]={x:p.x,y:p.y};
+  recalc();
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);$('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  updateOpt();drawMain();
+}
+
+function updateOpt(){
+  const nm=$('pn').value||'—',nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB');
+  $('opt-text').innerHTML='<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>'+
+    'Monocular PD — R: '+rPdR.toFixed(1)+' / L: '+rPdL.toFixed(1)+' mm<br/>'+
+    'Binocular PD: '+(rPdR+rPdL).toFixed(1)+' mm<br/>'+
+    'Seg height — R: '+rSegR.toFixed(1)+' / L: '+rSegL.toFixed(1)+' mm<br/>'+
+    '<span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+
+function handlePhoto(file){
+  if(!file)return;
+  loadFile(file).then(canvas=>{
+    if(!canvas)return;
+    rawImg=canvas;
+    const slot=$('slot');
+    let im=slot.querySelector('img');
+    if(!im){im=document.createElement('img');slot.insertBefore(im,slot.firstChild);}
+    im.src=canvas.toDataURL('image/jpeg',.7);
+    slot.querySelector('.slot-lbl').style.display='none';
+    let tk=slot.querySelector('.tick');
+    if(!tk){tk=document.createElement('div');tk.className='tick';tk.textContent='✓';slot.appendChild(tk);}
+    slot.classList.add('done');
+    $('btn-process').disabled=false;
+  });
+}
+
+function rst(){
+  rawImg=null;procImg=null;pts=null;rPdR=0;rPdL=0;rSegR=0;rSegL=0;
+  $('inp').value='';
+  const slot=$('slot');
+  const im=slot.querySelector('img');if(im)im.remove();
+  const tk=slot.querySelector('.tick');if(tk)tk.remove();
+  slot.querySelector('.slot-lbl').style.display='';slot.classList.remove('done');
+  $('btn-process').disabled=true;
+  ['s-result','s-processing','s-photo'].forEach(hide);show('s-setup');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  $('btn-next').addEventListener('click',()=>{
+    binoPD=parseFloat($('f-pd').value)||0;
+    if(!binoPD){$('err').textContent='Enter binocular PD';return;}
+    $('err').textContent='';hide('s-setup');show('s-photo');
+  });
+  $('btn-back').addEventListener('click',()=>{hide('s-photo');show('s-setup');});
+  $('btn-process').addEventListener('click',processPhoto);
+  $('btn-again').addEventListener('click',rst);
+  $('btn-save').addEventListener('click',()=>{
+    const a=document.createElement('a');a.download='pd-measurement.png';
+    a.href=$('cv-main').toDataURL();a.click();
+  });
+  $('inp').addEventListener('change',function(){handlePhoto(this.files[0]);});
+  $('pn').addEventListener('input',updateOpt);$('pnt').addEventListener('input',updateOpt);
+
+  document.querySelectorAll('.dragbtn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.dragbtn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');dragPt=b.dataset.pt;
+    });
+  });
+
+  const cvs=$('cv-main');
+  let dragging=false;
+  cvs.addEventListener('touchstart',e=>{dragging=true;onDrag(e);},{passive:false});
+  cvs.addEventListener('touchmove',e=>{if(dragging)onDrag(e);},{passive:false});
+  cvs.addEventListener('touchend',()=>{dragging=false;});
+  cvs.addEventListener('mousedown',e=>{dragging=true;onDrag(e);});
+  cvs.addEventListener('mousemove',e=>{if(dragging)onDrag(e);});
+  cvs.addEventListener('mouseup',()=>{dragging=false;});
+});
+</script>
+</body>
+</html>
