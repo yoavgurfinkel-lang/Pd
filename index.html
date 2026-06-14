@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>PD Measure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 40px;}
+h1{font-size:21px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.05em;}
+.sub{font-size:10px;color:#444;letter-spacing:.25em;margin-bottom:20px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;text-align:center;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff18,#a78bfa18);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-green{background:#00e57718;border:1px solid #00e57766!important;color:#00e577;font-size:15px;padding:16px;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+#err{color:#ff6b35;font-size:12px;text-align:center;margin-bottom:8px;width:100%;max-width:460px;min-height:16px;}
+.photo-slot{border:2px dashed #2a2a3e;border-radius:10px;overflow:hidden;background:#0a0a14;position:relative;cursor:pointer;width:100%;max-width:460px;margin-bottom:10px;min-height:120px;display:flex;align-items:center;justify-content:center;}
+.photo-slot img{width:100%;display:block;}
+.photo-slot .slot-lbl{font-size:12px;color:#555;text-align:center;padding:12px;}
+.photo-slot input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.photo-slot .tick{position:absolute;top:8px;right:8px;background:#00e577;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#000;}
+.photo-slot.done{border-color:#00e57766;}
+.bigphoto{width:100%;max-width:460px;border-radius:10px;display:block;border:1px solid #1e1e2e;margin-bottom:12px;touch-action:none;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:10px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;}
+.mv{font-size:24px;font-weight:700;color:#00e5ff;}
+.mv.org{color:#ff6b35;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.adjust-hint{font-size:11px;color:#666;text-align:center;margin-bottom:10px;width:100%;max-width:460px;line-height:1.6;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.notice{margin-top:16px;font-size:10px;color:#222;text-align:center;width:100%;max-width:460px;line-height:1.6;}
+.dragmode{display:flex;gap:6px;margin-bottom:10px;width:100%;max-width:460px;flex-wrap:wrap;}
+.dragbtn{flex:1;min-width:80px;padding:8px 4px;border-radius:8px;font-size:10px;font-family:inherit;border:1px solid #2a2a3e;background:#13131e;color:#666;cursor:pointer;text-align:center;letter-spacing:.05em;}
+.dragbtn.active{border-color:#00e5ff;color:#00e5ff;background:#00e5ff11;}
+.tap-wrap{position:relative;width:100%;max-width:460px;border-radius:10px;overflow:hidden;cursor:crosshair;border:2px solid #00e5ff44;margin-bottom:10px;}
+.tap-wrap img{width:100%;display:block;pointer-events:none;}
+.tap-dot{position:absolute;width:22px;height:22px;border-radius:50%;border:3px solid #00e5ff;background:rgba(0,229,255,.3);transform:translate(-50%,-50%);pointer-events:none;display:none;}
+.instr{font-size:12px;color:#00e5ff;text-align:center;margin-bottom:10px;letter-spacing:.06em;padding:10px;background:#00e5ff11;border:1px solid #00e5ff33;border-radius:8px;width:100%;max-width:460px;}
+.proc-box{width:100%;max-width:460px;text-align:center;padding:50px 0;}
+.proc-step{font-size:11px;color:#555;margin-top:8px;}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:16px;">
+  <div class="sub">OPTICAL MEASUREMENT SYSTEM</div>
+  <h1>MONOCULAR PD + SEG</h1>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup">
+  <div class="card">
+    <div class="clabel">PATIENT BINOCULAR PD</div>
+    <div class="field"><label>BINOCULAR PD (mm)</label>
+      <input type="number" id="f-pd" placeholder="e.g. 64" inputmode="decimal"/>
+    </div>
+  </div>
+  <div style="background:#1a1408;border:1px solid #3a2a08;border-radius:8px;padding:10px 12px;font-size:11px;color:#a98a3a;line-height:1.6;width:100%;max-width:460px;margin-bottom:12px;">
+    📐 Binocular PD sets the scale. Head straight, glasses on, camera at eye level.
+  </div>
+  <div id="err"></div>
+  <button class="btn btn-primary" id="btn-next">NEXT — TAKE PHOTO</button>
+</div>
+
+<!-- PHOTO -->
+<div id="s-photo" class="hidden">
+  <div style="font-size:11px;color:#555;line-height:1.8;margin-bottom:12px;width:100%;max-width:460px;">
+    Take a <b style="color:#00e5ff">close-up front photo</b>: glasses filling most of the frame.
+  </div>
+  <div class="photo-slot" id="slot">
+    <div class="slot-lbl">📷 TAP TO TAKE PHOTO</div>
+    <input type="file" accept="image/*" capture="environment" id="inp"/>
+  </div>
+  <button class="btn btn-green" id="btn-totap" disabled>NEXT — TAP ON GLASSES →</button>
+  <button class="btn btn-ghost" id="btn-back">← BACK</button>
+</div>
+
+<!-- TAP ON GLASSES -->
+<div id="s-tap" class="hidden">
+  <div class="instr" id="tap-instr">👆 TAP ON THE GLASSES IN THE PHOTO</div>
+  <div class="tap-wrap" id="tap-wrap">
+    <img id="tap-img" src="" alt=""/>
+    <div class="tap-dot" id="tap-dot"></div>
+  </div>
+  <button class="btn btn-green hidden" id="btn-analyze">ANALYZE →</button>
+  <button class="btn btn-ghost" id="btn-retake">← RETAKE PHOTO</button>
+</div>
+
+<!-- PROCESSING -->
+<div id="s-processing" class="hidden">
+  <div class="proc-box">
+    <div style="font-size:32px;margin-bottom:16px;">🔍</div>
+    <div style="font-size:13px;color:#00e5ff;letter-spacing:.15em;" id="proc-msg">PROCESSING…</div>
+    <div class="proc-step" id="proc-step"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="s-result" class="hidden">
+  <div class="grid2">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">MONO PD R / L</div><div class="mv" style="font-size:15px">
+      <span id="r-pdr" style="color:#ff6b35">--</span>/<span id="r-pdl" style="color:#a78bfa">--</span><span>mm</span>
+    </div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+  <div class="adjust-hint">✋ Drag any marker to correct it. Select point to drag:</div>
+  <div class="dragmode">
+    <button class="dragbtn active" data-pt="rP">R PUPIL</button>
+    <button class="dragbtn" data-pt="lP">L PUPIL</button>
+    <button class="dragbtn" data-pt="bridge">BRIDGE</button>
+    <button class="dragbtn" data-pt="rB">R BTM</button>
+    <button class="dragbtn" data-pt="lB">L BTM</button>
+  </div>
+  <canvas id="cv-main" class="bigphoto"></canvas>
+  <div class="card">
+    <div class="clabel">PATIENT</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name…"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes…"/></div>
+  </div>
+  <div class="optbox">
+    <div style="color:#3a7a3a;font-size:10px;letter-spacing:.15em;margin-bottom:4px;">FOR YOUR OPTICIAN</div>
+    <span id="opt-text"></span>
+  </div>
+  <button class="btn btn-primary" id="btn-save">SAVE IMAGE</button>
+  <button class="btn btn-ghost" id="btn-again">MEASURE AGAIN</button>
+</div>
+
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE · Examiner view (mirrored)</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+const tick=()=>new Promise(r=>setTimeout(r,40));
+
+let binoPD=0, rawCanvas=null, procImg=null, pts=null, ppm=1;
+let rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let dragPt='rP';
+let tapImgX=0, tapImgY=0; // tap in ORIGINAL (pre-flip) natural image pixels
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function loadFile(file){
+  return new Promise(res=>{
+    const im=new Image(), url=URL.createObjectURL(file);
+    im.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=im.naturalWidth; c.height=im.naturalHeight;
+      c.getContext('2d').drawImage(im,0,0);
+      URL.revokeObjectURL(url); res(c);
+    };
+    im.onerror=()=>res(null);
+    im.src=url;
+  });
+}
+
+function flipH(src){
+  const c=document.createElement('canvas');
+  c.width=src.width; c.height=src.height;
+  const ctx=c.getContext('2d');
+  ctx.translate(src.width,0); ctx.scale(-1,1);
+  ctx.drawImage(src,0,0);
+  return c;
+}
+
+function getPixels(canvas){
+  return canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+}
+function br(px,x,y,W){ const i=(y*W+x)*4; return(px[i]+px[i+1]+px[i+2])/3; }
+
+function cropRegion(src, x, y, w, h){
+  x=Math.max(0,Math.round(x)); y=Math.max(0,Math.round(y));
+  w=Math.min(Math.round(w), src.width-x);
+  h=Math.min(Math.round(h), src.height-y);
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  c.getContext('2d').drawImage(src,x,y,w,h,0,0,w,h);
+  return c;
+}
+
+// ── Find darkest compact region in a pixel region ────────────────────────────
+function darkestSpot(px, sw, sh, x0, x1, y0, y1, boxR, sc){
+  let bx=Math.round((x0+x1)/2), by=Math.round((y0+y1)/2), best=256;
+  const step=2;
+  x0=Math.max(boxR,x0); x1=Math.min(sw-boxR,x1);
+  y0=Math.max(boxR,y0); y1=Math.min(sh-boxR,y1);
+  for(let y=y0;y<y1;y+=step){
+    for(let x=x0;x<x1;x+=step){
+      let s=0,n=0;
+      for(let dy=-boxR;dy<=boxR;dy+=2)
+        for(let dx=-boxR;dx<=boxR;dx+=2){ s+=br(px,x+dx,y+dy,sw); n++; }
+      const v=s/n;
+      if(v<best){best=v;bx=x;by=y;}
+    }
+  }
+  // pixel-level refine
+  let rx=bx,ry=by,rv=256;
+  for(let y=by-boxR;y<=by+boxR;y++)
+    for(let x=bx-boxR;x<=bx+boxR;x++){
+      if(x<0||y<0||x>=sw||y>=sh) continue;
+      const v=br(px,x,y,sw); if(v<rv){rv=v;rx=x;ry=y;}
+    }
+  return {x:rx/sc, y:ry/sc};
+}
+
+// ── Detect pupils: left half + right half independently ───────────────────────
+function detectPupils(cropCanvas){
+  const W=cropCanvas.width, H=cropCanvas.height;
+  const sc=Math.min(1,500/W);
+  const sw=Math.round(W*sc), sh=Math.round(H*sc);
+  const ds=document.createElement('canvas'); ds.width=sw; ds.height=sh;
+  ds.getContext('2d').drawImage(cropCanvas,0,0,sw,sh);
+  const px=getPixels(ds);
+
+  const yBot=Math.round(sh*0.58); // pupils in upper ~58% of crop
+  const boxR=Math.max(3,Math.round(sw*0.04));
+  const mid=Math.round(sw/2);
+
+  const lP=darkestSpot(px,sw,sh, 0,   mid, 0,yBot, boxR, sc);
+  const rP=darkestSpot(px,sw,sh, mid, sw,  0,yBot, boxR, sc);
+  return [lP,rP]; // left-in-image, right-in-image
+}
+
+// ── Detect lens bottom: darkest row in strip below pupil ─────────────────────
+function detectBottom(cropCanvas, pupil, ppmEst){
+  const W=cropCanvas.width, H=cropCanvas.height;
+  const sc=Math.min(1,600/W);
+  const sw=Math.round(W*sc), sh=Math.round(H*sc);
+  const ds=document.createElement('canvas'); ds.width=sw; ds.height=sh;
+  ds.getContext('2d').drawImage(cropCanvas,0,0,sw,sh);
+  const px=getPixels(ds);
+
+  const cx=Math.round(pupil.x*sc);
+  const strip=Math.max(4,Math.round(ppmEst*sc*3));
+  const x1=Math.max(0,cx-strip), x2=Math.min(sw-1,cx+strip);
+  // Start scanning 3mm below pupil, stop at 30mm
+  const startY=Math.round(pupil.y*sc)+Math.round(ppmEst*sc*3);
+  const maxY=Math.min(sh-2, Math.round(pupil.y*sc)+Math.round(ppmEst*sc*30));
+
+  let darkY=startY, darkV=256;
+  for(let y=startY;y<maxY;y++){
+    let s=0,n=0;
+    for(let x=x1;x<=x2;x++){ s+=br(px,x,y,sw); n++; }
+    if(s/n<darkV){darkV=s/n;darkY=y;}
+  }
+  return {x:pupil.x, y:darkY/sc};
+}
+
+// ── Detect bridge: darkest point in center vertical strip near pupil level ────
+function detectBridge(cropCanvas, lP, rP){
+  const W=cropCanvas.width, H=cropCanvas.height;
+  const sc=Math.min(1,400/W);
+  const sw=Math.round(W*sc), sh=Math.round(H*sc);
+  const ds=document.createElement('canvas'); ds.width=sw; ds.height=sh;
+  ds.getContext('2d').drawImage(cropCanvas,0,0,sw,sh);
+  const px=getPixels(ds);
+
+  const midX=Math.round((lP.x+rP.x)/2*sc);
+  const midY=Math.round((lP.y+rP.y)/2*sc);
+  const sw2=Math.max(4,Math.round(sw*0.06));
+  const x1=Math.max(0,midX-sw2), x2=Math.min(sw-1,midX+sw2);
+  const y0=Math.max(0,midY-Math.round(sh*0.18));
+  const y1=Math.min(sh-1,midY+Math.round(sh*0.08));
+
+  let darkY=midY, darkV=256;
+  for(let y=y0;y<=y1;y++){
+    let s=0,n=0;
+    for(let x=x1;x<=x2;x++){ s+=br(px,x,y,sw); n++; }
+    if(s/n<darkV){darkV=s/n;darkY=y;}
+  }
+  return {x:(lP.x+rP.x)/2, y:darkY/sc};
+}
+
+// ── Main processing ───────────────────────────────────────────────────────────
+async function processPhoto(){
+  hide('s-tap'); show('s-processing');
+  const msg=(m,s='')=>{$('proc-msg').textContent=m;$('proc-step').textContent=s;};
+
+  msg('FLIPPING IMAGE…','Mirror → examiner view');
+  await tick();
+  const flipped=flipH(rawCanvas);
+
+  // Convert tap (in original pre-flip coords) to flipped coords
+  const fullTapX=flipped.width - tapImgX;
+  const fullTapY=tapImgY;
+
+  // Crop centred on tap. Width based on known binocular PD.
+  // We estimate: PD ~64mm, face width ~120mm → glasses ≈ 53% of face width.
+  // We don't know ppm yet, so use fraction of image width.
+  // Image width in a typical selfie: face fills ~60% → glasses ≈ 32% of IW.
+  // Use generous 45% IW each side for safety, tight height.
+  const IW=flipped.width, IH=flipped.height;
+  const halfW=Math.round(IW*0.46);   // wide enough to catch both pupils
+  const halfHu=Math.round(IH*0.14);  // tight above (just above frame top)
+  const halfHd=Math.round(IH*0.22);  // enough below for seg height
+
+  msg('CROPPING TO GLASSES…','');
+  await tick();
+  const cropped=cropRegion(flipped,
+    fullTapX-halfW, fullTapY-halfHu,
+    halfW*2, halfHu+halfHd);
+  procImg=cropped;
+
+  msg('LOCATING PUPILS…','Left half / right half search');
+  await tick();
+  const [lP,rP]=detectPupils(cropped);
+
+  const pupilPx=Math.hypot(rP.x-lP.x,rP.y-lP.y);
+  ppm=pupilPx/binoPD;
+
+  msg('FINDING FRAME BOTTOM…','Scanning below each pupil');
+  await tick();
+  const rB=detectBottom(cropped,lP,ppm); // lP = image-left = patient RIGHT
+  const lB=detectBottom(cropped,rP,ppm);
+
+  msg('LOCATING BRIDGE…','');
+  await tick();
+  const bridge=detectBridge(cropped,lP,rP);
+
+  // Examiner view: image-left = patient RIGHT
+  pts={rP:lP, lP:rP, bridge, rB, lB};
+  recalc();
+  showResults();
+}
+
+// ── Recalc measurements ───────────────────────────────────────────────────────
+function recalc(){
+  const{rP,lP,bridge,rB,lB}=pts;
+  const pupilPx=Math.hypot(rP.x-lP.x,rP.y-lP.y);
+  ppm=pupilPx/binoPD;
+  // Monocular PD = pupil center to frame geometric center (bridge)
+  let pdR=Math.abs(rP.x-bridge.x)/ppm;
+  let pdL=Math.abs(lP.x-bridge.x)/ppm;
+  // Normalise to sum = binoPD
+  const sum=pdR+pdL;
+  if(sum>0){pdR=pdR/sum*binoPD; pdL=pdL/sum*binoPD;}
+  rPdR=Math.max(20,Math.min(40,pdR));
+  rPdL=Math.max(20,Math.min(40,pdL));
+  // Seg height = pupil center to bottom of frame
+  rSegR=Math.max(5,Math.min(45,(rB.y-rP.y)/ppm));
+  rSegL=Math.max(5,Math.min(45,(lB.y-lP.y)/ppm));
+}
+
+// ── Draw results on canvas ────────────────────────────────────────────────────
+function drawMain(){
+  const cvs=$('cv-main');
+  const W=procImg.width, H=procImg.height;
+  cvs.width=W; cvs.height=H;
+  const c=cvs.getContext('2d');
+  c.drawImage(procImg,0,0);
+
+  const{rP,lP,bridge,rB,lB}=pts;
+  const lw=Math.max(1.5,W*0.004);   // line width
+  const dot=Math.max(4,W*0.012);    // small dot radius
+  const fs=Math.max(12,Math.round(W*0.038)); // font
+
+  // ── PD lines: horizontal from each pupil to bridge ──
+  c.strokeStyle='#ff4444'; c.lineWidth=lw;
+  c.setLineDash([]);
+  c.beginPath(); c.moveTo(rP.x,rP.y); c.lineTo(bridge.x,rP.y); c.stroke();
+  c.strokeStyle='#aa66ff';
+  c.beginPath(); c.moveTo(lP.x,lP.y); c.lineTo(bridge.x,lP.y); c.stroke();
+
+  // ── Seg lines: vertical from pupil to frame bottom ──
+  c.strokeStyle='#ff8800'; c.lineWidth=lw;
+  c.beginPath(); c.moveTo(rP.x,rP.y); c.lineTo(rP.x,rB.y); c.stroke();
+  c.strokeStyle='#ffdd00';
+  c.beginPath(); c.moveTo(lP.x,lP.y); c.lineTo(lP.x,lB.y); c.stroke();
+
+  // ── Markers: small filled circles + tiny crosshair ──
+  const pts2=[[rP,'#ff6b35'],[lP,'#a78bfa'],[bridge,'#00e5ff'],[rB,'#ff8800'],[lB,'#ffdd00']];
+  pts2.forEach(([p,col])=>{
+    // Filled dot
+    c.fillStyle=col;
+    c.beginPath(); c.arc(p.x,p.y,dot,0,Math.PI*2); c.fill();
+    // Small crosshair
+    c.strokeStyle=col; c.lineWidth=lw;
+    c.beginPath();
+    c.moveTo(p.x-dot*2,p.y); c.lineTo(p.x+dot*2,p.y);
+    c.moveTo(p.x,p.y-dot*2); c.lineTo(p.x,p.y+dot*2);
+    c.stroke();
+  });
+
+  // ── Labels ──
+  c.font=`bold ${fs}px Courier New`;
+  function label(text, x, y, col, align='center'){
+    c.textAlign=align;
+    const tw=c.measureText(text).width;
+    const px=align==='center'?x-tw/2 : x;
+    c.fillStyle='rgba(0,0,0,.82)';
+    c.fillRect(px-3, y-fs+2, tw+6, fs+4);
+    c.fillStyle=col;
+    c.fillText(text, align==='center'?x:x, y);
+  }
+
+  // Monocular PD labels above the PD line midpoints
+  const rmx=(rP.x+bridge.x)/2, lmx=(lP.x+bridge.x)/2;
+  label(rPdR.toFixed(1)+'mm', rmx, rP.y-dot*2-4, '#ff6b35');
+  label(rPdL.toFixed(1)+'mm', lmx, lP.y-dot*2-4, '#a78bfa');
+
+  // Seg labels alongside the vertical lines
+  c.textAlign='left';
+  const rSegMidY=(rP.y+rB.y)/2;
+  const lSegMidY=(lP.y+lB.y)/2;
+  label(rSegR.toFixed(1)+'mm', rP.x+dot*2+4, rSegMidY+fs/3, '#ff8800', 'left');
+  label(rSegL.toFixed(1)+'mm', lP.x+dot*2+4, lSegMidY+fs/3, '#ffdd00', 'left');
+
+  // ── Examiner view badge ──
+  const bh=Math.round(fs*1.6);
+  c.fillStyle='rgba(0,229,255,.12)'; c.fillRect(0,0,W,bh);
+  c.fillStyle='#00e5ff'; c.font=`bold ${Math.round(fs*.65)}px Courier New`; c.textAlign='center';
+  c.fillText('◄ R      EXAMINER VIEW      L ►', W/2, bh*0.68);
+}
+
+function showResults(){
+  hide('s-processing');
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1);
+  $('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  updateOpt(); drawMain(); show('s-result');
+}
+
+// ── Drag to correct ───────────────────────────────────────────────────────────
+function canvasPos(e){
+  const cvs=$('cv-main'), rect=cvs.getBoundingClientRect();
+  const t=e.touches?e.touches[0]:e;
+  const sx=cvs.width/rect.width;
+  return{x:(t.clientX-rect.left)*sx, y:(t.clientY-rect.top)*sx};
+}
+function onDrag(e){
+  e.preventDefault(); if(!pts)return;
+  const p=canvasPos(e); pts[dragPt]={x:p.x,y:p.y};
+  recalc();
+  $('r-pd').innerHTML=(rPdR+rPdL).toFixed(1)+'<span>mm</span>';
+  $('r-pdr').textContent=rPdR.toFixed(1); $('r-pdl').textContent=rPdL.toFixed(1);
+  $('r-segr').innerHTML=rSegR.toFixed(1)+'<span>mm</span>';
+  $('r-segl').innerHTML=rSegL.toFixed(1)+'<span>mm</span>';
+  updateOpt(); drawMain();
+}
+
+function updateOpt(){
+  const nm=$('pn').value||'—', nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB');
+  $('opt-text').innerHTML=
+    '<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>'+
+    'Mono PD — R: '+rPdR.toFixed(1)+' / L: '+rPdL.toFixed(1)+' mm<br/>'+
+    'Bino PD: '+(rPdR+rPdL).toFixed(1)+' mm<br/>'+
+    'Seg height — R: '+rSegR.toFixed(1)+' / L: '+rSegL.toFixed(1)+' mm<br/>'+
+    '<span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+
+// ── Tap screen ────────────────────────────────────────────────────────────────
+function setupTapScreen(){
+  const wrap=$('tap-wrap');
+  const img=$('tap-img');
+  const dot=$('tap-dot');
+
+  function onTap(e){
+    e.preventDefault(); e.stopPropagation();
+    const cx=e.changedTouches?e.changedTouches[0].clientX:e.clientX;
+    const cy=e.changedTouches?e.changedTouches[0].clientY:e.clientY;
+    const rect=wrap.getBoundingClientRect();
+    const rx=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
+    const ry=Math.max(0,Math.min(1,(cy-rect.top)/rect.height));
+    tapImgX=rx*img.naturalWidth;
+    tapImgY=ry*img.naturalHeight;
+    dot.style.left=(rx*100)+'%';
+    dot.style.top=(ry*100)+'%';
+    dot.style.display='block';
+    const instr=$('tap-instr');
+    instr.textContent='✅ Tap confirmed — press ANALYZE';
+    instr.style.color='#00e577';
+    show('btn-analyze');
+  }
+
+  wrap.addEventListener('touchend',onTap,{passive:false});
+  wrap.addEventListener('click',onTap);
+}
+
+function handlePhoto(file){
+  if(!file)return;
+  loadFile(file).then(c=>{
+    if(!c)return;
+    rawCanvas=c;
+    const slot=$('slot');
+    let im=slot.querySelector('img');
+    if(!im){im=document.createElement('img');slot.insertBefore(im,slot.firstChild);}
+    im.src=c.toDataURL('image/jpeg',.5);
+    slot.querySelector('.slot-lbl').style.display='none';
+    let tk=slot.querySelector('.tick');
+    if(!tk){tk=document.createElement('div');tk.className='tick';tk.textContent='✓';slot.appendChild(tk);}
+    slot.classList.add('done');
+    $('btn-totap').disabled=false;
+  });
+}
+
+function goToTap(){
+  $('tap-img').src=rawCanvas.toDataURL('image/jpeg',.85);
+  $('tap-dot').style.display='none';
+  hide('btn-analyze');
+  const instr=$('tap-instr');
+  instr.textContent='👆 TAP ON THE GLASSES IN THE PHOTO';
+  instr.style.color='#00e5ff';
+  hide('s-photo'); show('s-tap');
+}
+
+function rst(){
+  rawCanvas=null;procImg=null;pts=null;
+  rPdR=0;rPdL=0;rSegR=0;rSegL=0;
+  $('inp').value='';
+  const slot=$('slot');
+  const im=slot.querySelector('img');if(im)im.remove();
+  const tk=slot.querySelector('.tick');if(tk)tk.remove();
+  slot.querySelector('.slot-lbl').style.display='';
+  slot.classList.remove('done');
+  $('btn-totap').disabled=true;
+  ['s-result','s-processing','s-tap','s-photo'].forEach(hide);
+  show('s-setup');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  setupTapScreen();
+
+  $('btn-next').addEventListener('click',()=>{
+    binoPD=parseFloat($('f-pd').value)||0;
+    if(!binoPD){$('err').textContent='Enter binocular PD';return;}
+    $('err').textContent=''; hide('s-setup'); show('s-photo');
+  });
+  $('btn-back').addEventListener('click',()=>{hide('s-photo');show('s-setup');});
+  $('btn-totap').addEventListener('click',goToTap);
+  $('btn-retake').addEventListener('click',()=>{hide('s-tap');show('s-photo');});
+  $('btn-analyze').addEventListener('click',processPhoto);
+  $('btn-again').addEventListener('click',rst);
+  $('btn-save').addEventListener('click',()=>{
+    const a=document.createElement('a');
+    a.download='pd-measurement.png';
+    a.href=$('cv-main').toDataURL(); a.click();
+  });
+  $('inp').addEventListener('change',function(){handlePhoto(this.files[0]);});
+  $('pn').addEventListener('input',updateOpt);
+  $('pnt').addEventListener('input',updateOpt);
+
+  document.querySelectorAll('.dragbtn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.dragbtn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); dragPt=b.dataset.pt;
+    });
+  });
+
+  const cvs=$('cv-main');
+  let drag=false;
+  cvs.addEventListener('touchstart',e=>{drag=true;onDrag(e);},{passive:false});
+  cvs.addEventListener('touchmove',e=>{if(drag)onDrag(e);},{passive:false});
+  cvs.addEventListener('touchend',()=>drag=false);
+  cvs.addEventListener('mousedown',e=>{drag=true;onDrag(e);});
+  cvs.addEventListener('mousemove',e=>{if(drag)onDrag(e);});
+  cvs.addEventListener('mouseup',()=>drag=false);
+});
+</script>
+</body>
+</html>
