@@ -158,7 +158,7 @@ h1{font-size:21px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78b
       <line x1="0" y1="98"  x2="300" y2="98"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
       <line x1="0" y1="112" x2="300" y2="112" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
       <line x1="0" y1="126" x2="300" y2="126" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
-      <line x1="0" y1="200" x2="300" y2="200" stroke="rgba(0,229,255,0.5)" stroke-width="1.2"/>
+      <line x1="0" y1="165" x2="300" y2="165" stroke="rgba(0,229,255,0.5)" stroke-width="1.2"/>
       <line x1="0" y1="154" x2="300" y2="154" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
       <line x1="0" y1="168" x2="300" y2="168" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
       <line x1="0" y1="182" x2="300" y2="182" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
@@ -178,13 +178,13 @@ h1{font-size:21px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78b
       <line x1="0" y1="378" x2="300" y2="378" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
       <line x1="0" y1="392" x2="300" y2="392" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
       <!-- TARGET scaled 1.8x -->
-      <circle cx="150" cy="200" r="32" fill="none" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
-      <circle cx="150" cy="200" r="3" fill="rgba(0,80,200,0.95)"/>
-      <line x1="100" y1="200" x2="140" y2="200" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
-      <line x1="160" y1="200" x2="200" y2="200" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
-      <line x1="150" y1="150" x2="150" y2="192" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
-      <line x1="150" y1="208" x2="150" y2="250" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
-      <circle cx="150" cy="200" r="16" fill="none" stroke="rgba(0,80,200,0.5)" stroke-width="0.8"/>
+      <circle cx="150" cy="165" r="32" fill="none" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
+      <circle cx="150" cy="165" r="3" fill="rgba(0,80,200,0.95)"/>
+      <line x1="100" y1="165" x2="140" y2="165" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
+      <line x1="160" y1="165" x2="200" y2="165" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
+      <line x1="150" y1="115" x2="150" y2="157" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
+      <line x1="150" y1="173" x2="150" y2="215" stroke="rgba(0,80,200,0.95)" stroke-width="1.4"/>
+      <circle cx="150" cy="165" r="16" fill="none" stroke="rgba(0,80,200,0.5)" stroke-width="0.8"/>
       <!-- Face oval scaled 1.8x -->
       <ellipse id="face-oval" cx="150" cy="210" rx="99" ry="135" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4"/>
       <text x="150" y="396" text-anchor="middle" fill="rgba(0,229,255,0.5)" font-size="8" font-family="Courier New">CENTER FACE · HOLD LEVEL</text>
@@ -519,13 +519,13 @@ function updateOpt(){
 // ── Move point with D-pad ──────────────────────────────────────────────────────
 function movePoint(dx,dy){
   if(!pts[activePt]||!procImg) return;
-  // stepSize is in screen px; convert to image px via zoom
   const zoom=ZOOM_STEPS[zoomIdx];
   const wrap=$('cv-wrap');
   const dispW=wrap.clientWidth||320;
-  // image px per display px
   const imgPerDisp=(procImg.width/zoom)/dispW;
-  const step=Math.max(1, Math.round(stepSize*imgPerDisp));
+  // Bridge uses half step — 1mm PD split resolution instead of 2mm
+  const scaleFactor=activePt==='bridge'?0.5:1;
+  const step=Math.max(0.5, stepSize*imgPerDisp*scaleFactor);
   pts[activePt].x=Math.max(0,Math.min(procImg.width,  pts[activePt].x+dx*step));
   pts[activePt].y=Math.max(0,Math.min(procImg.height, pts[activePt].y+dy*step));
   recalc(); draw();
