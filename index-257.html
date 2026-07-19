@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>PD Measure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0c0c12;color:#e2e2ee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 24px;}
+h1{font-size:21px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.05em;}
+.sub{font-size:10px;color:#444;letter-spacing:.25em;margin-bottom:20px;}
+.card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px;width:100%;max-width:460px;}
+.clabel{font-size:10px;color:#444;letter-spacing:.22em;margin-bottom:12px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:#777;margin-bottom:4px;}
+.field input{width:100%;background:#0a0a14;border:1px solid #2a2a3e;border-radius:8px;color:#e2e2ee;padding:10px 12px;font-size:17px;font-family:inherit;outline:none;}
+.btn{width:100%;max-width:460px;padding:14px;border-radius:10px;font-size:13px;letter-spacing:.15em;cursor:pointer;font-family:inherit;border:none;display:block;margin-bottom:9px;text-align:center;}
+.btn-primary{background:linear-gradient(135deg,#00e5ff18,#a78bfa18);border:1px solid #00e5ff66!important;color:#00e5ff;}
+.btn-green{background:#00e57718;border:1px solid #00e57766!important;color:#00e577;font-size:15px;padding:16px;}
+.btn-ghost{background:transparent;border:1px solid #1e1e2e!important;color:#444;}
+.hidden{display:none!important;}
+#err{color:#ff6b35;font-size:12px;text-align:center;margin-bottom:8px;width:100%;max-width:460px;min-height:16px;}
+.photo-slot{border:2px dashed #2a2a3e;border-radius:10px;overflow:hidden;background:#0a0a14;position:relative;cursor:pointer;width:100%;max-width:460px;margin-bottom:10px;min-height:120px;display:flex;align-items:center;justify-content:center;}
+.photo-slot img{width:100%;display:block;}
+.photo-slot .slot-lbl{font-size:12px;color:#555;text-align:center;padding:12px;}
+.photo-slot input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.photo-slot .tick{position:absolute;top:8px;right:8px;background:#00e577;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#000;}
+.photo-slot.done{border-color:#00e57766;}
+/* Canvas wrapper for zoom */
+.canvas-wrap{position:relative;width:100%;max-width:460px;margin-bottom:8px;overflow:hidden;border-radius:10px;border:1px solid #1e1e2e;background:#000;}
+#cv-main{width:100%;display:block;touch-action:none;cursor:crosshair;}
+.zoom-badge{position:absolute;top:6px;right:8px;background:rgba(0,0,0,.7);color:#00e5ff;font-size:10px;font-family:'Courier New',monospace;padding:3px 7px;border-radius:5px;pointer-events:none;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;width:100%;max-width:460px;}
+.metric{background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:10px 12px;}
+.ml{font-size:10px;color:#444;margin-bottom:2px;}
+.mv{font-size:24px;font-weight:700;color:#00e5ff;}
+.mv.org{color:#ff6b35;}
+.mv span{font-size:11px;color:#555;margin-left:2px;}
+.optbox{background:#080f08;border:1px solid #152015;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#2a5a2a;line-height:1.9;width:100%;max-width:460px;}
+.notice{margin-top:12px;font-size:10px;color:#222;text-align:center;width:100%;max-width:460px;line-height:1.6;}
+.pt-tabs{display:flex;gap:5px;margin-bottom:8px;width:100%;max-width:460px;flex-wrap:wrap;}
+.pt-tab{flex:1;min-width:60px;padding:9px 4px;border-radius:8px;font-size:10px;font-family:inherit;border:1px solid #2a2a3e;background:#13131e;color:#666;cursor:pointer;text-align:center;letter-spacing:.04em;line-height:1.3;}
+.pt-tab.active{border-color:var(--col);color:var(--col);background:color-mix(in srgb,var(--col) 12%,transparent);}
+.controller{width:100%;max-width:460px;margin-bottom:10px;}
+.ctrl-row{display:flex;gap:5px;justify-content:center;margin-bottom:7px;align-items:center;}
+.ctrl-label{font-size:10px;color:#444;letter-spacing:.1em;width:70px;text-align:right;margin-right:4px;}
+.step-btn{padding:7px 11px;border-radius:6px;font-size:11px;font-family:inherit;border:1px solid #2a2a3e;background:#13131e;color:#666;cursor:pointer;}
+.step-btn.active{border-color:#00e5ff;color:#00e5ff;background:#00e5ff15;}
+.zoom-btn{padding:7px 14px;border-radius:6px;font-size:14px;font-family:inherit;border:1px solid #2a2a3e;background:#13131e;color:#a78bfa;cursor:pointer;line-height:1;}
+.zoom-btn:active{background:#a78bfa22;border-color:#a78bfa;}
+.zoom-val{font-size:12px;color:#a78bfa;width:36px;text-align:center;}
+.dpad{display:grid;grid-template-columns:52px 52px 52px;grid-template-rows:52px 52px 52px;gap:4px;margin:0 auto;}
+.dpad-btn{border-radius:10px;border:1px solid #2a2a3e;background:#13131e;color:#888;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;}
+.dpad-btn:active,.dpad-btn.pressed{background:#00e5ff22;border-color:#00e5ff;color:#00e5ff;}
+.dpad-center{background:#1a1a2e;border-color:#333;color:#555;font-size:9px;letter-spacing:.05em;text-align:center;line-height:1.3;}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="s-setup" style="width:100%;max-width:460px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0;">
+
+  <!-- Eye icon -->
+  <svg width="72" height="40" viewBox="0 0 72 40" style="display:block;margin:0 auto 20px;">
+    <defs>
+      <linearGradient id="eyegrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#1a6b5a"/>
+        <stop offset="50%" stop-color="#2aa68a"/>
+        <stop offset="100%" stop-color="#1a6b5a"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="36" cy="20" rx="33" ry="17" fill="none" stroke="url(#eyegrad)" stroke-width="1.5"/>
+    <circle cx="36" cy="20" r="9" fill="none" stroke="#2aa68a" stroke-width="1.2"/>
+    <circle cx="36" cy="20" r="4" fill="#2aa68a" opacity="0.85"/>
+    <line x1="3" y1="20" x2="69" y2="20" stroke="#2aa68a" stroke-width="0.5" opacity="0.25"/>
+  </svg>
+
+  <!-- Title -->
+  <div style="text-align:center;margin-bottom:8px;">
+    <div style="font-size:10px;color:#6b8c82;letter-spacing:.35em;font-family:Georgia,serif;margin-bottom:8px;">OPTICAL MEASUREMENT SYSTEM</div>
+    <div style="font-size:26px;font-weight:700;color:#1a2e28;letter-spacing:.04em;font-family:Georgia,serif;">PD + Segment</div>
+    <div style="font-size:11px;color:#8aaa9e;font-family:Georgia,serif;margin-top:4px;font-style:italic;">Monocular measurement tool</div>
+  </div>
+
+  <!-- Divider -->
+  <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,#2aa68a,transparent);margin:20px auto 28px;"></div>
+
+  <!-- PD Card -->
+  <div style="width:100%;background:#f7faf9;border:1px solid #c8ddd8;border-radius:16px;padding:28px 24px;margin-bottom:14px;box-shadow:0 2px 16px rgba(42,166,138,0.08);">
+    <div style="font-size:10px;color:#6b8c82;letter-spacing:.22em;font-family:Georgia,serif;text-align:center;margin-bottom:20px;text-transform:uppercase;">Frame PD</div>
+
+    <!-- Input with unit -->
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:8px;border-bottom:2px solid #2aa68a55;padding-bottom:12px;margin-bottom:8px;">
+      <input type="number" id="f-pd" placeholder="PD" inputmode="decimal"
+        style="background:transparent;border:none;color:#1a2e28;font-size:56px;font-weight:300;font-family:Georgia,serif;text-align:center;outline:none;width:160px;padding:0;"/>
+      <span style="font-size:18px;color:#6b8c82;font-family:Georgia,serif;font-weight:300;">mm</span>
+    </div>
+    <div style="text-align:center;font-size:10px;color:#9ab8b0;font-family:Georgia,serif;letter-spacing:.1em;">Patient's binocular PD is calculated from the frame's PD</div>
+  </div>
+
+  <div id="err" style="color:#c0392b;font-size:12px;font-family:Georgia,serif;text-align:center;margin-bottom:8px;min-height:18px;"></div>
+
+  <!-- Next button -->
+  <button id="btn-next" style="width:100%;padding:17px;border-radius:12px;font-size:13px;letter-spacing:.18em;cursor:pointer;font-family:Georgia,serif;border:none;background:linear-gradient(135deg,#2aa68a,#1a8a6e);color:#fff;box-shadow:0 4px 18px rgba(42,166,138,0.3);font-weight:600;">
+    BEGIN MEASUREMENT →
+  </button>
+
+  <div style="margin-top:24px;font-size:10px;color:#b0ccc6;text-align:center;font-family:Georgia,serif;letter-spacing:.1em;">For professional use · Yoav Gurfinkel Optometry</div>
+</div>
+
+<!-- PHOTO -->
+<div id="s-photo" class="hidden">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-size:9px;color:#334;letter-spacing:.3em;margin-bottom:4px;">OPTICAL MEASUREMENT SYSTEM</div>
+    <div style="font-size:18px;font-weight:900;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.05em;">MONOCULAR PD + SEG</div>
+  </div>
+  <div style="font-size:11px;color:#555;line-height:1.5;margin-bottom:10px;width:100%;max-width:460px;">
+    Start further away and move closer until distance shows <strong style="color:#00e5ff;">GOOD</strong>, then adjust tilt. Align the blue cross level with the eyes, with the <strong style="color:#ffdd00;">yellow dots</strong> under the bridge of the glasses frame, between the eyes.
+  </div>
+  <!-- Live viewfinder with centering guide -->
+  <div style="position:relative;width:100%;max-width:460px;margin-bottom:10px;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:3/4;">
+    <video id="vf" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1);"></video>
+    <!-- Camera switch button -->
+    <button id="btn-torch" style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,220,0,0.5);border-radius:8px;color:#ffdd00;font-size:11px;font-family:'Courier New',monospace;padding:6px 10px;cursor:pointer;">🔦 OFF</button>
+    <button id="btn-camswitch" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.5);border:1px solid rgba(0,229,255,0.5);border-radius:8px;color:#00e5ff;font-size:11px;font-family:'Courier New',monospace;padding:6px 10px;cursor:pointer;">🔄 REAR</button>
+    <!-- Optical zoom controls -->
+    <div id="zoom-ctrl" style="position:absolute;bottom:90px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.55);border-radius:20px;padding:6px 12px;">
+      <button id="cam-zoom-out" style="background:none;border:none;color:#00e5ff;font-size:20px;font-family:'Courier New',monospace;cursor:pointer;width:24px;line-height:1;">−</button>
+      <span id="cam-zoom-val" style="color:#00e5ff;font-size:12px;font-family:'Courier New',monospace;min-width:38px;text-align:center;">1.0×</span>
+      <button id="cam-zoom-in" style="background:none;border:none;color:#00e5ff;font-size:20px;font-family:'Courier New',monospace;cursor:pointer;width:24px;line-height:1;">+</button>
+    </div>
+    <!-- Distance status badge -->
+    <div id="dist-badge" style="position:absolute;top:50px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);border:1.5px solid rgba(255,170,0,0.7);border-radius:20px;color:#ffaa00;font-size:12px;font-family:'Courier New',monospace;padding:7px 16px;letter-spacing:.08em;white-space:nowrap;transition:all 0.2s;">◷ DISTANCE…</div>
+    <!-- Height/tilt status badge -->
+    <div id="height-badge" style="display:none;position:absolute;top:88px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);border:1.5px solid rgba(255,170,0,0.7);border-radius:20px;color:#ffaa00;font-size:12px;font-family:'Courier New',monospace;padding:7px 16px;letter-spacing:.08em;white-space:nowrap;transition:all 0.2s;">↕ HEIGHT…</div>
+    <!-- Grid + centering overlay -->
+    <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg"
+      style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">
+      <!-- Grid every 14px to compensate for 1.8x video zoom -->
+      <line x1="14"  y1="0" x2="14"  y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="28"  y1="0" x2="28"  y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="42"  y1="0" x2="42"  y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="56"  y1="0" x2="56"  y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="70"  y1="0" x2="70"  y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="84"  y1="0" x2="84"  y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="98"  y1="0" x2="98"  y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="112" y1="0" x2="112" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="126" y1="0" x2="126" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="140" y1="0" x2="140" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="150" y1="0" x2="150" y2="400" stroke="rgba(0,229,255,0.5)" stroke-width="1.2"/>
+      <line x1="160" y1="0" x2="160" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="174" y1="0" x2="174" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="188" y1="0" x2="188" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="202" y1="0" x2="202" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="216" y1="0" x2="216" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="230" y1="0" x2="230" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="244" y1="0" x2="244" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="258" y1="0" x2="258" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="272" y1="0" x2="272" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="286" y1="0" x2="286" y2="400" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <!-- Horizontal lines every 14px -->
+      <line x1="0" y1="14"  x2="300" y2="14"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="28"  x2="300" y2="28"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="42"  x2="300" y2="42"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="56"  x2="300" y2="56"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="70"  x2="300" y2="70"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="84"  x2="300" y2="84"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="98"  x2="300" y2="98"  stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="112" x2="300" y2="112" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="126" x2="300" y2="126" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="165" x2="300" y2="165" stroke="rgba(0,229,255,0.5)" stroke-width="1.2"/>
+      <line x1="0" y1="154" x2="300" y2="154" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="168" x2="300" y2="168" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="182" x2="300" y2="182" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="196" x2="300" y2="196" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="210" x2="300" y2="210" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="224" x2="300" y2="224" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="238" x2="300" y2="238" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="252" x2="300" y2="252" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="266" x2="300" y2="266" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="280" x2="300" y2="280" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="294" x2="300" y2="294" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="308" x2="300" y2="308" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="322" x2="300" y2="322" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="336" x2="300" y2="336" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="350" x2="300" y2="350" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="364" x2="300" y2="364" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="378" x2="300" y2="378" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <line x1="0" y1="392" x2="300" y2="392" stroke="rgba(0,229,255,0.18)" stroke-width="0.7"/>
+      <!-- FULL-SCREEN CROSSHAIR -->
+      <line x1="150" y1="0" x2="150" y2="400" stroke="rgba(0,80,200,0.95)" stroke-width="1.6"/>
+      <line x1="0" y1="165" x2="300" y2="165" stroke="rgba(0,80,200,0.95)" stroke-width="1.6"/>
+
+      <!-- BRIDGE MARKER — small dashed mark between the eyes, at the
+           glasses' bridge position. The corner-bracket lens boxes were
+           removed per request; only this centre marker remains as the
+           placement guide. Bright yellow by default so it reads clearly
+           against any background — distinct from the blue crosshair/grid. -->
+      <g id="lens-target" stroke="rgba(255,221,0,0.95)" stroke-width="2.2" fill="none">
+        <!-- bridge — gap 143–157, midpoint=150 -->
+        <line x1="143" y1="166" x2="157" y2="166" stroke-dasharray="3,3"/>
+      </g>
+
+      <!-- Face oval scaled 1.8x -->
+      <text x="150" y="396" text-anchor="middle" fill="rgba(0,229,255,0.5)" font-size="8" font-family="Courier New">CENTER FACE · HOLD LEVEL</text>
+    </svg>
+    <!-- Capture button overlay -->
+    <button id="btn-capture" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,box-shadow .2s,opacity .2s;opacity:0.55;">
+      <div style="width:46px;height:46px;border-radius:50%;background:#999;transition:background .2s;"></div>
+    </button>
+    <div id="capture-hint" style="position:absolute;bottom:82px;left:50%;transform:translateX(-50%);font-size:9px;color:#888;font-family:'Courier New',monospace;letter-spacing:.05em;white-space:nowrap;">align distance + height to unlock</div>
+    <!-- Fallback file input (hidden, used if camera fails) -->
+    <input type="file" accept="image/*" capture="environment" id="inp" style="display:none"/>
+  </div>
+  <div id="vf-status" style="font-size:10px;color:#444;text-align:center;margin-bottom:8px;"></div>
+
+  <div class="photo-slot hidden" id="slot">
+    <div class="slot-lbl">📷 TAP TO CHOOSE PHOTO</div>
+    <input type="file" accept="image/*" id="inp2"/>
+  </div>
+  <button class="btn btn-green" id="btn-goplace" disabled>NEXT — PLACE MARKERS →</button>
+  <button class="btn btn-ghost" id="btn-back">← BACK</button>
+</div>
+
+<!-- PLACE MARKERS -->
+<div id="s-place" class="hidden">
+  <div class="grid2 hidden" id="results-grid">
+    <div class="metric"><div class="ml">BINOCULAR PD</div><div class="mv" id="r-pd">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">MONO PD R / L</div><div class="mv" style="font-size:15px">
+      <span id="r-pdr" style="color:#ff6b35">--</span>/<span id="r-pdl" style="color:#a78bfa">--</span><span>mm</span>
+    </div></div>
+    <div class="metric"><div class="ml">SEG RIGHT</div><div class="mv org" id="r-segr">--<span>mm</span></div></div>
+    <div class="metric"><div class="ml">SEG LEFT</div><div class="mv org" id="r-segl">--<span>mm</span></div></div>
+  </div>
+
+  <div class="canvas-wrap" id="cv-wrap">
+    <canvas id="cv-main"></canvas>
+    <div class="zoom-badge" id="zoom-badge">1×</div>
+  </div>
+
+  
+
+  <div class="pt-tabs">
+    <button class="pt-tab" data-pt="rP"     style="--col:#ff6b35">R PUPIL</button>
+    <button class="pt-tab" data-pt="lP"     style="--col:#a78bfa">L PUPIL</button>
+    <button class="pt-tab" data-pt="bridge" style="--col:#00e5ff">BRIDGE</button>
+    <button class="pt-tab" data-pt="rLC"    style="--col:#ff2d9e">R LENS</button>
+    <button class="pt-tab" data-pt="lLC"    style="--col:#39e639">L LENS</button>
+    <button class="pt-tab" data-pt="rB"     style="--col:#ff8800">R BTM</button>
+    <button class="pt-tab" data-pt="lB"     style="--col:#ffdd00">L BTM</button>
+  </div>
+  <button id="btn-flip" class="btn btn-ghost" style="display:none;">↔ FLIP MIRROR</button>
+  <!-- Action buttons row -->
+  <div style="display:flex;gap:6px;width:100%;max-width:460px;margin-bottom:8px;">
+    <button id="btn-center" style="flex:1;padding:9px 4px;border-radius:8px;font-size:10px;font-family:'Courier New',monospace;border:1px solid #2a2a3e;background:#13131e;color:#00e5ff;cursor:pointer;letter-spacing:.05em;">⊕ CENTER</button>
+    <button id="btn-results" style="flex:2;padding:9px 4px;border-radius:8px;font-size:10px;font-family:'Courier New',monospace;border:1px solid #00e57766;background:#00e57711;color:#00e577;cursor:pointer;letter-spacing:.05em;">✓ SHOW RESULTS</button>
+  </div>
+
+  <div class="controller">
+    <!-- Step size row -->
+    <div class="ctrl-row">
+      <span class="ctrl-label">STEP</span>
+      <button class="step-btn" data-step="1">1px</button>
+      <button class="step-btn active" data-step="5">5px</button>
+    </div>
+    <!-- Zoom row -->
+    <div class="ctrl-row">
+      <span class="ctrl-label">ZOOM</span>
+      <button class="zoom-btn" id="z-out">−</button>
+      <span class="zoom-val" id="z-val">1×</span>
+      <button class="zoom-btn" id="z-in">+</button>
+    </div>
+<!-- D-pad -->
+    <div class="dpad">
+      <div></div>
+      <button class="dpad-btn" id="d-up">▲</button>
+      <div></div>
+      <button class="dpad-btn" id="d-left">◀</button>
+      <div class="dpad-btn dpad-center">MOVE<br/>POINT</div>
+      <button class="dpad-btn" id="d-right">▶</button>
+      <div></div>
+      <button class="dpad-btn" id="d-down">▼</button>
+      <div></div>
+    </div>
+  </div>
+
+  <div class="card" id="results-card" style="display:none">
+    <div class="clabel">PATIENT</div>
+    <div class="field"><input type="text" id="pn" placeholder="Patient name…"/></div>
+    <div class="field" style="margin-bottom:0"><input type="text" id="pnt" placeholder="Notes…"/></div>
+  </div>
+  <div class="optbox" id="results-optbox" style="display:none">
+    <div style="color:#3a7a3a;font-size:10px;letter-spacing:.15em;margin-bottom:4px;">FOR YOUR OPTICIAN</div>
+    <span id="opt-text"></span>
+  </div>
+  <button class="btn btn-primary hidden" id="btn-save">SAVE IMAGE</button>
+  <button class="btn btn-ghost" id="btn-again">MEASURE AGAIN</button>
+</div>
+
+<div class="notice">FOR GUIDANCE ONLY · NOT A MEDICAL DEVICE · Examiner view (mirrored)</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>$(id).classList.remove('hidden');
+const hide=id=>$(id).classList.add('hidden');
+
+let binoPD=0, rawCanvas=null, procImg=null, captureFacing="user"; // binoPD set by examiner at start
+// Auto-detected pupil landmarks from the moment of capture (if the face
+// model was available), used to seed marker placement instead of guesses.
+let lastLandmarks=null, lastLandmarksGeom=null;
+// While true, BRIDGE auto-recentres to the pupil midpoint whenever R/L pupil
+// markers move. Turns off the moment the examiner manually moves BRIDGE
+// itself, so a deliberate placement is never overwritten.
+let bridgeAuto=true;
+function centerBridge(){
+  if(!pts.rP||!pts.lP) return;
+  pts.bridge={x:(pts.rP.x+pts.lP.x)/2, y:(pts.rP.y+pts.lP.y)/2};
+}
+let ppm=1, rPdR=0,rPdL=0,rSegR=0,rSegL=0;
+let showLabels=false;
+let activePt='rP';
+let stepSize=5;
+let zoomLevel=1;
+const ZOOM_STEPS=[1,1.5,2,3,5];
+let zoomIdx=0;
+
+// Distance target — eye-corner normalized distance corresponding to ~30cm.
+// Adjustable live via slider on photo screen, persisted across sessions.
+let eyeDistTargetRatio = parseFloat(localStorage.getItem('pd_eyedist_ratio')) || 0.208;
+
+let pts={rP:null,lP:null,bridge:null,rB:null,lB:null,rLC:null,lLC:null};
+const PT_COLORS={rP:'#ff6b35',lP:'#a78bfa',bridge:'#00e5ff',rB:'#ff8800',lB:'#ffdd00',rLC:'#ff2d9e',lLC:'#39e639'};
+const PT_ORDER=['rP','lP','bridge','rB','lB','rLC','lLC'];
+
+// ── File load ──────────────────────────────────────────────────────────────────
+function loadFile(file){
+  return new Promise(res=>{
+    const im=new Image(), url=URL.createObjectURL(file);
+    im.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=im.naturalWidth; c.height=im.naturalHeight;
+      c.getContext('2d').drawImage(im,0,0);
+      URL.revokeObjectURL(url); res(c);
+    };
+    im.onerror=()=>res(null);
+    im.src=url;
+  });
+}
+
+function flipH(src){
+  const c=document.createElement('canvas');
+  c.width=src.width; c.height=src.height;
+  const ctx=c.getContext('2d');
+  ctx.translate(src.width,0); ctx.scale(-1,1);
+  ctx.drawImage(src,0,0);
+  return c;
+}
+
+function roundHalf(x){ return Math.round(x*2)/2; }
+function fmtHalf(x){ const r=roundHalf(x); return r%1===0?r.toFixed(0):r.toFixed(1); }
+
+function defaultPts(W,H){
+  return {
+    rP:    {x:Math.round(W*0.35),y:Math.round(H*0.42)},
+    lP:    {x:Math.round(W*0.65),y:Math.round(H*0.42)},
+    bridge:{x:Math.round(W*0.50),y:Math.round(H*0.42)},
+    rB:    {x:Math.round(W*0.35),y:Math.round(H*0.42)+Math.round(W*0.117*0.7)},
+    lB:    {x:Math.round(W*0.65),y:Math.round(H*0.42)+Math.round(W*0.117*0.7)},
+    // Lens geometric-center markers — independent of the pupil markers.
+    // Starting guess is the same spot as the pupil; the examiner drags each
+    // to the frame's true optical/geometric center, which may differ from
+    // where the patient's actual pupil sits (that difference is the point).
+    rLC:   {x:Math.round(W*0.35),y:Math.round(H*0.42)},
+    lLC:   {x:Math.round(W*0.65),y:Math.round(H*0.42)},
+  };
+}
+
+// ── Auto-placed points from the face model's iris landmarks ────────────────
+// Uses the same MediaPipe FaceLandmarker already loaded for the distance
+// check. Iris centers (indices 468 & 473) give a much closer starting mark
+// than a fixed guess, so the examiner only needs small manual corrections.
+// Returns null (caller falls back to defaultPts) if no detection is available.
+function smartPts(W,H){
+  if(!lastLandmarks||!lastLandmarksGeom) return null;
+  const g=lastLandmarksGeom, lm=lastLandmarks;
+  const IRIS_A=468, IRIS_B=473;
+  if(!lm[IRIS_A]||!lm[IRIS_B]) return null;
+  const toPixel=idx=>{
+    const p=lm[idx];
+    return { x:p.x*g.vw-g.cropX, y:p.y*g.vh-g.cropY };
+  };
+  const a=toPixel(IRIS_A), b=toPixel(IRIS_B);
+  const clamp=(v,max)=>Math.max(0,Math.min(max,v));
+  // Leftmost point in the (unmirrored) capture is the patient's right eye —
+  // matches the same left/right convention defaultPts uses. Determined by
+  // pixel position rather than landmark-index semantics, so it stays correct
+  // regardless of camera facing or any mirroring quirks.
+  let rP = a.x<=b.x ? a : b;
+  let lP = a.x<=b.x ? b : a;
+  rP={x:clamp(rP.x,W),y:clamp(rP.y,H)};
+  lP={x:clamp(lP.x,W),y:clamp(lP.y,H)};
+  if(Math.abs(lP.x-rP.x) < W*0.05) return null; // sanity check — too close, don't trust it
+  const bridge={x:(rP.x+lP.x)/2, y:(rP.y+lP.y)/2};
+  // Lens-bottom offset scaled to the detected pupil separation (rather than
+  // full image width) so it stays proportionate whatever the crop/zoom.
+  const pupilPx=Math.abs(lP.x-rP.x);
+  const drop=pupilPx*0.273;
+  return {
+    rP, lP, bridge,
+    rB:{x:rP.x,y:clamp(rP.y+drop,H)},
+    lB:{x:lP.x,y:clamp(lP.y+drop,H)},
+    // Lens-center markers start at the detected pupil position — the
+    // examiner drags each to the frame's true geometric center.
+    rLC:{x:rP.x,y:rP.y},
+    lLC:{x:lP.x,y:lP.y},
+  };
+}
+
+// Mirror an existing point set horizontally (used when flipping the photo),
+// preserving whatever placement — auto-detected or manually adjusted — was
+// already there, instead of discarding it back to the defaults.
+function mirrorPts(p,W){
+  if(!p||!p.rP) return null;
+  return {
+    rP:{x:W-p.lP.x,y:p.lP.y}, lP:{x:W-p.rP.x,y:p.rP.y},
+    bridge:{x:W-p.bridge.x,y:p.bridge.y},
+    rB:{x:W-p.lB.x,y:p.lB.y}, lB:{x:W-p.rB.x,y:p.rB.y},
+    rLC:{x:W-p.lLC.x,y:p.lLC.y}, lLC:{x:W-p.rLC.x,y:p.rLC.y},
+  };
+}
+
+// ── Auto-detect the frame's lower rim below a pupil ─────────────────────────
+// No glasses-detection model is available client-side, so this is a plain
+// pixel heuristic: scan a thin vertical strip under the pupil for the
+// strongest horizontal contrast edge (a frame rim against skin/background)
+// within a plausible segment-height range. Returns the detected y (image
+// coords) or null if no confident edge was found, so the caller can fall
+// back to the proportional guess. Treat this as a starting point to refine
+// with real photos — CONTRAST_THRESHOLD below is the main dial to retune.
+function detectFrameBottom(img, px, py, mmPerPx){
+  if(!mmPerPx || mmPerPx<=0) return null;
+  const W=img.width, H=img.height;
+  const stripHalf=Math.max(1, Math.round(W*0.008));
+  const x0=Math.max(0, Math.round(px-stripHalf));
+  const x1=Math.min(W, Math.round(px+stripHalf));
+  if(x1-x0 < 2) return null;
+
+  // Skip the lower eyelid/iris right under the pupil, then look through a
+  // physiologically plausible segment-height window.
+  // Start the search 10mm below the pupil — clears the iris/lower eyelid so
+  // the scan doesn't mistake that edge for the frame's bottom rim.
+  const minMM=10, maxMM=35;
+  const minGapPx=Math.round(minMM/mmPerPx), maxGapPx=Math.round(maxMM/mmPerPx);
+  const y0=Math.round(py+minGapPx), y1=Math.min(H-2, Math.round(py+maxGapPx));
+  if(y1-y0 < 6) return null;
+
+  let data;
+  try{
+    data=img.getContext('2d').getImageData(x0,y0,x1-x0,y1-y0+1).data;
+  }catch(e){ return null; }
+  const rowW=x1-x0, rows=y1-y0+1;
+
+  // Average luminance per row across the strip
+  const lum=new Array(rows);
+  for(let r=0;r<rows;r++){
+    let sum=0;
+    for(let c=0;c<rowW;c++){
+      const idx=(r*rowW+c)*4;
+      sum += 0.299*data[idx]+0.587*data[idx+1]+0.114*data[idx+2];
+    }
+    lum[r]=sum/rowW;
+  }
+
+  // Strongest local gradient over a small smoothing window (reduces noise
+  // sensitivity vs. a raw row-to-row derivative).
+  const win=Math.max(1, Math.round(rows*0.03));
+  let bestIdx=-1, bestMag=0;
+  for(let r=win; r<rows-win; r++){
+    const mag=Math.abs(lum[r+win]-lum[r-win]);
+    if(mag>bestMag){ bestMag=mag; bestIdx=r; }
+  }
+
+  const CONTRAST_THRESHOLD=18; // luminance units (0-255) — tune against real photos
+  if(bestIdx<0 || bestMag<CONTRAST_THRESHOLD) return null;
+  return y0+bestIdx;
+}
+
+// Runs the detector for both eyes and updates pts.rB/lB in place. If only
+// one side gets a confident edge, mirrors that vertical offset onto the
+// other eye (frames are normally level) rather than leaving it unrefined.
+function applyFrameBottomDetection(){
+  if(!pts.rP||!pts.lP||!binoPD) return;
+  const pupilPx=Math.abs(pts.rP.x-pts.lP.x);
+  if(pupilPx<=0) return;
+  const mmPerPx=binoPD/pupilPx;
+  let rY=detectFrameBottom(procImg, pts.rP.x, pts.rP.y, mmPerPx);
+  let lY=detectFrameBottom(procImg, pts.lP.x, pts.lP.y, mmPerPx);
+  if(rY==null && lY!=null) rY=pts.rP.y+(lY-pts.lP.y);
+  if(lY==null && rY!=null) lY=pts.lP.y+(rY-pts.rP.y);
+  const H=procImg.height;
+  if(rY!=null) pts.rB.y=Math.max(0,Math.min(H,rY));
+  if(lY!=null) pts.lB.y=Math.max(0,Math.min(H,lY));
+}
+
+// Finds the true geometric center of each lens by explicitly distinguishing
+// frame material from face — skin, eyelid, cornea, iris — rather than just
+// chasing the single strongest contrast edge (which kept latching onto
+// eyelid creases, brow shadow, or lens glare instead of the actual rim).
+//
+// Approach: from a safe distance past the pupil (clearing iris/eyelid),
+// sample a small patch of what should be plain skin as a color reference.
+// Then walk further outward comparing each sample's color to that skin
+// reference. The point where color sustainedly diverges from skin is the
+// frame's near edge; if color returns toward skin further out, that's the
+// far edge of the (thin) rim, and the two are averaged for the rim's true
+// center line. This targets "not skin-colored" directly, instead of hoping
+// the biggest edge in the strip happens to be the frame.
+function scanFrameColorEdge(img, px, py, mmPerPx, axis, dir, minMMOverride, maxMMOverride){
+  if(!mmPerPx || mmPerPx<=0) return null;
+  const W=img.width, H=img.height;
+  // Generous clearance before we start trusting "skin" — has to clear brow
+  // shadow, eyelid crease and any corneal glare, not just the iris itself.
+  const minMM = minMMOverride!=null ? minMMOverride : 12;
+  const maxMM = maxMMOverride!=null ? maxMMOverride : (axis==='x' ? 40 : 34);
+  const minGapPx=Math.round(minMM/mmPerPx), maxGapPx=Math.round(maxMM/mmPerPx);
+  const stripHalf=Math.max(1, Math.round(W*0.006));
+  let x0,y0,x1,y1;
+  if(axis==='x'){
+    y0=Math.max(0, Math.round(py-stripHalf)); y1=Math.min(H, Math.round(py+stripHalf));
+    if(dir>0){ x0=Math.round(px+minGapPx); x1=Math.min(W-1, Math.round(px+maxGapPx)); }
+    else     { x1=Math.round(px-minGapPx); x0=Math.max(0,   Math.round(px-maxGapPx)); }
+  } else {
+    x0=Math.max(0, Math.round(px-stripHalf)); x1=Math.min(W, Math.round(px+stripHalf));
+    if(dir>0){ y0=Math.round(py+minGapPx); y1=Math.min(H-1, Math.round(py+maxGapPx)); }
+    else     { y1=Math.round(py-minGapPx); y0=Math.max(0,   Math.round(py-maxGapPx)); }
+  }
+  if(x1-x0<3 || y1-y0<3) return null;
+
+  let data;
+  try{ data=img.getContext('2d').getImageData(x0,y0,x1-x0,y1-y0).data; }catch(e){ return null; }
+  const rowW=x1-x0, rows=y1-y0;
+  const n = axis==='x' ? rowW : rows;
+  if(n<6) return null;
+
+  // Average RGB per sample-step along the scan axis
+  const colors=new Array(n);
+  for(let i=0;i<n;i++){
+    let rs=0,gs=0,bs=0,cnt=0;
+    if(axis==='x'){
+      for(let r=0;r<rows;r++){ const idx=(r*rowW+i)*4; rs+=data[idx]; gs+=data[idx+1]; bs+=data[idx+2]; cnt++; }
+    } else {
+      for(let c=0;c<rowW;c++){ const idx=(i*rowW+c)*4; rs+=data[idx]; gs+=data[idx+1]; bs+=data[idx+2]; cnt++; }
+    }
+    colors[i]={r:rs/cnt,g:gs/cnt,b:bs/cnt};
+  }
+
+  // Skin reference: average of the first ~20% of samples, i.e. right after
+  // the min-gap buffer — by construction that should be clean cheek/temple
+  // skin, not eye or frame yet.
+  const refCount=Math.max(2, Math.round(n*0.2));
+  let rr=0,rg=0,rb=0;
+  for(let i=0;i<refCount;i++){ rr+=colors[i].r; rg+=colors[i].g; rb+=colors[i].b; }
+  const ref={r:rr/refCount, g:rg/refCount, b:rb/refCount};
+  const dist=c=>{ const dr=c.r-ref.r, dg=c.g-ref.g, db=c.b-ref.b; return Math.sqrt(dr*dr+dg*dg+db*db); };
+
+  const COLOR_THRESHOLD=28; // Euclidean RGB distance — retune against real photos
+  // Require 2 consecutive off-skin samples so one noisy pixel can't trigger it
+  let enterIdx=-1;
+  for(let i=refCount;i<n-1;i++){
+    if(dist(colors[i])>COLOR_THRESHOLD && dist(colors[i+1])>COLOR_THRESHOLD){ enterIdx=i; break; }
+  }
+  if(enterIdx<0) return null;
+
+  // Frame rim is thin — if color comes back toward skin shortly after, use
+  // the midpoint of that band as the true rim line rather than just the
+  // near edge (which biases the estimate half a rim-width too close).
+  let exitIdx=-1;
+  for(let i=enterIdx+1;i<n;i++){
+    if(dist(colors[i])<COLOR_THRESHOLD){ exitIdx=i; break; }
+  }
+  const centerIdx = exitIdx>=0 ? (enterIdx+exitIdx)/2 : enterIdx;
+  return axis==='x' ? x0+centerIdx : y0+centerIdx;
+}
+
+let lensDebug={r:{},l:{}}; // raw detected edge points per eye, for on-screen debug ticks
+
+// From the last debug screenshots: TOP kept landing on the eyebrow (dark
+// hair reads as "not skin" just like frame does — a genuine false positive,
+// not a threshold issue) and BOTTOM failed outright on both eyes. Left/right
+// were roughly on track but the nasal side could overshoot into the bridge
+// hardware or the neighboring lens once it went far enough.
+// Fix: (1) hard-cap the nasal-direction scan at the bridge position itself
+// (with a small margin) so it physically cannot cross into the other lens;
+// (2) drop the top/bottom color scan entirely and instead reuse the
+// already-solid frame-bottom detector (rB/lB) plus the radius measured
+// horizontally — these are round lenses, so vertical radius should match
+// horizontal radius — which never goes near the eyebrow at all.
+function applyLensCenterDetection(){
+  if(!pts.rP||!pts.lP||!pts.bridge||!binoPD) return;
+  const pupilPx=Math.abs(pts.rP.x-pts.lP.x);
+  if(pupilPx<=0) return;
+  const mmPerPx=binoPD/pupilPx;
+  const W=procImg.width, H=procImg.height;
+
+  function centerFor(px,py,bottomYKnown){
+    const nasalSign = pts.bridge.x>=px ? +1 : -1; // dir from this pupil toward the bridge
+    const temporalSign=-nasalSign;
+
+    // Nasal scan: capped a few mm short of the bridge marker so it can never
+    // read past it into the other lens/bridge hardware.
+    const bridgeGapMM=Math.max(6, Math.abs(pts.bridge.x-px)*mmPerPx-3);
+    const nasalX   =scanFrameColorEdge(procImg, px,py,mmPerPx,'x', nasalSign,   8, bridgeGapMM);
+    // Temporal scan: this side was reliable, keep the generous window.
+    const temporalX=scanFrameColorEdge(procImg, px,py,mmPerPx,'x', temporalSign,8, 40);
+
+    const leftX  = nasalSign<0 ? nasalX : temporalX;
+    const rightX = nasalSign<0 ? temporalX : nasalX;
+    const cx = (leftX!=null && rightX!=null) ? (leftX+rightX)/2 : px;
+    const radius = (leftX!=null && rightX!=null) ? Math.abs(rightX-leftX)/2 : null;
+
+    const cy = (radius!=null && bottomYKnown!=null) ? bottomYKnown-radius : py;
+
+    return {
+      center:{ x:Math.max(0,Math.min(W,cx)), y:Math.max(0,Math.min(H,cy)) },
+      raw:{leftX,rightX,topY:null,botY:bottomYKnown,py,px}
+    };
+  }
+  const rRes=centerFor(pts.rP.x, pts.rP.y, pts.rB?pts.rB.y:null);
+  const lRes=centerFor(pts.lP.x, pts.lP.y, pts.lB?pts.lB.y:null);
+  pts.rLC=rRes.center; pts.lLC=lRes.center;
+  lensDebug={r:rRes.raw, l:lRes.raw};
+}
+
+
+// ── DRAW ───────────────────────────────────────────────────────────────────────
+// Zoom: render a zoomed crop of procImg centred on the active point.
+// All pts coords are always in procImg full-res coords.
+function draw(){
+  const cvs=$('cv-main');
+  const IW=procImg.width, IH=procImg.height;
+  const zoom=ZOOM_STEPS[zoomIdx];
+
+  // Viewport: what portion of the image we show
+  // At zoom=1 we show the whole image. At zoom=N we show 1/N of it.
+  const vw=IW/zoom, vh=IH/zoom;
+
+  // Centre viewport on active point (or image centre if no active)
+  const ap=pts[activePt];
+  const cx=ap?ap.x:IW/2, cy=ap?ap.y:IH/2;
+  let vx=cx-vw/2, vy=cy-vh/2;
+  // Clamp so we don't go outside image
+  vx=Math.max(0,Math.min(IW-vw,vx));
+  vy=Math.max(0,Math.min(IH-vh,vy));
+
+  // Canvas display size = wrapper width, aspect-correct height
+  const wrap=$('cv-wrap');
+  const dispW=wrap.clientWidth||320;
+  const dispH=Math.round(dispW*(vh/vw));
+  const dpr=window.devicePixelRatio||1;
+
+  // Physical pixel size for crispness on high-DPI screens
+  cvs.style.width=dispW+'px';
+  cvs.style.height=dispH+'px';
+  cvs.width=Math.round(dispW*dpr);
+  cvs.height=Math.round(dispH*dpr);
+
+  const c=cvs.getContext('2d');
+  c.scale(dpr,dpr); // all coords below are in CSS px
+
+  // Draw viewport crop of full-res image
+  c.drawImage(procImg, vx,vy,vw,vh, 0,0,dispW,dispH);
+
+  // Scale factor: image px → CSS px
+  const sx=dispW/vw, sy=dispH/vh;
+
+  // Helper: image coords → CSS display coords
+  const id2d=(x,y)=>({x:(x-vx)*sx, y:(y-vy)*sy});
+
+  const{rP,lP,bridge,rB,lB,rLC,lLC}=pts;
+  if(!rP) return;
+
+  // Marker sizes in CSS px — same physical size regardless of zoom or DPR
+  const dot=4;
+  const arm=12;
+  const lw=1.2;
+  const fs=12;
+
+  // ── PD lines ──
+  c.lineWidth=lw; c.setLineDash([]);
+  const rPd=id2d(rP.x,rP.y), lPd=id2d(lP.x,lP.y);
+  const brd=id2d(bridge.x,bridge.y);
+  const rBd=id2d(rB.x,rB.y), lBd=id2d(lB.x,lB.y);
+
+  c.strokeStyle='#ff4444';
+  c.beginPath(); c.moveTo(rPd.x,rPd.y); c.lineTo(brd.x+8,rPd.y); c.stroke();
+  c.strokeStyle='#aa66ff';
+  c.beginPath(); c.moveTo(lPd.x,lPd.y); c.lineTo(brd.x-8,lPd.y); c.stroke();
+  // Seg lines (vertical)
+  c.strokeStyle='#ff8800';
+  c.beginPath(); c.moveTo(rPd.x,rPd.y); c.lineTo(rPd.x,rBd.y); c.stroke();
+  c.strokeStyle='#ffdd00';
+  c.beginPath(); c.moveTo(lPd.x,lPd.y); c.lineTo(lPd.x,lBd.y); c.stroke();
+  // Seg horizontal lines at bottom markers (dashed, for visual reference)
+  c.setLineDash([4,3]);
+  c.strokeStyle='#ff8800';
+  c.beginPath(); c.moveTo(rBd.x,rBd.y); c.lineTo(brd.x+8,rBd.y); c.stroke();
+  c.strokeStyle='#ffdd00';
+  c.beginPath(); c.moveTo(lBd.x,lBd.y); c.lineTo(brd.x-8,lBd.y); c.stroke();
+  c.setLineDash([]);
+
+  // ── Markers ──
+  const dispPts={rP:rPd,lP:lPd,bridge:brd,rB:rBd,lB:lBd,rLC:id2d(rLC.x,rLC.y),lLC:id2d(lLC.x,lLC.y)};
+  PT_ORDER.forEach(key=>{
+    const p=dispPts[key];
+    const col=PT_COLORS[key];
+    const isActive=key===activePt;
+
+    if(key==='bridge'){
+      c.save();
+      // Bold center dot only + vertical line, no rings
+      c.fillStyle='rgba(0,150,255,0.95)';
+      c.beginPath(); c.arc(p.x,p.y,4,0,Math.PI*2); c.fill();
+      c.strokeStyle='rgba(0,150,255,0.95)'; c.lineWidth=2.5; c.setLineDash([]);
+      c.beginPath();
+      c.moveTo(p.x,p.y-28); c.lineTo(p.x,p.y-6);
+      c.moveTo(p.x,p.y+6);  c.lineTo(p.x,p.y+28);
+      c.stroke();
+      c.restore();
+      return;
+    }
+
+    // Active outer ring
+    if(isActive){
+      c.strokeStyle=col; c.lineWidth=1.5;
+      c.beginPath(); c.arc(p.x,p.y,dot+arm*0.55,0,Math.PI*2); c.stroke();
+    }
+    // Dot
+    c.fillStyle=col;
+    c.beginPath(); c.arc(p.x,p.y,dot,0,Math.PI*2); c.fill();
+    c.strokeStyle='rgba(0,0,0,0.7)'; c.lineWidth=0.8;
+    c.beginPath(); c.arc(p.x,p.y,dot,0,Math.PI*2); c.stroke();
+    // Crosshair with gap
+    c.strokeStyle=col; c.lineWidth=1;
+    const gap=dot+2;
+    c.beginPath();
+    c.moveTo(p.x-arm,p.y); c.lineTo(p.x-gap,p.y);
+    c.moveTo(p.x+gap,p.y); c.lineTo(p.x+arm,p.y);
+    c.moveTo(p.x,p.y-arm); c.lineTo(p.x,p.y-gap);
+    c.moveTo(p.x,p.y+gap); c.lineTo(p.x,p.y+arm);
+    c.stroke();
+  });
+
+  // ── Labels (only when showLabels=true) ──
+  if(showLabels){
+    c.font=`bold ${fs}px Courier New`;
+    function lbl(txt,x,y,col){
+      const tw=c.measureText(txt).width;
+      c.fillStyle='rgba(0,0,0,.88)'; c.fillRect(x-tw/2-2,y-fs+1,tw+4,fs+4);
+      c.fillStyle=col; c.textAlign='center'; c.fillText(txt,x,y);
+    }
+    function lblL(txt,x,y,col){
+      const tw=c.measureText(txt).width;
+      c.fillStyle='rgba(0,0,0,.88)'; c.fillRect(x-1,y-fs+1,tw+4,fs+4);
+      c.fillStyle=col; c.textAlign='left'; c.fillText(txt,x,y);
+    }
+    lbl(fmtHalf(rPdR)+'mm',(rPd.x+brd.x)/2, rPd.y-arm-4, '#ff6b35');
+    lbl(fmtHalf(rPdL)+'mm',(lPd.x+brd.x)/2, lPd.y-arm-4, '#a78bfa');
+    lblL(fmtHalf(rSegR)+'mm', rPd.x+arm+3, (rPd.y+rBd.y)/2+fs*.35, '#ff8800');
+    lblL(fmtHalf(rSegL)+'mm', lPd.x+arm+3, (lPd.y+lBd.y)/2+fs*.35, '#ffdd00');
+  }
+
+  // ── DEBUG: show exactly what the lens-center scan detected on each side,
+  // so a failure/false-positive can be diagnosed from a screenshot instead
+  // of guessed at blind. Always visible (not tied to which tab is active) so
+  // any screenshot of the working area shows it, whichever tab it's on.
+  if(lensDebug){
+    c.save();
+    c.font=`bold 10px Courier New`;
+    c.textAlign='center';
+    const tick=(imgX,imgY,label,found)=>{
+      const d=id2d(imgX,imgY);
+      c.strokeStyle=found?'#00ff88':'#ff2222';
+      c.fillStyle=found?'#00ff88':'#ff2222';
+      c.lineWidth=2;
+      c.beginPath(); c.moveTo(d.x-7,d.y-7); c.lineTo(d.x+7,d.y+7); c.moveTo(d.x+7,d.y-7); c.lineTo(d.x-7,d.y+7); c.stroke();
+      c.fillText(label+(found?'':' ✗'), d.x, d.y-11);
+    };
+    [['r',lensDebug.r],['l',lensDebug.l]].forEach(([side,eye])=>{
+      if(!eye || eye.px==null) return;
+      const p=side==='r'?'R':'L';
+      tick(eye.leftX ?? eye.px,  eye.py, p+'-L', eye.leftX!=null);
+      tick(eye.rightX?? eye.px,  eye.py, p+'-R', eye.rightX!=null);
+      tick(eye.px, eye.topY??eye.py, p+'-T', eye.topY!=null);
+      tick(eye.px, eye.botY??eye.py, p+'-B', eye.botY!=null);
+    });
+    c.restore();
+  }
+
+  // Orientation badge
+  if(zoom===1){
+    c.fillStyle='rgba(0,229,255,.12)'; c.fillRect(0,0,dispW,fs*1.6);
+    c.fillStyle='#00e5ff'; c.font=`bold ${Math.round(fs*.7)}px Courier New`; c.textAlign='center';
+    c.fillText('◄ R (PATIENT)      L (PATIENT) ►',dispW/2,fs*1.1);
+  }
+
+  // Update zoom badge
+  $('zoom-badge').textContent=zoom+'×';
+  $('z-val').textContent=zoom+'×';
+}
+
+// ── Recalc ─────────────────────────────────────────────────────────────────────
+// Frame PD (entered at setup) is a property of the FRAME, not the patient —
+// so it must NOT be used to scale the pupil-to-pupil distance directly
+// (that would just echo the entered number back as "PD" regardless of where
+// the patient's eyes actually are). Instead, scale comes from the two LENS
+// CENTER markers (rLC/lLC), which the examiner places at the frame's own
+// geometric centers — a real, frame-fixed reference. The patient's actual
+// monocular/binocular PD is then measured independently against that scale,
+// using the pupil markers, and is free to differ from the entered Frame PD.
+function recalc(){
+  const{rP,lP,bridge,rB,lB,rLC,lLC}=pts;
+  if(!rP||!lP||!bridge||!rB||!lB||!rLC||!lLC) return;
+  if(!binoPD) return;
+
+  // Scale from the frame's own lens-center-to-lens-center span + entered Frame PD
+  const lensPx = Math.abs(rLC.x - lLC.x);
+  if(lensPx <= 0) return;
+  const mmPerPx = binoPD / lensPx;
+  ppm = 1 / mmPerPx;
+
+  // ── Mono PD — measured independently from the pupils, not forced to sum
+  // to the entered Frame PD. If the frame doesn't sit exactly centered on
+  // the patient's eyes, this is expected to differ from Frame PD — that
+  // mismatch is the whole point of measuring it this way.
+  const bridgeToR = Math.abs(rP.x - bridge.x);
+  const bridgeToL = Math.abs(lP.x - bridge.x);
+  let pdR_raw = bridgeToR * mmPerPx;
+  let pdL_raw = bridgeToL * mmPerPx;
+
+  rPdR = Math.max(20, Math.min(40, pdR_raw));
+  rPdL = Math.max(20, Math.min(40, pdL_raw));
+
+  // ── Seg heights ──
+  // Use the SAME lens-center-calibrated mmPerPx — do not derive a separate
+  // scale for seg.
+  pts.rB.x = pts.rP.x; pts.lB.x = pts.lP.x;
+  rSegR = Math.max(3, Math.min(45, (rB.y - rP.y) * mmPerPx));
+  rSegL = Math.max(3, Math.min(45, (lB.y - lP.y) * mmPerPx));
+
+  // Symmetry correction on seg (unchanged — already worked well)
+  {
+    const avg = (rSegR + rSegL) / 2;
+    rSegR = avg + (rSegR - avg) * 0.5;
+    rSegL = avg + (rSegL - avg) * 0.5;
+  }
+  updateOpt();
+}
+
+function updateOpt(){
+  const nm=$('pn').value||'—', nt=$('pnt').value||'—';
+  const dt=new Date().toLocaleDateString('en-GB');
+  $('opt-text').innerHTML=
+    '<b style="color:#4a8a4a">'+nm+'</b> · '+dt+'<br/>'+
+    'Mono PD — R: '+fmtHalf(rPdR)+' / L: '+fmtHalf(rPdL)+' mm<br/>'+
+    'Bino PD: '+fmtHalf(roundHalf(rPdR+rPdL))+' mm<br/>'+
+    'Seg height — R: '+fmtHalf(rSegR)+' / L: '+fmtHalf(rSegL)+' mm<br/>'+
+    '<span style="color:#2a4a2a">Notes: '+nt+'</span>';
+}
+
+// ── Move point with D-pad ──────────────────────────────────────────────────────
+function movePoint(dx,dy){
+  if(!pts[activePt]||!procImg) return;
+  const zoom=ZOOM_STEPS[zoomIdx];
+  const wrap=$('cv-wrap');
+  const dispW=wrap.clientWidth||320;
+  const imgPerDisp=(procImg.width/zoom)/dispW;
+  // Bridge uses half step — 1mm PD split resolution instead of 2mm
+  const scaleFactor=activePt==='bridge'?0.5:1;
+  const step=Math.max(0.5, stepSize*imgPerDisp*scaleFactor);
+  pts[activePt].x=Math.max(0,Math.min(procImg.width,  pts[activePt].x+dx*step));
+  pts[activePt].y=Math.max(0,Math.min(procImg.height, pts[activePt].y+dy*step));
+  if(activePt==='bridge') bridgeAuto=false;
+  else if(bridgeAuto) centerBridge();
+  recalc(); draw();
+}
+
+// ── Canvas tap → jump point ────────────────────────────────────────────────────
+function canvasTap(e){
+  e.preventDefault();
+  const cvs=$('cv-main'), rect=cvs.getBoundingClientRect();
+  const t=e.touches?e.changedTouches[0]:e;
+  const dx=t.clientX-rect.left, dy=t.clientY-rect.top;
+
+  // Convert display coords back to image coords
+  const zoom=ZOOM_STEPS[zoomIdx];
+  const IW=procImg.width, IH=procImg.height;
+  const vw=IW/zoom, vh=IH/zoom;
+  const ap=pts[activePt];
+  const cx=ap?ap.x:IW/2, cy=ap?ap.y:IH/2;
+  let vx=Math.max(0,Math.min(IW-vw, cx-vw/2));
+  let vy=Math.max(0,Math.min(IH-vh, cy-vh/2));
+
+  const dispW=rect.width, dispH=rect.height;
+  const ix=vx+(dx/dispW)*vw;
+  const iy=vy+(dy/dispH)*vh;
+
+  pts[activePt]={x:Math.max(0,Math.min(IW,ix)), y:Math.max(0,Math.min(IH,iy))};
+  if(activePt==='bridge') bridgeAuto=false;
+  else if(bridgeAuto) centerBridge();
+  recalc(); draw();
+}
+
+// ── Zoom ───────────────────────────────────────────────────────────────────────
+function changeZoom(dir){
+  zoomIdx=Math.max(0,Math.min(ZOOM_STEPS.length-1, zoomIdx+dir));
+  draw();
+}
+
+// ── Long-press D-pad ──────────────────────────────────────────────────────────
+let pressInterval=null;
+function startMove(dx,dy,btn){
+  btn.classList.add('pressed');
+  movePoint(dx,dy);
+  pressInterval=setInterval(()=>movePoint(dx,dy),80);
+}
+function stopMove(btn){
+  if(btn)btn.classList.remove('pressed');
+  clearInterval(pressInterval); pressInterval=null;
+}
+
+// ── Photo load ─────────────────────────────────────────────────────────────────
+function handlePhoto(file){
+  if(!file)return;
+  loadFile(file).then(c=>{
+    if(!c)return;
+    rawCanvas=c;
+    lastLandmarks=null; lastLandmarksGeom=null; // no live-frame detection for an uploaded file
+    const slot=$('slot');
+    let im=slot.querySelector('img');
+    if(!im){im=document.createElement('img');slot.insertBefore(im,slot.firstChild);}
+    im.src=c.toDataURL('image/jpeg',.5);
+    slot.querySelector('.slot-lbl').style.display='none';
+    let tk=slot.querySelector('.tick');
+    if(!tk){tk=document.createElement('div');tk.className='tick';tk.textContent='✓';slot.appendChild(tk);}
+    slot.classList.add('done');
+    $('btn-goplace').disabled=false;
+  });
+}
+
+function goPlace(){
+  procImg=rawCanvas;
+  bridgeAuto=true;
+  pts=smartPts(procImg.width,procImg.height)||defaultPts(procImg.width,procImg.height);
+  applyFrameBottomDetection();
+  applyLensCenterDetection();
+  activePt='rP'; zoomIdx=4; // default to 5× zoom
+  document.querySelectorAll('.pt-tab').forEach(b=>b.classList.toggle('active',b.dataset.pt==='rP'));
+  hide('s-photo'); show('s-place');
+  requestAnimationFrame(()=>{ recalc(); draw(); });
+}
+
+// ── Save full-res image ────────────────────────────────────────────────────────
+function saveImage(){
+  // Render at full zoom=1 onto an offscreen canvas
+  const off=document.createElement('canvas');
+  const W=procImg.width, H=procImg.height;
+  off.width=W; off.height=H;
+  const c=off.getContext('2d');
+  c.drawImage(procImg,0,0);
+
+  const{rP,lP,bridge,rB,lB}=pts;
+  const lw=Math.max(1.5,W*0.003);
+  const dot=Math.max(4,W*0.006);
+  const arm=Math.max(12,W*0.018);
+  const fs=Math.max(12,Math.round(W*0.032));
+
+  c.lineWidth=lw;
+  c.strokeStyle='#ff4444';
+  c.beginPath();c.moveTo(rP.x,rP.y);c.lineTo(bridge.x,rP.y);c.stroke();
+  c.strokeStyle='#aa66ff';
+  c.beginPath();c.moveTo(lP.x,lP.y);c.lineTo(bridge.x,lP.y);c.stroke();
+  c.strokeStyle='#ff8800';
+  c.beginPath();c.moveTo(rP.x,rP.y);c.lineTo(rP.x,rB.y);c.stroke();
+  c.strokeStyle='#ffdd00';
+  c.beginPath();c.moveTo(lP.x,lP.y);c.lineTo(lP.x,lB.y);c.stroke();
+
+  [[rP,'#ff6b35'],[lP,'#a78bfa'],[bridge,'#00e5ff'],[rB,'#ff8800'],[lB,'#ffdd00']].forEach(([p,col])=>{
+    c.fillStyle=col;c.beginPath();c.arc(p.x,p.y,dot,0,Math.PI*2);c.fill();
+    c.strokeStyle='rgba(0,0,0,.7)';c.lineWidth=0.8;c.beginPath();c.arc(p.x,p.y,dot,0,Math.PI*2);c.stroke();
+    c.strokeStyle=col;c.lineWidth=lw;
+    const g=dot+2;
+    c.beginPath();
+    c.moveTo(p.x-arm,p.y);c.lineTo(p.x-g,p.y);
+    c.moveTo(p.x+g,p.y);c.lineTo(p.x+arm,p.y);
+    c.moveTo(p.x,p.y-arm);c.lineTo(p.x,p.y-g);
+    c.moveTo(p.x,p.y+g);c.lineTo(p.x,p.y+arm);
+    c.stroke();
+  });
+
+  c.font=`bold ${fs}px Courier New`;c.textAlign='center';
+  function lbl(txt,x,y,col){const tw=c.measureText(txt).width;c.fillStyle='rgba(0,0,0,.88)';c.fillRect(x-tw/2-2,y-fs+1,tw+4,fs+4);c.fillStyle=col;c.fillText(txt,x,y);}
+  function lblL(txt,x,y,col){const tw=c.measureText(txt).width;c.fillStyle='rgba(0,0,0,.88)';c.fillRect(x-1,y-fs+1,tw+4,fs+4);c.fillStyle=col;c.textAlign='left';c.fillText(txt,x,y);}
+  lbl(rPdR.toFixed(1)+'mm',(rP.x+bridge.x)/2,rP.y-arm-4,'#ff6b35');
+  lbl(rPdL.toFixed(1)+'mm',(lP.x+bridge.x)/2,lP.y-arm-4,'#a78bfa');
+  lblL(rSegR.toFixed(1)+'mm',rP.x+arm+3,(rP.y+rB.y)/2+fs*.35,'#ff8800');
+  lblL(rSegL.toFixed(1)+'mm',lP.x+arm+3,(lP.y+lB.y)/2+fs*.35,'#ffdd00');
+
+  const bh=Math.round(fs*1.6);
+  c.fillStyle='rgba(0,229,255,.12)';c.fillRect(0,0,W,bh);
+  c.fillStyle='#00e5ff';c.font=`bold ${Math.round(fs*.7)}px Courier New`;c.textAlign='center';
+  c.fillText('◄ R      EXAMINER VIEW      L ►',W/2,fs*1.1);
+
+  const a=document.createElement('a');a.download='pd-measurement.png';a.href=off.toDataURL();a.click();
+}
+
+function rst(){
+  rawCanvas=null;procImg=null;
+  lensDebug={r:{},l:{}};
+  lastLandmarks=null;lastLandmarksGeom=null;
+  bridgeAuto=true;
+  pts={rP:null,lP:null,bridge:null,rB:null,lB:null,rLC:null,lLC:null};
+  rPdR=0;rPdL=0;rSegR=0;rSegL=0; zoomIdx=4;
+  $('inp').value='';
+  const slot=$('slot');
+  const im=slot.querySelector('img');if(im)im.remove();
+  const tk=slot.querySelector('.tick');if(tk)tk.remove();
+  slot.querySelector('.slot-lbl').style.display='';
+  slot.classList.remove('done');
+  $('btn-goplace').disabled=true;
+  ['s-place','s-photo'].forEach(hide);
+  showLabels=false;
+  hide('btn-save');
+  hide('results-grid');
+  if($('results-card'))$('results-card').style.display='none';
+  if($('results-optbox'))$('results-optbox').style.display='none';
+  $('f-pd').value='';
+  show('s-setup');
+  setTheme('setup');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // ── Camera viewfinder ────────────────────────────────────────────────────────
+  let stream=null;
+  let facingMode='user'; // 'user'=front, 'environment'=rear
+  function startCamera(){
+    const vf=$('vf');
+    if(!vf) return;
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+      navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:9999,min:1280},height:{ideal:9999,min:720},advanced:[{width:{min:3000}},{width:{min:1920}}]}})
+        .then(s=>{
+          stream=s; vf.srcObject=s;
+          vf.style.transform=facingMode==='user'?'scaleX(-1)':'scaleX(1)';
+          $('vf-status').textContent='';
+          startDistanceCheck();
+          const sw=$('btn-camswitch');
+          if(sw) sw.textContent=facingMode==='user'?'🔄 REAR':'🔄 FRONT';
+          // Setup native zoom if supported
+          setupZoom(s);
+        })
+        .catch(()=>{
+          $('vf-status').textContent='Camera unavailable — use file picker below';
+          show('slot');
+        });
+    } else {
+      $('vf-status').textContent='Camera not supported — use file picker below';
+      show('slot');
+    }
+  }
+
+  // Native camera zoom (optical/digital — distortion-free, capture matches preview)
+  let camZoom=1, zoomMin=1, zoomMax=1, zoomStep=0.1, zoomTrack=null;
+  function setupZoom(s){
+    const track=s.getVideoTracks()[0];
+    zoomTrack=track;
+    const caps=track.getCapabilities?track.getCapabilities():{};
+    const ctrl=$('zoom-ctrl');
+    if(caps.zoom){
+      zoomMin=caps.zoom.min||1;
+      zoomMax=caps.zoom.max||1;
+      zoomStep=caps.zoom.step||0.1;
+      camZoom=Math.max(zoomMin,Math.min(zoomMax,track.getSettings().zoom||zoomMin));
+      if(ctrl) ctrl.style.display='flex';
+      updateZoomLabel();
+    } else {
+      // No native zoom available — hide control
+      if(ctrl) ctrl.style.display='none';
+    }
+  }
+  function updateZoomLabel(){
+    const v=$('cam-zoom-val'); if(v) v.textContent=camZoom.toFixed(1)+'×';
+  }
+  function applyZoom(){
+    if(!zoomTrack) return;
+    camZoom=Math.max(zoomMin,Math.min(zoomMax,camZoom));
+    zoomTrack.applyConstraints({advanced:[{zoom:camZoom}]}).catch(()=>{});
+    updateZoomLabel();
+  }
+
+  function stopCamera(){
+    stopDistanceCheck();
+    if(stream){
+      // Turn off torch before stopping
+      torchOn=false;
+      const track=stream.getVideoTracks&&stream.getVideoTracks()[0];
+      if(track&&track.getCapabilities&&track.getCapabilities().torch){
+        track.applyConstraints({advanced:[{torch:false}]}).catch(()=>{});
+      }
+      stream.getTracks().forEach(t=>t.stop());
+      stream=null;
+    }
+  }
+
+  // Torch toggle
+  let torchOn=false;
+  document.addEventListener('click', e=>{
+    if(e.target.id==='btn-torch'){
+      if(!stream) return;
+      const track=stream.getVideoTracks()[0];
+      if(!track||!track.getCapabilities||!track.getCapabilities().torch) return;
+      torchOn=!torchOn;
+      track.applyConstraints({advanced:[{torch:torchOn}]}).catch(()=>{});
+      $('btn-torch').textContent=torchOn?'🔦 ON':'🔦 OFF';
+      $('btn-torch').style.borderColor=torchOn?'rgba(255,220,0,0.9)':'rgba(255,220,0,0.5)';
+      $('btn-torch').style.color=torchOn?'#fff':'#ffdd00';
+    }
+  });
+
+  // Distance + height indicator — MediaPipe Face Landmarker (on-device AI,
+  // no experimental browser flags, no hardware API dependency)
+  // Target ratio calibrated and locked at 0.208 (= 20.8% eye-corner distance
+  // at true 30cm working distance).
+  let distInterval=null;
+  let distState='detecting', heightState=null;
+  function setLensTargetColor(state){
+    const g=document.getElementById('lens-target'); if(!g) return;
+    const col = state==='good' ? 'rgba(0,230,118,0.95)' : 'rgba(255,221,0,0.95)';
+    g.setAttribute('stroke', col);
+  }
+  function setBadge(state){
+    const b=$('dist-badge'); if(!b) return;
+    distState=state;
+    updateCaptureReady();
+    setLensTargetColor(state);
+    if(state==='good'){
+      b.style.borderColor='rgba(0,220,80,0.9)';
+      b.style.color='#00e577';
+      b.style.background='rgba(0,40,20,0.7)';
+      b.textContent='✓ GOOD DISTANCE';
+    } else if(state==='near'){
+      b.style.borderColor='rgba(255,80,80,0.8)';
+      b.style.color='#ff6666';
+      b.style.background='rgba(0,0,0,0.6)';
+      b.textContent='⊖ TOO CLOSE — MOVE BACK';
+    } else if(state==='far'){
+      b.style.borderColor='rgba(255,170,0,0.8)';
+      b.style.color='#ffaa00';
+      b.style.background='rgba(0,0,0,0.6)';
+      b.textContent='⊕ TOO FAR — COME CLOSER';
+    } else {
+      b.style.borderColor='rgba(255,170,0,0.6)';
+      b.style.color='#ffaa00';
+      b.style.background='rgba(0,0,0,0.6)';
+      b.textContent='◷ DETECTING…';
+    }
+  }
+  function setHeightBadge(state){
+    const b=$('height-badge'); if(!b) return;
+    heightState=state;
+    updateCaptureReady();
+    if(state==='good'){
+      b.style.borderColor='rgba(0,220,80,0.9)';
+      b.style.color='#00e577';
+      b.style.background='rgba(0,40,20,0.7)';
+      b.textContent='✓ HEIGHT OK';
+      b.style.display='';
+    } else if(state==='up'){
+      b.style.borderColor='rgba(255,170,0,0.8)';
+      b.style.color='#ffaa00';
+      b.style.background='rgba(0,0,0,0.6)';
+      b.textContent='↑ TILT UP MORE';
+      b.style.display='';
+    } else if(state==='down'){
+      b.style.borderColor='rgba(255,170,0,0.8)';
+      b.style.color='#ffaa00';
+      b.style.background='rgba(0,0,0,0.6)';
+      b.textContent='↓ TILT DOWN MORE';
+      b.style.display='';
+    } else {
+      b.style.display='none';
+    }
+  }
+  // Capture "stopper" — only allow the shutter once distance AND height are
+  // both confirmed good, so every photo is taken from the same consistent
+  // position (critical for repeatable PD/seg measurements). If the face
+  // model fails to load, fall back to always-allowed (with a warning) so the
+  // examiner is never permanently blocked.
+  function captureIsReady(){
+    if(landmarkerFailed) return true;
+    return distState==='good' && heightState==='good';
+  }
+  function updateCaptureReady(){
+    const btn=$('btn-capture'); if(!btn) return;
+    const inner=btn.firstElementChild;
+    const hint=$('capture-hint');
+    if(captureIsReady()){
+      btn.style.borderColor='rgba(0,230,118,0.95)';
+      btn.style.boxShadow='0 0 14px rgba(0,230,118,0.55)';
+      btn.style.opacity='1';
+      if(inner) inner.style.background='#fff';
+      if(hint){ hint.textContent='✓ ready — tap to capture'; hint.style.color='#00e577'; }
+    } else {
+      btn.style.borderColor='rgba(255,255,255,0.35)';
+      btn.style.boxShadow='none';
+      btn.style.opacity='0.55';
+      if(inner) inner.style.background='#999';
+      if(hint){ hint.textContent='align distance + height to unlock'; hint.style.color='#888'; }
+    }
+  }
+
+  // ── MediaPipe Face Landmarker — eye-corner distance detection ──────────────
+  // Loaded once, lazily, the first time the camera screen needs it.
+  let faceLandmarker = null;
+  let landmarkerLoading = false;
+  let landmarkerFailed = false;
+
+  async function ensureLandmarker(){
+    if(faceLandmarker || landmarkerLoading || landmarkerFailed) return;
+    landmarkerLoading = true;
+    const dbg=$('dist-debug');
+    if(dbg) dbg.textContent = 'Loading face model… (one-time, few MB)';
+    try{
+      const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+      const filesetResolver = await vision.FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+      );
+      faceLandmarker = await vision.FaceLandmarker.createFromOptions(filesetResolver, {
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+          delegate: 'GPU'
+        },
+        outputFaceBlendshapes: false,
+        runningMode: 'VIDEO',
+        numFaces: 1
+      });
+      if(dbg) dbg.textContent = 'Face model loaded ✓';
+    }catch(e){
+      landmarkerFailed = true;
+      if(dbg) dbg.textContent = 'Face model failed to load: '+e.message;
+      updateCaptureReady();
+    }
+    landmarkerLoading = false;
+  }
+
+  function startDistanceCheck(){
+    if(distInterval) clearInterval(distInterval);
+    setBadge('detecting');
+    ensureLandmarker();
+
+    const vf=$('vf');
+    const dbg=$('dist-debug');
+
+    // Eye-corner landmarks (MediaPipe Face Mesh indices):
+    // 33  = outer corner of the (subject's) right eye in mirrored selfie view
+    // 263 = outer corner of the (subject's) left eye
+    // These give a stable, real anatomical width baseline.
+    const L_OUTER = 33, R_OUTER = 263;
+
+    // Target: outer-eye-corner normalized distance corresponding to ~30cm.
+    // Adjustable live via slider — see eyeDistTargetRatio global.
+    const TOLERANCE = 0.010;
+
+    let lastTs = -1;
+
+    distInterval = setInterval(()=>{
+      if(!faceLandmarker || !vf.videoWidth){
+        if(dbg && faceLandmarker===null && !landmarkerLoading && landmarkerFailed){
+          dbg.textContent = 'Face model unavailable — falling back to visual bracket only';
+        }
+        return;
+      }
+      const ts = performance.now();
+      if(ts===lastTs) return;
+      lastTs = ts;
+
+      let result;
+      try{
+        result = faceLandmarker.detectForVideo(vf, ts);
+      }catch(e){
+        if(dbg) dbg.textContent = 'detectForVideo error: '+e.message;
+        return;
+      }
+
+      if(!result || !result.faceLandmarks || result.faceLandmarks.length===0){
+        setBadge('detecting');
+        setHeightBadge(null);
+        if(dbg) dbg.textContent = 'no face detected';
+        return;
+      }
+
+      const lm = result.faceLandmarks[0];
+      const p1 = lm[L_OUTER], p2 = lm[R_OUTER];
+      // Landmarks are normalized 0–1 relative to frame width/height.
+      const dx = (p2.x - p1.x);
+      const dy = (p2.y - p1.y);
+      const eyeDist = Math.sqrt(dx*dx + dy*dy); // normalized units
+
+      if(dbg) dbg.textContent = 'eye-corner dist: '+(eyeDist*100).toFixed(2)+'% (target '+(eyeDistTargetRatio*100).toFixed(1)+'%)';
+
+      if(Math.abs(eyeDist-eyeDistTargetRatio) <= TOLERANCE) setBadge('good');
+      else if(eyeDist < eyeDistTargetRatio) setBadge('far');
+      else setBadge('near');
+
+      // Height check: average eye y-position should align with crosshair
+      // (165/400 = 0.4125 down the frame).
+      const eyeY = (p1.y + p2.y)/2;
+      const targetY = 165/400;
+      const tolY = 0.04;
+      if(eyeY < targetY - tolY) setHeightBadge('down');
+      else if(eyeY > targetY + tolY) setHeightBadge('up');
+      else setHeightBadge('good');
+    }, 200);
+  }
+  function stopDistanceCheck(){
+    if(distInterval){ clearInterval(distInterval); distInterval=null; }
+  }
+
+  // Zoom buttons
+  document.addEventListener('click', e=>{
+    if(e.target.id==='cam-zoom-in'){ camZoom+=Math.max(zoomStep,(zoomMax-zoomMin)/20); applyZoom(); }
+    if(e.target.id==='cam-zoom-out'){ camZoom-=Math.max(zoomStep,(zoomMax-zoomMin)/20); applyZoom(); }
+  });
+
+  // Camera switch
+  document.addEventListener('click', e=>{
+    if(e.target.id==='btn-camswitch'){
+      torchOn=false;
+      facingMode=facingMode==='user'?'environment':'user';
+      startCamera();
+    }
+  });
+
+  // Capture snapshot from viewfinder — matches preview exactly
+  function doCapture(){
+    if(!captureIsReady()){
+      // Blocked — give clear feedback instead of silently ignoring the tap
+      if(navigator.vibrate) navigator.vibrate(80);
+      const btn=$('btn-capture');
+      btn.style.transition='none';
+      btn.style.borderColor='rgba(255,80,80,0.95)';
+      setTimeout(()=>{ btn.style.transition=''; updateCaptureReady(); },220);
+      const st=$('vf-status');
+      st.style.color='#ff6666';
+      if(distState!=='good') st.textContent='⊖ Get distance to GOOD first';
+      else if(heightState!=='good') st.textContent='↕ Align height to GOOD first';
+      else st.textContent='Hold steady — not aligned yet';
+      return;
+    }
+    const vf=$('vf');
+    const hasVideo=vf.srcObject&&vf.videoWidth>0;
+    const vw=hasVideo?vf.videoWidth:640;
+    const vh=hasVideo?vf.videoHeight:480;
+
+    // object-fit:cover crops the video to the visible box's real aspect ratio.
+    const boxRect = vf.getBoundingClientRect();
+    const boxAR = boxRect.width / boxRect.height;
+    const videoAR = vw/vh;
+    let cropW, cropH;
+    if(videoAR > boxAR){ cropH = vh; cropW = Math.round(vh*boxAR); }
+    else { cropW = vw; cropH = Math.round(vw/boxAR); }
+    const cropX = Math.round((vw - cropW)/2);
+    const cropY = Math.round((vh - cropH)/2);
+
+    // Grab the pupil positions from the face model on this exact frame,
+    // before anything moves — this seeds the marker placement step.
+    lastLandmarks=null; lastLandmarksGeom=null;
+    if(hasVideo && faceLandmarker){
+      try{
+        const result=faceLandmarker.detectForVideo(vf, performance.now());
+        if(result && result.faceLandmarks && result.faceLandmarks.length){
+          lastLandmarks=result.faceLandmarks[0];
+          lastLandmarksGeom={vw, vh, cropX, cropY, cropW, cropH};
+        }
+      }catch(e){ /* fall back to manual placement */ }
+    }
+
+    const c=document.createElement('canvas');
+    c.width=cropW; c.height=cropH;
+    const ctx=c.getContext('2d');
+    if(hasVideo){
+      ctx.drawImage(vf, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    }
+    rawCanvas=c;
+    captureFacing=facingMode;
+    stopCamera();
+    const prev=document.createElement('img');
+    prev.src=c.toDataURL('image/jpeg',.8);
+    const mir=facingMode==='user'?'transform:scaleX(-1);':'';
+    prev.style.cssText='width:100%;border-radius:8px;margin-bottom:8px;display:block;max-width:460px;'+mir;
+    const vfWrap=$('vf').parentElement;
+    vfWrap.style.display='none';
+    vfWrap.parentElement.insertBefore(prev,vfWrap);
+    $('btn-goplace').disabled=false;
+    $('vf-status').textContent='✅ Photo captured — press NEXT to place markers';
+    $('vf-status').style.color='#00e577';
+  }
+  $('btn-capture').addEventListener('click',doCapture);
+  $('btn-capture').addEventListener('touchend',e=>{e.preventDefault();doCapture();},{passive:false});
+
+  // Fallback file input
+  $('inp').addEventListener('change',function(){handlePhoto(this.files[0]);});
+  try{ $('inp2').addEventListener('change', function(){ handlePhoto(this.files[0]); }); }catch(e){}
+
+  // Switch body background: light for setup, dark for rest
+  function setTheme(screen){
+    document.body.style.background = screen==='setup' ? '#eef4f2' : '#0c0c12';
+  }
+  setTheme('setup');
+
+  $('btn-next').addEventListener('click',()=>{
+    binoPD=parseFloat($('f-pd').value)||0;
+    if(!binoPD){$('err').textContent='Enter frame PD';return;}
+    $('err').textContent='';
+    hide('s-setup'); show('s-photo'); setTheme('photo');
+    startCamera();
+  });
+
+  $('btn-back').addEventListener('click',()=>{
+    stopCamera();
+    hide('s-place');
+    show('s-photo');
+    startCamera();
+  });
+
+  // Tap canvas to toggle results overlay
+  function showResults(){
+    recalc();
+    const bino=roundHalf(rPdR+rPdL);
+    $('r-pd').innerHTML=fmtHalf(bino)+'<span>mm</span>';
+    $('r-pdr').textContent=fmtHalf(rPdR);
+    $('r-pdl').textContent=fmtHalf(rPdL);
+    $('r-segr').innerHTML=fmtHalf(rSegR)+'<span>mm</span>';
+    $('r-segl').innerHTML=fmtHalf(rSegL)+'<span>mm</span>';
+    updateOpt();
+    show('results-grid');
+    $('results-card').style.display='';
+    $('results-optbox').style.display='';
+    show('btn-save');
+  }
+  $('btn-flip').addEventListener('click',()=>{
+    if(!procImg) return;
+    procImg=flipH(procImg);
+    pts=mirrorPts(pts,procImg.width)||defaultPts(procImg.width,procImg.height);
+    recalc(); draw();
+  });
+
+  $('btn-center').addEventListener('click',()=>{
+    // Switch to bridge point — zoom centres on it exactly like pressing BRIDGE tab
+    activePt='bridge';
+    document.querySelectorAll('.pt-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelector('[data-pt="bridge"]').classList.add('active');
+    zoomIdx=Math.min(2, ZOOM_STEPS.length-1);
+    draw();
+  });
+
+  $('btn-results').addEventListener('click',()=>{
+    showLabels=true; draw();
+    recalc();
+    const bino=roundHalf(rPdR+rPdL);
+    $('r-pd').innerHTML=fmtHalf(bino)+'<span>mm</span>';
+    $('r-pdr').textContent=fmtHalf(rPdR);
+    $('r-pdl').textContent=fmtHalf(rPdL);
+    $('r-segr').innerHTML=fmtHalf(rSegR)+'<span>mm</span>';
+    $('r-segl').innerHTML=fmtHalf(rSegL)+'<span>mm</span>';
+    updateOpt();
+    show('results-grid');
+    $('results-card').style.display='';
+    $('results-optbox').style.display='';
+    show('btn-save');
+  });
+
+
+  $('btn-again').addEventListener('click',()=>{rst();});
+  $('btn-save').addEventListener('click',saveImage);
+  document.querySelector('[id="btn-goplace"]') && $('btn-goplace').addEventListener('click',goPlace);
+  $('pn').addEventListener('input',()=>{recalc();});
+  $('pnt').addEventListener('input',()=>{recalc();});
+
+  // Point tabs
+  document.querySelectorAll('.pt-tab').forEach(b=>{
+    b.addEventListener('click',()=>{
+      activePt=b.dataset.pt;
+      document.querySelectorAll('.pt-tab').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      draw();
+    });
+  });
+
+  // Step size
+  document.querySelectorAll('.step-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      stepSize=parseInt(b.dataset.step);
+      document.querySelectorAll('.step-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+
+  // Zoom buttons
+  $('z-in').addEventListener('click',()=>changeZoom(+1));
+  $('z-out').addEventListener('click',()=>changeZoom(-1));
+
+
+  // D-pad — with global safety stop to prevent stuck repeat
+  let activeDpadBtn=null;
+  function startMove2(dx,dy,btn){
+    if(pressInterval) clearInterval(pressInterval);
+    activeDpadBtn=btn;
+    startMove(dx,dy,btn);
+  }
+  function stopMove2(){
+    stopMove(activeDpadBtn);
+    activeDpadBtn=null;
+  }
+  [['d-up',0,-1],['d-down',0,1],['d-left',-1,0],['d-right',1,0]].forEach(([id,dx,dy])=>{
+    const btn=$(id);
+    btn.addEventListener('touchstart',e=>{e.preventDefault();startMove2(dx,dy,btn);},{passive:false});
+    btn.addEventListener('touchend',  e=>{e.preventDefault();stopMove2();},{passive:false});
+    btn.addEventListener('touchcancel',e=>{e.preventDefault();stopMove2();},{passive:false});
+    btn.addEventListener('mousedown', ()=>startMove2(dx,dy,btn));
+    btn.addEventListener('mouseup',   ()=>stopMove2());
+    btn.addEventListener('mouseleave',()=>stopMove2());
+  });
+  // Global safety: if touch lifts anywhere on screen, stop D-pad
+  document.addEventListener('touchend',  ()=>stopMove2());
+  document.addEventListener('touchcancel',()=>stopMove2());
+
+  // Canvas tap
+  const cvs=$('cv-main');
+  cvs.addEventListener('touchend', canvasTap,{passive:false});
+  cvs.addEventListener('click',    canvasTap);
+});
+</script>
+</body>
+</html>
