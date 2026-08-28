@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>קליניקה — אנשי קשר</title>
+<style>
+  html{color-scheme:light; forced-color-adjust:none;}
+  :root{
+    --bg-a:#eef6fc; --bg-b:#e0edf9;
+    --navy:#0d1b3e; --blue:#2f6fed; --blue-light:#dfeafd;
+    --warn:#e0a24b; --warn-light:#fdf1e0;
+    --card:#ffffff; --text:#16233f; --muted:#5c6c88;
+    --danger:#c0524a; --ok:#2f9e6b; --border:#e2ebf7;
+  }
+  *{box-sizing:border-box; forced-color-adjust:none;}
+  body{
+    margin:0; font-family:'Segoe UI',Arial,sans-serif; color:var(--text); min-height:100vh; padding-bottom:40px;
+    background-color:var(--bg-a);
+    background-image:
+      radial-gradient(circle at 30% 0%, rgba(255,255,255,.6), transparent 55%),
+      linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 100%),
+      linear-gradient(rgba(13,27,62,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(13,27,62,0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+    background-attachment: fixed;
+  }
+  header{padding:16px 16px 14px; text-align:center; border-bottom:1px solid var(--border); background:rgba(255,255,255,.85); backdrop-filter:blur(6px); position:sticky; top:0; z-index:10; box-shadow:0 4px 14px rgba(13,27,62,.08);}
+  .header-icon{display:flex; justify-content:center; margin-bottom:6px; filter:drop-shadow(0 4px 6px rgba(13,27,62,.25));}
+  header h1{margin:0; font-size:19px; color:var(--navy); font-weight:800; letter-spacing:.2px;}
+  header .sub{font-size:12px; color:var(--muted); margin-top:2px;}
+  .container{max-width:640px; margin:0 auto; padding:16px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .card{
+    background-color:var(--card);
+    background-image:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border:1px solid var(--border); border-top:3px solid var(--blue); border-radius:20px; padding:18px; margin-bottom:14px;
+    box-shadow: 0 14px 28px rgba(13,27,62,.10), 0 3px 8px rgba(13,27,62,.06), inset 0 1px 0 rgba(255,255,255,.8);
+  }
+  input[type=text], input[type=tel], input[type=date], textarea{
+    width:100%; background-color:#fff; background-image:linear-gradient(180deg,#fbfdff,#ffffff);
+    border:1.5px solid var(--border); color:var(--text); border-radius:12px; padding:10px 12px; font-size:15px; margin-top:4px; font-family:inherit;
+    box-shadow: inset 0 2px 5px rgba(13,27,62,.07), inset 0 -1px 0 #fff;
+  }
+  input[type=text]:focus, input[type=tel]:focus, input[type=date]:focus, textarea:focus{outline:none; border-color:var(--blue); box-shadow: inset 0 2px 5px rgba(13,27,62,.07), 0 0 0 3px var(--blue-light);}
+  textarea{min-height:160px; resize:vertical; line-height:1.5;}
+  label{font-size:13px; color:var(--muted); display:block; margin-top:10px;}
+  button{font-family:inherit; cursor:pointer; border:none; border-radius:999px; font-size:15px; padding:13px 18px; -webkit-appearance:none; appearance:none; transition:transform .08s ease, box-shadow .12s ease;}
+  .btn-primary{
+    background-image:linear-gradient(180deg, #4d84ff 0%, #2f6fed 55%, #2560d8 100%); color:#ffffff; font-weight:700; width:100%; margin-top:14px;
+    box-shadow: 0 10px 20px rgba(47,111,237,.38), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.15);
+  }
+  .btn-primary:active{ transform: translateY(2px); box-shadow: 0 4px 10px rgba(47,111,237,.3), inset 0 2px 5px rgba(0,0,0,.2); }
+  .btn-secondary{
+    background-color:#ffffff; background-image:linear-gradient(180deg,#ffffff,#f1f6fd); color:var(--blue); border:1.5px solid var(--blue); width:100%; margin-top:8px; font-weight:600;
+    box-shadow: 0 6px 14px rgba(13,27,62,.09), inset 0 1px 0 #fff;
+  }
+  .btn-secondary:active{ transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(13,27,62,.12); }
+  .btn-danger{
+    background-color:#ffffff; background-image:linear-gradient(180deg,#ffffff,#fdf3f2); color:var(--danger); border:1.5px solid var(--danger); width:100%; margin-top:8px; padding:10px; font-weight:600;
+    box-shadow: 0 6px 14px rgba(192,82,74,.12), inset 0 1px 0 #fff;
+  }
+  .btn-danger:active{ transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(192,82,74,.15); }
+  .btn-small{
+    background-color:var(--blue-light); background-image:linear-gradient(180deg,#eaf3ff,#d7e8fd); color:var(--blue); border:none; padding:7px 14px; font-size:13px; font-weight:600;
+    box-shadow: 0 4px 10px rgba(47,111,237,.18), inset 0 1px 0 #fff;
+  }
+  .btn-small:active{ transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(47,111,237,.2); }
+  .btn-back{background:#fff; color:var(--navy); padding:9px 16px 9px 12px; font-size:14px; font-weight:600; border-radius:999px; box-shadow:0 3px 8px rgba(13,27,62,.08); border:1px solid var(--border); display:inline-flex; align-items:center; gap:6px; margin-bottom:10px;}
+  .btn-back:active{background:var(--blue-light);}
+  .btn-back svg{width:18px; height:18px; flex-shrink:0;}
+  .search-box{margin-bottom:10px;}
+  .list-item{
+    background-color:#fff; background-image:linear-gradient(180deg,#ffffff,#fafcff);
+    border:1px solid var(--border); border-right:4px solid var(--blue); border-radius:16px; padding:12px 14px; margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center; cursor:pointer;
+    box-shadow: 0 8px 18px rgba(13,27,62,.09), 0 2px 4px rgba(13,27,62,.05), inset 0 1px 0 rgba(255,255,255,.7);
+    transition: transform .08s ease, box-shadow .12s ease;
+  }
+  .list-item:active{background-color:var(--blue-light); transform:translateY(1px); box-shadow: inset 0 2px 5px rgba(13,27,62,.1);}
+  .list-item .name{font-weight:700; color:var(--navy);}
+  .list-item .sub2{font-size:12px; color:var(--muted); margin-top:2px;}
+  .empty{color:var(--muted); text-align:center; padding:24px 0; font-size:14px;}
+  .customer-header{
+    margin-bottom:12px; background-color:var(--navy); background-image:linear-gradient(135deg, #16295c, var(--navy) 60%, #0a1330); color:#fff; border-radius:16px; padding:16px 18px;
+    box-shadow: 0 16px 30px rgba(13,27,62,.35), inset 0 1px 0 rgba(255,255,255,.1), inset 0 -2px 6px rgba(0,0,0,.25);
+  }
+  .customer-header .name{font-size:18px; font-weight:700; color:#fff;}
+  .customer-header .detail{font-size:13px; color:#b7c4e0; margin-top:2px;}
+  .exam-item{
+    background-color:#fff; background-image:linear-gradient(180deg,#ffffff,#fafcff);
+    border:1px solid var(--border); border-right:4px solid var(--ok); border-radius:16px; padding:12px; margin-top:10px; cursor:pointer;
+    box-shadow: 0 8px 18px rgba(13,27,62,.09), 0 2px 4px rgba(13,27,62,.05), inset 0 1px 0 rgba(255,255,255,.7);
+    transition: transform .08s ease, box-shadow .12s ease;
+  }
+  .exam-item:active{background-color:var(--blue-light); transform:translateY(1px); box-shadow: inset 0 2px 5px rgba(13,27,62,.1);}
+  .exam-date{font-size:12px; color:var(--blue); font-weight:700;}
+  .exam-preview{font-size:13px; color:var(--muted); margin-top:4px; white-space:pre-wrap; max-height:60px; overflow:hidden;}
+  .field-hint{font-size:11px; color:var(--muted); margin-top:4px;}
+  .backup-banner{
+    background-color:var(--warn-light); background-image:linear-gradient(180deg,#fff6e6,#fbecd3);
+    border:1px solid var(--warn); border-radius:16px; padding:14px; margin-bottom:14px;
+    box-shadow: 0 10px 22px rgba(224,162,75,.18), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .backup-banner .title{font-weight:700; color:#8a5a1a; margin-bottom:4px;}
+  .backup-banner .text{font-size:13px; color:var(--text); margin-bottom:10px;}
+  .backup-banner .btn-primary{background-image:linear-gradient(180deg,#f0b56a,var(--warn) 60%,#c98a3f); color:#241a0d; box-shadow: 0 10px 20px rgba(224,162,75,.4), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.15);}
+  .backup-row{display:flex; gap:8px;}
+  .backup-row button{flex:1;}
+  .settings-card summary{cursor:pointer; color:var(--muted); font-size:13px;}
+  .minimal-row{display:flex; align-items:center; justify-content:space-between; padding:6px 4px 18px;}
+  .link-btn{background:none; border:none; color:var(--blue); font-weight:700; font-size:15px; padding:8px 6px; display:flex; align-items:center; gap:6px; border-radius:8px; box-shadow:none;}
+  .link-btn:active{background:var(--blue-light); transform:translateY(1px);}
+  .icon-round-btn{
+    width:46px; height:46px; border-radius:50%;
+    background-color:var(--blue-light); background-image:radial-gradient(circle at 32% 28%, #f2f8ff, var(--blue-light) 70%);
+    color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:18px; border:none; padding:0;
+    box-shadow: 0 8px 16px rgba(47,111,237,.28), inset 0 1px 0 #fff, inset 0 -3px 5px rgba(47,111,237,.18);
+  }
+  .icon-round-btn:active{ transform: translateY(1px) scale(.96); box-shadow: inset 0 3px 6px rgba(47,111,237,.3); }
+  .scan-overlay{display:none; position:fixed; inset:0; background:rgba(13,27,62,.55); z-index:100; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(2px);}
+  .scan-overlay.active{display:flex;}
+  .spinner{width:46px; height:46px; border-radius:50%; border:4px solid rgba(255,255,255,.3); border-top-color:#fff; animation:spin .9s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .scan-overlay .msg{color:#fff; margin-top:14px; font-size:14px;}
+  .apikey-status{font-size:12px; margin-top:6px;}
+  .apikey-status.ok{color:var(--ok);}
+  .apikey-status.missing{color:var(--danger);}
+  .mic-wrap{display:flex; flex-direction:column; align-items:center; padding:12px 0 4px;}
+  .mic-btn{
+    width:60px; height:60px; border-radius:50%;
+    background-image:radial-gradient(circle at 35% 30%, #5a90ff, var(--blue));
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+    box-shadow: 0 8px 18px rgba(47,111,237,.35), inset 0 1px 0 rgba(255,255,255,.35);
+    cursor:pointer; transition: transform .1s ease;
+  }
+  .mic-btn:active{ transform: scale(.95); }
+  .mic-btn.listening{ animation: mic-pulse 1.2s infinite; background-image:radial-gradient(circle at 35% 30%, #ff8a70, var(--danger)); }
+  @keyframes mic-pulse{
+    0%{box-shadow:0 0 0 0 rgba(192,82,74,.6), 0 8px 18px rgba(192,82,74,.35);}
+    70%{box-shadow:0 0 0 18px rgba(192,82,74,0), 0 8px 18px rgba(192,82,74,.35);}
+    100%{box-shadow:0 0 0 0 rgba(192,82,74,0), 0 8px 18px rgba(192,82,74,.35);}
+  }
+  .mic-label{font-size:12px; color:var(--muted); margin-top:6px;}
+  .transcript{background:#fff; border:1px dashed var(--border); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--muted); min-height:20px; margin-top:8px; white-space:pre-wrap;}
+</style>
+</head>
+<body>
+
+<div class="scan-overlay" id="scan-overlay">
+  <div class="spinner"></div>
+  <div class="msg">מנתח את הסריקה...</div>
+</div>
+
+
+<header>
+  <div class="header-icon" id="header-icon" onclick="handleHeaderIconClick()" style="cursor:pointer;">
+    <svg width="76" height="34" viewBox="0 0 250 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- temple stubs -->
+      <rect x="48" y="48" width="16" height="14" rx="3" fill="#0d0f10"/>
+      <rect x="226" y="48" width="16" height="14" rx="3" fill="#0d0f10"/>
+      <!-- bridge -->
+      <rect x="134" y="48" width="22" height="14" rx="6" fill="#0d0f10"/>
+      <!-- lenses -->
+      <circle cx="100" cy="55" r="38" stroke="#0d0f10" stroke-width="14"/>
+      <circle cx="190" cy="55" r="38" stroke="#0d0f10" stroke-width="14"/>
+      <!-- left lens: crosshair -->
+      <line x1="100" y1="35" x2="100" y2="75" stroke="#29c9e6" stroke-width="7" stroke-linecap="round"/>
+      <line x1="80" y1="55" x2="120" y2="55" stroke="#29c9e6" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="100" cy="55" r="6" fill="#ffffff"/>
+      <!-- right lens: target -->
+      <circle cx="190" cy="55" r="16" stroke="#f4703c" stroke-width="6"/>
+      <circle cx="190" cy="55" r="6" fill="#f4703c"/>
+    </svg>
+  </div>
+  <h1>מאגר לקוחות — קליניקה</h1>
+  <div class="field-hint" id="show-all-indicator" style="margin-top:2px;"></div>
+</header>
+
+<div class="container">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div id="backup-banner-slot"></div>
+    <div class="card">
+      <label>חיפוש לקוח (שם פרטי / משפחה)</label>
+      <input type="text" id="search-input" class="search-box" placeholder="הקלד לחיפוש...">
+      <div id="customers-list"></div>
+      <button class="btn-primary" onclick="startNewCustomer()">+ לקוח חדש</button>
+      <button class="btn-secondary" onclick="startVoiceCustomer()">🎤 לקוח חדש בהקלטה קולית</button>
+    </div>
+
+    <div class="minimal-row">
+      <button class="link-btn" onclick="showScreen('screen-orders')">📒 פנקס הזמנות</button>
+      <div style="display:flex; gap:8px;">
+        <button class="icon-round-btn" onclick="toggleApiKeyPanel()" title="מפתח API לסריקה" aria-label="מפתח API לסריקה">🔑</button>
+        <button class="icon-round-btn" onclick="handleBackupIconClick()" title="ייבוא אנשי קשר" aria-label="ייבוא אנשי קשר">💾</button>
+      </div>
+    </div>
+
+    <div class="card" id="apikey-panel" style="display:none;">
+      <label style="margin-top:0;">מפתח Anthropic API (לסריקת מעטפות אוטומטית)</label>
+      <input type="password" id="apikey-input" placeholder="sk-ant-...">
+      <button class="btn-small" style="margin-top:8px;" onclick="saveApiKey()">שמור מפתח</button>
+      <button class="btn-small" style="margin-top:8px;" onclick="clearApiKey()">מחק מפתח</button>
+      <div id="apikey-status" class="apikey-status"></div>
+      <div class="field-hint">אופציונלי: בלי מפתח, אפשר להמשיך להדביק טקסט ידנית מהצ'אט כרגיל. עם מפתח, כפתור הסריקה במסך הבדיקה יעבוד אוטומטית. המפתח נשמר רק בדפדפן שלך.</div>
+    </div>
+
+    <div class="card" id="backup-panel" style="display:none;">
+      <div id="backup-json-section" style="display:none;">
+        <div class="field-hint" style="margin-top:0;">גיבוי אחרון: <span id="last-backup-display">מעולם לא</span></div>
+        <button class="btn-secondary" onclick="exportBackup()">📤 גבה עכשיו (הורדת קובץ)</button>
+        <label>שחזור מקובץ גיבוי</label>
+        <input type="file" id="import-file-input" accept="application/json" onchange="handleImportFile(event)">
+        <div class="field-hint">שחזור מוחק את כל הנתונים הקיימים ומחליף אותם בגיבוי שנטען.</div>
+      </div>
+
+      <label style="margin-top:0; display:block;">ייבוא אנשי קשר מ-Wix (CSV)</label>
+      <input type="file" id="wix-csv-input" accept=".csv,text/csv" onchange="handleWixCsvFile(event)">
+      <div class="field-hint">Wix → Contacts → Import/Export → Export Contacts → Regular CSV. הייבוא <b>מוסיף</b> לקוחות חדשים בלבד — לא מוחק ולא דורס אף לקוח קיים, ומדלג אוטומטית על מי שכבר קיים אצלך (התאמת שם מלא + טלפון). אם יש בקובץ שדות מרשם מובנים (כמו תאריך/PD/ADD/שמאל/ימין), הם ייכנסו אוטומטית כבדיקה מסודרת — גם ללקוחות שכבר קיימים אצלך, בלי צורך בהעתקה ידנית.</div>
+      <div id="wix-import-result" class="field-hint"></div>
+      <div class="field-hint" id="backup-json-hint" style="margin-top:10px;">שלוש לחיצות רצופות על 💾 מציגות גם אפשרויות גיבוי ושחזור מלאות.</div>
+    </div>
+  </div>
+
+  <!-- ORDERS LIST -->
+  <div class="screen" id="screen-orders">
+    <button class="btn-back" onclick="showScreen('screen-home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>חזרה</span></button>
+    <div class="card">
+      <div style="font-weight:700; color:var(--navy);">פנקס הזמנות</div>
+      <label>חיפוש (שם לקוח)</label>
+      <input type="text" id="order-search-input" placeholder="הקלד לחיפוש...">
+      <div id="orders-list"></div>
+      <button class="btn-primary" onclick="startNewOrder()">+ הזמנה חדשה</button>
+      <button class="btn-secondary" onclick="openOrderReport()">📊 הפקת דוח</button>
+    </div>
+  </div>
+
+  <!-- ORDER REPORT -->
+  <div class="screen" id="screen-order-report">
+    <button class="btn-back" onclick="showScreen('screen-orders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>חזרה</span></button>
+    <div class="card">
+      <div style="font-weight:700; color:var(--navy); margin-bottom:4px;">הפקת דוח הזמנות</div>
+      <div class="add-mode">
+        <label><input type="radio" name="report-mode" value="date" checked onchange="renderReportModeFields()"> לפי תאריכים</label>
+        <label><input type="radio" name="report-mode" value="number" onchange="renderReportModeFields()"> לפי מספר הזמנה</label>
+      </div>
+      <div id="report-mode-fields"></div>
+      <button class="btn-primary" onclick="generateOrderReport()">הפק דוח</button>
+      <div id="report-summary" style="margin-top:14px;"></div>
+      <div id="report-results"></div>
+      <button class="btn-secondary" id="report-csv-btn" style="display:none;" onclick="downloadReportCsv()">📥 הורד כ-CSV</button>
+    </div>
+  </div>
+
+  <!-- NEW ORDER -->
+  <div class="screen" id="screen-order-new">
+    <button class="btn-back" onclick="showScreen('screen-orders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>חזרה</span></button>
+    <div class="card">
+      <div style="font-weight:700; color:var(--navy); margin-bottom:4px;">הזמנה חדשה</div>
+      <div class="field-hint">מספר הזמנה יוקצה אוטומטית בשמירה</div>
+
+      <label>תאריך</label>
+      <input type="date" id="of-date">
+
+      <label>שם לקוח</label>
+      <input type="text" id="of-customer-name" placeholder="הקלד שם לחיפוש בין הלקוחות..." autocomplete="off" oninput="renderOrderCustomerSuggestions()">
+      <div id="order-customer-suggestions"></div>
+
+      <label>פרטי ההזמנה</label>
+      <input type="text" id="of-item" value="משקפיים">
+
+      <label>סכום כולל (₪)</label>
+      <input type="text" id="of-amount" placeholder="0" inputmode="decimal">
+
+      <label>שולם בעת ההזמנה (₪)</label>
+      <input type="text" id="of-paid" placeholder="0" inputmode="decimal">
+
+      <label>נמסר</label>
+      <div class="add-mode">
+        <label><input type="radio" name="of-delivered" value="no" checked> לא</label>
+        <label><input type="radio" name="of-delivered" value="yes"> כן</label>
+      </div>
+
+      <button class="btn-primary" onclick="saveNewOrder()">שמור הזמנה</button>
+    </div>
+  </div>
+
+  <!-- ORDER DETAIL -->
+  <div class="screen" id="screen-order-detail">
+    <button class="btn-back" onclick="showScreen('screen-orders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>חזרה לפנקס</span></button>
+    <div class="card">
+      <div class="customer-header">
+        <div class="name">הזמנה מס' <span id="od-number"></span></div>
+        <div class="detail" id="od-customer-name"></div>
+        <div class="detail" id="od-date"></div>
+      </div>
+
+      <div id="od-view-mode">
+        <label>פרטי ההזמנה</label>
+        <div id="od-item-display" style="font-size:15px; margin-top:2px;"></div>
+        <div class="row" style="display:flex; gap:14px; margin-top:12px;">
+          <div><label>סכום כולל</label><div id="od-amount-display" style="font-size:16px; font-weight:700;"></div></div>
+          <div><label>שולם</label><div id="od-paid-display" style="font-size:16px; font-weight:700; color:var(--ok);"></div></div>
+          <div><label>חוב</label><div id="od-debt-display" style="font-size:16px; font-weight:700;"></div></div>
+        </div>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:14px; color:var(--muted);">נמסר:</span>
+          <span id="od-delivered-display" style="font-weight:700;"></span>
+          <button class="btn-small" onclick="toggleOrderDelivered()">שנה</button>
+        </div>
+        <button class="btn-small" style="margin-top:12px;" onclick="startEditOrder()">✎ ערוך פרטי הזמנה</button>
+      </div>
+
+      <div style="border:1px solid var(--border); border-radius:14px; padding:12px; margin-top:14px;" id="od-payment-form">
+        <label style="margin-top:0;">רישום תשלום על החוב</label>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <input type="text" id="op-amount" placeholder="סכום" inputmode="decimal" style="flex:1;">
+          <input type="date" id="op-date" style="flex:1;">
+        </div>
+        <button class="btn-secondary" onclick="addOrderPayment()">רשום תשלום</button>
+      </div>
+
+      <label style="margin-top:16px;">היסטוריית תשלומים</label>
+      <div id="od-payments-list"></div>
+
+      <button class="btn-danger" onclick="deleteCurrentOrder()">🗑 מחק הזמנה</button>
+    </div>
+  </div>
+
+  <!-- EDIT ORDER -->
+  <div class="screen" id="screen-order-edit">
+    <button class="btn-back" onclick="cancelEditOrder()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>ביטול</span></button>
+    <div class="card">
+      <div style="font-weight:700; color:var(--navy); margin-bottom:4px;">עריכת הזמנה מס' <span id="oe-number"></span></div>
+
+      <label>תאריך</label>
+      <input type="date" id="oe-date">
+
+      <label>שם לקוח</label>
+      <input type="text" id="oe-customer-name" autocomplete="off" oninput="renderOrderCustomerSuggestions('oe')">
+      <div id="order-customer-suggestions-oe"></div>
+
+      <label>פרטי ההזמנה</label>
+      <input type="text" id="oe-item">
+
+      <label>סכום כולל (₪)</label>
+      <input type="text" id="oe-amount" inputmode="decimal">
+
+      <label>נמסר</label>
+      <div class="add-mode">
+        <label><input type="radio" name="oe-delivered" value="no"> לא</label>
+        <label><input type="radio" name="oe-delivered" value="yes"> כן</label>
+      </div>
+
+      <button class="btn-primary" onclick="saveEditOrder()">שמור שינויים</button>
+    </div>
+  </div>
+
+  <!-- NEW/EDIT CUSTOMER -->
+  <div class="screen" id="screen-customer-form">
+    <button class="btn-back" onclick="showScreen('screen-home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>חזרה</span></button>
+    <div class="card">
+      <div style="font-weight:600; margin-bottom:4px;" id="customer-form-title">לקוח חדש</div>
+      <label>שם פרטי</label>
+      <input type="text" id="cf-firstname">
+      <label>שם משפחה</label>
+      <input type="text" id="cf-lastname">
+      <label>טלפון</label>
+      <input type="tel" id="cf-phone">
+      <label>כתובת</label>
+      <input type="text" id="cf-address">
+      <button class="btn-primary" onclick="saveCustomer()">שמור</button>
+    </div>
+  </div>
+
+  <!-- VOICE NEW CUSTOMER -->
+  <div class="screen" id="screen-voice-customer">
+    <button class="btn-back" onclick="showScreen('screen-home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>ביטול</span></button>
+    <div class="card">
+      <div style="font-weight:700; color:var(--navy);">הקלטת לקוח חדש</div>
+      <div class="field-hint">לחץ והקלט, אמור: "הנבדק" או "הנבדקת", ואז שם פרטי, שם משפחה, וטלפון</div>
+      <div class="mic-wrap">
+        <div class="mic-btn" id="mic-customer" onclick="toggleCustomerListen()">🎤</div>
+        <div class="mic-label">לחץ להקלטה</div>
+      </div>
+      <div class="transcript" id="customer-voice-transcript"></div>
+      <div id="voice-customer-confirm" style="display:none;">
+        <label>שם פרטי</label>
+        <input type="text" id="vc-firstname">
+        <label>שם משפחה</label>
+        <input type="text" id="vc-lastname">
+        <label>טלפון</label>
+        <input type="tel" id="vc-phone">
+        <button class="btn-primary" onclick="confirmVoiceCustomer()">אשר והמשך להקלטת מרשם</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER DETAIL -->
+  <div class="screen" id="screen-customer-detail">
+    <button class="btn-back" onclick="showScreen('screen-home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>חזרה לחיפוש</span></button>
+    <div class="card">
+      <div class="customer-header">
+        <div class="name" id="detail-name"></div>
+        <div class="detail" id="detail-phone"></div>
+        <div class="detail" id="detail-address"></div>
+      </div>
+      <button class="btn-small" onclick="editCurrentCustomer()">✎ ערוך פרטי לקוח</button>
+      <button class="btn-primary" onclick="startNewExam()">+ בדיקה חדשה</button>
+      <button class="btn-secondary" onclick="startNewOrderForCurrentCustomer()">📒 + הזמנה חדשה</button>
+      <div id="exams-container"></div>
+      <button class="btn-danger" style="margin-top:20px;" onclick="deleteCurrentCustomer()">🗑 מחק לקוח</button>
+    </div>
+  </div>
+
+  <!-- EXAM EDIT -->
+  <div class="screen" id="screen-exam-edit">
+    <button class="btn-back" onclick="backFromExam()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span>חזרה</span></button>
+    <div class="card">
+      <div style="font-weight:600;">בדיקה — <span id="exam-customer-name"></span></div>
+      <label>תאריך בדיקה</label>
+      <input type="date" id="exam-date-input" style="max-width:200px;">
+      <label style="display:flex; align-items:center; gap:8px; margin-top:12px; cursor:pointer;">
+        <input type="checkbox" id="exam-is-checkup" style="width:18px; height:18px;">
+        <span style="color:var(--text); font-size:14px;">ביקורת</span>
+      </label>
+      <label>Prescription Detail</label>
+      <div class="mic-wrap">
+        <div class="mic-btn" id="mic-rx" onclick="toggleRxListen()">🎤</div>
+        <div class="mic-label">הקלטת מרשם קולית: עין ימין, עין שמאל, תוספת, ואז פי-די</div>
+      </div>
+      <div class="transcript" id="rx-voice-transcript"></div>
+      <label class="btn-secondary" style="display:block; text-align:center; margin-top:6px; margin-bottom:0;">
+        📷 סרוק מעטפת עבודה (ממלא אוטומטית)
+        <input type="file" id="exam-scan-input" accept="image/*" capture="environment" style="display:none" onchange="handleExamScanFile(event)">
+      </label>
+      <textarea id="exam-text-main" dir="ltr" style="text-align:left;" placeholder="Paste prescription details here..."></textarea>
+      <label>הערות נוספות</label>
+      <textarea id="exam-text-notes" dir="rtl" style="text-align:right;" placeholder="הערות נוספות בעברית..."></textarea>
+      <button class="btn-primary" onclick="saveExam()">שמור בדיקה</button>
+      <button class="btn-secondary" onclick="openOrderForExamCustomer()">📒 פתח הזמנה ללקוח זה</button>
+      <button class="btn-danger" id="delete-exam-btn" onclick="deleteCurrentExam()" style="display:none;">🗑 מחק בדיקה</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------------- storage ---------------- */
+const LS_CUSTOMERS = 'clinica_customers';
+const LS_EXAMS = 'clinica_exams';
+const LS_LASTBACKUP = 'clinica_lastbackup';
+const LS_SNOOZE = 'clinica_snooze';
+function getCustomers(){ return JSON.parse(localStorage.getItem(LS_CUSTOMERS) || '[]'); }
+function saveCustomers(a){ localStorage.setItem(LS_CUSTOMERS, JSON.stringify(a)); }
+function getExams(){ return JSON.parse(localStorage.getItem(LS_EXAMS) || '[]'); }
+function saveExams(a){ localStorage.setItem(LS_EXAMS, JSON.stringify(a)); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------------- navigation ---------------- */
+let currentCustomerId = null;
+let currentExamId = null; // null = creating a new exam
+let editingCustomerId = null; // set when editing an existing customer's info
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='screen-home'){ renderCustomersList(); renderBackupBanner(); }
+  if(id==='screen-orders'){ renderOrdersList(); }
+}
+
+function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function fmtDate(iso){ return new Date(iso).toLocaleDateString('he-IL'); }
+
+/* ---------------- customers ---------------- */
+function startNewCustomer(){
+  editingCustomerId = null;
+  document.getElementById('customer-form-title').textContent = 'לקוח חדש';
+  document.getElementById('cf-firstname').value='';
+  document.getElementById('cf-lastname').value='';
+  document.getElementById('cf-phone').value='';
+  document.getElementById('cf-address').value='';
+  showScreen('screen-customer-form');
+}
+function editCurrentCustomer(){
+  const customers = getCustomers();
+  const c = customers.find(x=>x.id===currentCustomerId);
+  if(!c) return;
+  editingCustomerId = c.id;
+  document.getElementById('customer-form-title').textContent = 'עריכת פרטי לקוח';
+  document.getElementById('cf-firstname').value = c.firstName;
+  document.getElementById('cf-lastname').value = c.lastName;
+  document.getElementById('cf-phone').value = c.phone || '';
+  document.getElementById('cf-address').value = c.address || '';
+  showScreen('screen-customer-form');
+}
+function saveCustomer(){
+  const firstName = document.getElementById('cf-firstname').value.trim();
+  const lastName = document.getElementById('cf-lastname').value.trim();
+  const phone = document.getElementById('cf-phone').value.trim();
+  const address = document.getElementById('cf-address').value.trim();
+  if(!firstName){ alert('נא להזין שם פרטי'); return; }
+  let customers = getCustomers();
+  if(editingCustomerId){
+    const c = customers.find(x=>x.id===editingCustomerId);
+    if(c){ c.firstName=firstName; c.lastName=lastName; c.phone=phone; c.address=address; }
+    saveCustomers(customers);
+    currentCustomerId = editingCustomerId;
+  } else {
+    const c = { id: uid(), firstName, lastName, phone, address };
+    customers.push(c);
+    saveCustomers(customers);
+    currentCustomerId = c.id;
+  }
+  showScreen('screen-customer-detail');
+  renderCustomerDetail(currentCustomerId);
+}
+function deleteCurrentCustomer(){
+  if(!currentCustomerId) return;
+  const relatedExams = getExams().filter(e=>e.customerId===currentCustomerId);
+  const relatedOrders = getOrders().filter(o=>o.customerId===currentCustomerId);
+  let msg = 'למחוק את הלקוח הזה? הפעולה לא הפיכה.';
+  if(relatedExams.length || relatedOrders.length){
+    msg = 'ללקוח הזה יש ' + relatedExams.length + ' בדיקות ו-' + relatedOrders.length + ' הזמנות. מחיקת הלקוח תמחק גם אותן. להמשיך?';
+  }
+  if(!confirm(msg)) return;
+
+  const customers = getCustomers().filter(c=>c.id!==currentCustomerId);
+  saveCustomers(customers);
+
+  const remainingExams = getExams().filter(e=>e.customerId!==currentCustomerId);
+  saveExams(remainingExams);
+
+  const allOrders = getOrders();
+  if(relatedOrders.length){
+    const remainingOrders = allOrders.filter(o=>o.customerId!==currentCustomerId);
+    saveOrders(renumberOrders(remainingOrders));
+  }
+
+  currentCustomerId = null;
+  showScreen('screen-home');
+}
+
+/* ---------------- home / search ---------------- */
+let showAllCustomers = false;
+let headerClickCount = 0;
+let headerClickTimer = null;
+function handleHeaderIconClick(){
+  headerClickCount++;
+  if(headerClickTimer) clearTimeout(headerClickTimer);
+  headerClickTimer = setTimeout(()=>{ headerClickCount = 0; }, 600);
+  if(headerClickCount >= 3){
+    headerClickCount = 0;
+    clearTimeout(headerClickTimer);
+    showAllCustomers = !showAllCustomers;
+    renderShowAllIndicator();
+    renderCustomersList();
+  }
+}
+function renderShowAllIndicator(){
+  const el = document.getElementById('show-all-indicator');
+  if(!el) return;
+  el.textContent = showAllCustomers ? 'מציג את כל הלקוחות (כולל ללא הזמנות)' : '';
+}
+function customerHasOrders(customerId){
+  return getOrders().some(o=>o.customerId===customerId);
+}
+function customerHasCheckupExam(customerId){
+  return getExams().some(e=>e.customerId===customerId && e.isCheckup);
+}
+function customerQualifiesForDefaultView(customerId){
+  return customerHasOrders(customerId) || customerHasCheckupExam(customerId);
+}
+function customerMatchesQuery(c, q){
+  return (c.firstName+' '+c.lastName).includes(q) || c.lastName.includes(q) || c.firstName.includes(q);
+}
+function renderCustomersList(){
+  const q = (document.getElementById('search-input').value || '').trim();
+  const container = document.getElementById('customers-list');
+  const allCustomers = getCustomers();
+  const pool = showAllCustomers ? allCustomers : allCustomers.filter(c => customerQualifiesForDefaultView(c.id));
+
+  let filtered;
+  if(showAllCustomers){
+    filtered = q ? pool.filter(c => customerMatchesQuery(c, q)) : pool;
+  } else {
+    if(!q){ container.innerHTML = ''; return; }
+    filtered = pool.filter(c => customerMatchesQuery(c, q));
+  }
+
+  filtered = filtered.slice().reverse();
+  if(filtered.length===0){
+    container.innerHTML = '<div class="empty">אין לקוחות תואמים</div>';
+    return;
+  }
+  container.innerHTML = '';
+  filtered.forEach(c=>{
+    const div = document.createElement('div');
+    div.className='list-item';
+    div.onclick = ()=>{ currentCustomerId = c.id; showScreen('screen-customer-detail'); renderCustomerDetail(c.id); };
+    div.innerHTML = `<div><div class="name">${c.firstName} ${c.lastName}</div><div class="sub2">${c.phone||''}</div></div><div>›</div>`;
+    container.appendChild(div);
+  });
+}
+document.getElementById('search-input').addEventListener('input', renderCustomersList);
+
+/* ---------------- customer detail / exams list ---------------- */
+function renderCustomerDetail(customerId){
+  const customers = getCustomers();
+  const c = customers.find(x=>x.id===customerId);
+  if(!c) return;
+  document.getElementById('detail-name').textContent = c.firstName+' '+c.lastName;
+  document.getElementById('detail-phone').textContent = c.phone||'';
+  document.getElementById('detail-address').textContent = c.address||'';
+  const exams = getExams().filter(e=>e.customerId===customerId).sort((a,b)=> b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+  const container = document.getElementById('exams-container');
+  if(exams.length===0){
+    container.innerHTML = '<div class="empty">אין בדיקות עדיין</div>';
+    return;
+  }
+  container.innerHTML = '';
+  exams.forEach(ex=>{
+    const div = document.createElement('div');
+    div.className='exam-item';
+    div.onclick = ()=>{ openExamForEdit(ex.id); };
+    const checkupBadge = ex.isCheckup ? ' <span style="color:var(--blue); font-weight:700;">· ביקורת</span>' : '';
+    div.innerHTML = `<div class="exam-date">${fmtDate(ex.date)}${checkupBadge}</div><div class="exam-preview">${(ex.text||'').slice(0,140) || '(ריק)'}</div>`;
+    container.appendChild(div);
+  });
+}
+
+/* ---------------- exam edit ---------------- */
+function startNewExam(){
+  const customers = getCustomers();
+  const c = customers.find(x=>x.id===currentCustomerId);
+  if(!c) return;
+  stopListening();
+  currentExamId = null;
+  document.getElementById('exam-customer-name').textContent = c.firstName+' '+c.lastName;
+  document.getElementById('exam-date-input').value = todayISO();
+  document.getElementById('exam-is-checkup').checked = false;
+  document.getElementById('exam-text-main').value = '';
+  document.getElementById('exam-text-notes').value = '';
+  document.getElementById('rx-voice-transcript').textContent = '';
+  document.getElementById('delete-exam-btn').style.display = 'none';
+  showScreen('screen-exam-edit');
+}
+function openExamForEdit(examId){
+  const exams = getExams();
+  const ex = exams.find(x=>x.id===examId);
+  if(!ex) return;
+  stopListening();
+  const customers = getCustomers();
+  const c = customers.find(x=>x.id===ex.customerId);
+  currentExamId = examId;
+  document.getElementById('exam-customer-name').textContent = c ? (c.firstName+' '+c.lastName) : '';
+  document.getElementById('exam-date-input').value = ex.date;
+  document.getElementById('exam-is-checkup').checked = !!ex.isCheckup;
+  document.getElementById('exam-text-main').value = ex.text || '';
+  document.getElementById('exam-text-notes').value = ex.notes || '';
+  document.getElementById('rx-voice-transcript').textContent = '';
+  document.getElementById('delete-exam-btn').style.display = 'block';
+  showScreen('screen-exam-edit');
+}
+function persistExamOnly(){
+  const text = document.getElementById('exam-text-main').value;
+  const notes = document.getElementById('exam-text-notes').value;
+  const date = document.getElementById('exam-date-input').value || todayISO();
+  const isCheckup = document.getElementById('exam-is-checkup').checked;
+  let exams = getExams();
+  if(currentExamId){
+    const ex = exams.find(x=>x.id===currentExamId);
+    if(ex){ ex.text = text; ex.notes = notes; ex.date = date; ex.isCheckup = isCheckup; }
+  } else {
+    const ex = { id: uid(), customerId: currentCustomerId, date, text, notes, isCheckup };
+    exams.push(ex);
+    currentExamId = ex.id;
+  }
+  saveExams(exams);
+}
+function saveExam(){
+  persistExamOnly();
+  showScreen('screen-customer-detail');
+  renderCustomerDetail(currentCustomerId);
+}
+function openOrderForExamCustomer(){
+  persistExamOnly();
+  const c = getCustomers().find(x=>x.id===currentCustomerId);
+  if(!c) return;
+  startNewOrder();
+  document.getElementById('of-customer-name').value = (c.firstName+' '+c.lastName).trim();
+  newOrderCustomerId = c.id;
+}
+function startNewOrderForCurrentCustomer(){
+  const c = getCustomers().find(x=>x.id===currentCustomerId);
+  if(!c) return;
+  startNewOrder();
+  document.getElementById('of-customer-name').value = (c.firstName+' '+c.lastName).trim();
+  newOrderCustomerId = c.id;
+}
+function deleteCurrentExam(){
+  if(!currentExamId) return;
+  if(!confirm('למחוק את הבדיקה הזו? הפעולה לא הפיכה.')) return;
+  let exams = getExams();
+  exams = exams.filter(x=>x.id!==currentExamId);
+  saveExams(exams);
+  currentExamId = null;
+  showScreen('screen-customer-detail');
+  renderCustomerDetail(currentCustomerId);
+}
+function backFromExam(){
+  showScreen('screen-customer-detail');
+  renderCustomerDetail(currentCustomerId);
+}
+
+/* ---------------- voice: speech recognition core ---------------- */
+let recognition = null;
+let listeningFor = null; // 'customer' | 'rx'
+function getRecognition(){
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!R){ alert('זיהוי קול לא זמין בדפדפן הזה.'); return null; }
+  const r = new R();
+  r.lang = 'he-IL';
+  r.interimResults = true;
+  r.continuous = false;
+  return r;
+}
+function toggleListen(which){
+  if(listeningFor===which){ stopListening(); return; }
+  if(listeningFor) stopListening();
+  recognition = getRecognition();
+  if(!recognition) return;
+  listeningFor = which;
+  const btnId = which==='customer' ? 'mic-customer' : 'mic-rx';
+  const boxId = which==='customer' ? 'customer-voice-transcript' : 'rx-voice-transcript';
+  const btn = document.getElementById(btnId);
+  const box = document.getElementById(boxId);
+  btn.classList.add('listening');
+  box.textContent = 'מקשיב...';
+  recognition.onresult = (e)=>{
+    let text = '';
+    for(let i=0;i<e.results.length;i++) text += e.results[i][0].transcript + ' ';
+    box.textContent = text.trim();
+    if(e.results[e.results.length-1].isFinal){
+      if(which==='customer') applyVoiceCustomerParse(text.trim());
+      else applyVoiceRxParse(text.trim());
+    }
+  };
+  recognition.onerror = ()=>{ stopListening(); };
+  recognition.onend = ()=>{ stopListening(); };
+  recognition.start();
+}
+function stopListening(){
+  if(recognition){ try{ recognition.stop(); }catch(e){} }
+  if(listeningFor){
+    const btnId = listeningFor==='customer' ? 'mic-customer' : 'mic-rx';
+    const btn = document.getElementById(btnId);
+    if(btn) btn.classList.remove('listening');
+  }
+  listeningFor = null;
+}
+function toggleCustomerListen(){ toggleListen('customer'); }
+function toggleRxListen(){ toggleListen('rx'); }
+
+/* ---------------- voice: new customer ---------------- */
+function startVoiceCustomer(){
+  document.getElementById('customer-voice-transcript').textContent = '';
+  document.getElementById('voice-customer-confirm').style.display = 'none';
+  document.getElementById('vc-firstname').value = '';
+  document.getElementById('vc-lastname').value = '';
+  document.getElementById('vc-phone').value = '';
+  showScreen('screen-voice-customer');
+}
+function applyVoiceCustomerParse(raw){
+  const cleaned = raw.replace(/^\s*(הנבדק|הנבדקת)\s*[:]?\s*/,'');
+  const digitMatch = cleaned.match(/\d[\d\s-]{5,}\d/);
+  let phone = '';
+  let nameText = cleaned;
+  if(digitMatch){
+    phone = digitMatch[0].replace(/[\s-]/g,'');
+    nameText = cleaned.replace(digitMatch[0], '').trim();
+  }
+  const parts = nameText.split(/\s+/).filter(Boolean);
+  const firstName = parts[0] || '';
+  const lastName = parts.slice(1).join(' ') || '';
+  document.getElementById('vc-firstname').value = firstName;
+  document.getElementById('vc-lastname').value = lastName;
+  document.getElementById('vc-phone').value = phone;
+  document.getElementById('voice-customer-confirm').style.display = 'block';
+}
+function confirmVoiceCustomer(){
+  const firstName = document.getElementById('vc-firstname').value.trim();
+  const lastName = document.getElementById('vc-lastname').value.trim();
+  const phone = document.getElementById('vc-phone').value.trim();
+  if(!firstName){ alert('נא לוודא שם פרטי לפני המשך'); return; }
+  let customers = getCustomers();
+  const c = { id: uid(), firstName, lastName, phone, address: '' };
+  customers.push(c);
+  saveCustomers(customers);
+  currentCustomerId = c.id;
+  startNewExam();
+  setTimeout(()=>{ toggleRxListen(); }, 300);
+}
+
+/* ---------------- voice: prescription parsing (Hebrew in, English text out) ---------------- */
+const HE_UNIT_WORDS = {
+  'אפס':0, 'אחד':1,'אחת':1, 'שתיים':2,'שניים':2,'שני':2,'שתי':2,
+  'שלוש':3,'שלושה':3, 'ארבע':4,'ארבעה':4, 'חמש':5,'חמישה':5,
+  'שש':6,'שישה':6, 'שבע':7,'שבעה':7, 'שמונה':8,'שמונה עשרה':18,
+  'תשע':9,'תשעה':9, 'עשר':10,'עשרה':10
+};
+function hebrewWordsToDigits(raw){
+  let s = raw;
+  // unit + fraction combos, e.g. "אחד ושלושת רבעי"->1.75, "אחד ורבע"->1.25, "אחד וחצי"->1.5
+  s = s.replace(/(\S+)\s+ו?שלושת\s*רבעי(?![א-ת])/g, (m, w)=>{ const n=HE_UNIT_WORDS[w]; return n!==undefined ? String(n+0.75) : m; });
+  s = s.replace(/(\S+)\s+ורבע(?![א-ת])/g, (m, w)=>{ const n=HE_UNIT_WORDS[w]; return n!==undefined ? String(n+0.25) : m; });
+  s = s.replace(/(\S+)\s+וחצי(?![א-ת])/g, (m, w)=>{ const n=HE_UNIT_WORDS[w]; return n!==undefined ? String(n+0.5) : m; });
+  // standalone fractions
+  s = s.replace(/(?<![א-ת])שלושת\s*רבעי(?![א-ת])/g, '0.75');
+  s = s.replace(/(?<![א-ת])רבע(?![א-ת])/g, '0.25');
+  s = s.replace(/(?<![א-ת])חצי(?![א-ת])/g, '0.5');
+  // standalone unit words -> digits (longest keys first so "שמונה עשרה" wins over "שמונה")
+  const keys = Object.keys(HE_UNIT_WORDS).sort((a,b)=>b.length-a.length);
+  keys.forEach(w=>{
+    const re = new RegExp('(?<![א-ת])'+w+'(?![א-ת])','g');
+    s = s.replace(re, String(HE_UNIT_WORDS[w]));
+  });
+  return s;
+}
+function normalizeRxVoice(raw){
+  let s = ' ' + hebrewWordsToDigits(raw) + ' ';
+  // "at X degrees" phrasing (e.g. "ב-70 מעלות") -> axis, BEFORE sign/keyword replacement
+  // so the hyphen in "ב-70" never gets mistaken for a minus sign.
+  s = s.replace(/ב-?\s*(\d+(?:\.\d+)?)\s*מעלות/g, ' AX $1 ');
+  s = s.replace(/(\d+(?:\.\d+)?)\s*מעלות/g, ' AX $1 ');
+  // "ב" + number alone (no "מעלות" said) is also understood as the axis
+  s = s.replace(/(?<![א-ת])ב-?\s*(\d+(?:\.\d+)?)/g, ' AX $1 ');
+  s = s.replace(/פלנו|פלאנו/g, ' PLANO ');
+  s = s.replace(/balance/gi, ' BALANCE ');
+  s = s.replace(/באלאנס|בלאנס/g, ' BALANCE ');
+  s = s.replace(/פלוס/g, ' + ');
+  s = s.replace(/מינוס/g, ' - ');
+  s = s.replace(/(?<![א-ת])על(?![א-ת])/g, ' CYL ');
+  s = s.replace(/איקס|אקס/g, ' AX ');
+  s = s.replace(/אדישן|אדיישן|תוספת/g, ' ADD ');
+  s = s.replace(/בייס אאוט|בסיס החוצה/g, ' BO ');
+  s = s.replace(/בייס אין|בסיס פנימה/g, ' BI ');
+  s = s.replace(/בייס אפ|בסיס למעלה/g, ' BU ');
+  s = s.replace(/בייס דאון|בסיס למטה/g, ' BD ');
+  s = s.replace(/עין ימין|ימין/g, ' EYE_R ');
+  s = s.replace(/עין שמאל|שמאל/g, ' EYE_L ');
+  s = s.replace(/פי\s*די/g, ' PD ');
+  s = s.replace(/\bpd\b/gi, ' PD ');
+  s = s.replace(/מרשם/g, ' ');
+  return s;
+}
+function roundQuarter(n){
+  if(n===null||n===undefined||isNaN(n)) return null;
+  return Math.round(n*4)/4;
+}
+function reinterpretCompact(n){
+  // spoken "seventy five" (75) etc. after a diopter value means 0.75, not 75 diopters —
+  // same "hundredths" convention already used in the Wix compact Rx notation (e.g. "125" = 1.25).
+  // Only kicks in for whole numbers that are multiples of 25 and too large to be a real diopter reading directly.
+  if(n===null || n===undefined || isNaN(n)) return n;
+  const abs = Math.abs(n);
+  if(Number.isInteger(abs) && abs>=10 && abs%25===0) return n/100;
+  return n;
+}
+function fmtSphVoice(n){
+  const r = roundQuarter(n);
+  if(r===null) return '';
+  return (r>=0?'+':'') + r.toFixed(2);
+}
+function fmtCylVoice(n){
+  // house rule: CYL is always negative notation
+  let r = roundQuarter(Math.abs(n));
+  if(r===null) return '';
+  return '-' + r.toFixed(2);
+}
+function parseEyeSegmentVoice(seg){
+  if(/BALANCE/.test(seg)){
+    return {sph:'BALANCE', cyl:null, axis:null, prisms:[]};
+  }
+  let sph;
+  if(/PLANO/.test(seg)){
+    sph = 'PL';
+  } else {
+    const sphM = seg.match(/([+-])\s*(\d+(?:\.\d+)?)/);
+    sph = sphM ? reinterpretCompact((sphM[1]==='-'?-1:1) * parseFloat(sphM[2])) : null;
+  }
+  const cylM = seg.match(/CYL\s*([+-]?\s*\d+(?:\.\d+)?)/);
+  const cyl = cylM ? reinterpretCompact(parseFloat(cylM[1].replace(/\s/g,''))) : null;
+  const axM = seg.match(/AX\s*(\d+(?:\.\d+)?)/);
+  const axis = axM ? parseFloat(axM[1]) : null;
+  const prisms = [];
+  const baseRe = /(\d+(?:\.\d+)?)\s*(BO|BI|BU|BD)/g;
+  let m;
+  while((m = baseRe.exec(seg))){ prisms.push({power: parseFloat(m[1]), base: m[2]}); }
+  return {sph, cyl, axis, prisms};
+}
+function parsePrescriptionVoice(raw){
+  const s = normalizeRxVoice(raw);
+
+  // find PD first, independently of ADD — PD may be said with or without ADD present
+  const pdIdx = s.indexOf('PD');
+  const beforePd = pdIdx>=0 ? s.slice(0, pdIdx) : s;
+  const pdSeg = pdIdx>=0 ? s.slice(pdIdx+2) : '';
+
+  const addIdx = beforePd.indexOf('ADD');
+  const rxPart = addIdx>=0 ? beforePd.slice(0, addIdx) : beforePd;
+  const addSeg = addIdx>=0 ? beforePd.slice(addIdx+3) : '';
+
+  const rIdx = rxPart.indexOf('EYE_R');
+  const lIdx = rxPart.indexOf('EYE_L');
+  let rSeg = '', lSeg = '';
+  if(rIdx>=0 && lIdx>=0){
+    if(rIdx < lIdx){ rSeg = rxPart.slice(rIdx, lIdx); lSeg = rxPart.slice(lIdx); }
+    else { lSeg = rxPart.slice(lIdx, rIdx); rSeg = rxPart.slice(rIdx); }
+  } else if(rIdx>=0){
+    rSeg = rxPart.slice(rIdx);
+  } else if(lIdx>=0){
+    lSeg = rxPart.slice(lIdx);
+  } else {
+    // no explicit "עין ימין"/"עין שמאל" said — best effort: whole thing as R only
+    rSeg = rxPart;
+  }
+
+  const R = parseEyeSegmentVoice(rSeg);
+  const L = parseEyeSegmentVoice(lSeg);
+
+  let add = null;
+  if(addSeg.trim()){
+    const vM = addSeg.match(/([+-]?\d+(?:\.\d+)?)/);
+    if(vM) add = reinterpretCompact(parseFloat(vM[1]));
+  }
+
+  let pd = null;
+  if(pdSeg.trim()){
+    const hasR = /EYE_R/.test(pdSeg);
+    const hasL = /EYE_L/.test(pdSeg);
+    if(hasR || hasL){
+      const rM = pdSeg.match(/EYE_R[^0-9]*(\d+(?:\.\d+)?)/);
+      const lM = pdSeg.match(/EYE_L[^0-9]*(\d+(?:\.\d+)?)/);
+      pd = { mode:'mono', r: rM?parseFloat(rM[1]):null, l: lM?parseFloat(lM[1]):null };
+    } else {
+      const vM = pdSeg.match(/(\d+(?:\.\d+)?)/);
+      if(vM) pd = { mode:'bino', value: parseFloat(vM[1]) };
+    }
+  }
+
+  return {R, L, add, pd};
+}
+function eyeLineVoice(label, eye){
+  if(eye.sph==='BALANCE'){
+    return label + ': BALANCE';
+  }
+  const sph = eye.sph==='PL' ? 'PL' : (eye.sph!==null ? fmtSphVoice(eye.sph) : '—');
+  const cyl = eye.cyl!==null ? fmtCylVoice(eye.cyl) : '—';
+  const axis = eye.axis!==null ? Math.round(eye.axis) : '—';
+  let line = label + ': ' + sph + ' / ' + cyl + ' x ' + axis;
+  if(eye.prisms && eye.prisms.length){
+    line += '  ' + eye.prisms.map(p=>p.power+p.base).join(', ');
+  }
+  return line;
+}
+function pdLineVoice(pd){
+  if(!pd) return 'PD: —';
+  if(pd.mode==='bino') return 'PD: ' + (pd.value!==null ? pd.value : '—');
+  if(pd.mode==='mono'){
+    const parts = [];
+    if(pd.r!==null) parts.push('R '+pd.r);
+    if(pd.l!==null) parts.push('L '+pd.l);
+    return 'PD: ' + (parts.length ? parts.join('  ') : '—');
+  }
+  return 'PD: —';
+}
+function applyVoiceRxParse(raw){
+  const parsed = parsePrescriptionVoice(raw);
+  let lines = ['Rx:'];
+  lines.push(eyeLineVoice('R', parsed.R));
+  lines.push(eyeLineVoice('L', parsed.L));
+  lines.push('ADD: ' + (parsed.add!==null ? fmtSphVoice(parsed.add) : '—'));
+  lines.push(pdLineVoice(parsed.pd));
+  const text = lines.join('\n');
+  const field = document.getElementById('exam-text-main');
+  field.value = field.value.trim() ? (field.value.trim() + '\n\n' + text) : text;
+  document.getElementById('rx-voice-transcript').textContent = raw + '\n\n→ ' + text.replace(/\n/g,' | ');
+}
+
+/* ---------------- backup / restore ---------------- */
+function getLastBackupTs(){
+  const v = localStorage.getItem(LS_LASTBACKUP);
+  return v ? parseInt(v,10) : null;
+}
+function setLastBackupTs(ts){ localStorage.setItem(LS_LASTBACKUP, String(ts)); }
+function getSnoozeUntil(){
+  const v = localStorage.getItem(LS_SNOOZE);
+  return v ? parseInt(v,10) : 0;
+}
+function setSnoozeUntil(ts){ localStorage.setItem(LS_SNOOZE, String(ts)); }
+
+function exportBackup(){
+  const data = {
+    exportedAt: new Date().toISOString(),
+    customers: getCustomers(),
+    exams: getExams(),
+    orders: getOrders()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = todayISO();
+  a.href = url;
+  a.download = 'clinica-backup-' + dateStr + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setLastBackupTs(Date.now());
+  setSnoozeUntil(0);
+  renderBackupBanner();
+  renderLastBackupDisplay();
+  alert('קובץ הגיבוי ירד להורדות. מומלץ להעביר אותו עכשיו לכרטיס USB.');
+}
+
+function handleImportFile(e){
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  if(!confirm('שחזור יחליף את כל הנתונים הקיימים באפליקציה בנתוני הגיבוי. להמשיך?')) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!Array.isArray(data.customers) || !Array.isArray(data.exams)) throw new Error('קובץ לא תקין');
+      saveCustomers(data.customers);
+      saveExams(data.exams);
+      if(Array.isArray(data.orders)) saveOrders(renumberOrders(data.orders));
+      alert('השחזור הושלם בהצלחה.');
+      showScreen('screen-home');
+    } catch(err){
+      alert('שגיאה בטעינת קובץ הגיבוי: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------------- Wix contacts CSV import (additive, non-destructive) ---------------- */
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF) text = text.slice(1);
+  const rows = [];
+  let i=0, field='', row=[], inQuotes=false;
+  while(i<text.length){
+    const c = text[i];
+    if(inQuotes){
+      if(c==='"'){
+        if(text[i+1]==='"'){ field+='"'; i+=2; continue; }
+        inQuotes=false; i++; continue;
+      }
+      field+=c; i++; continue;
+    } else {
+      if(c==='"'){ inQuotes=true; i++; continue; }
+      if(c===','){ row.push(field); field=''; i++; continue; }
+      if(c==='\r'){ i++; continue; }
+      if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; i++; continue; }
+      field+=c; i++; continue;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  if(rows.length===0) return [];
+  const headers = rows[0].map(h=>h.trim());
+  return rows.slice(1)
+    .filter(r=>r.some(v=>(v||'').trim()!==''))
+    .map(r=>{
+      const obj = {};
+      headers.forEach((h,idx)=>{ obj[h] = (r[idx]!==undefined ? r[idx] : '').trim(); });
+      return obj;
+    });
+}
+function extractField(rowObj, patterns){
+  for(const key of Object.keys(rowObj)){
+    const kl = key.toLowerCase();
+    if(patterns.some(p=> kl.includes(p) || key.includes(p)) && rowObj[key]) return rowObj[key];
+  }
+  return '';
+}
+function normalizePhone(raw){
+  if(!raw) return '';
+  let p = raw.trim();
+  p = p.replace(/^'+/, '');            // strip leading apostrophe (Excel/Wix "force text" artifact)
+  p = p.replace(/^\+972[\s-]?/, '0');  // "+972 54-..." -> "054-..." to match the local format used elsewhere
+  return p.trim();
+}
+function extractAddress(rowObj){
+  const parts = [];
+  Object.keys(rowObj).forEach(key=>{
+    const kl = key.toLowerCase();
+    if(/(address|city|street|state|zip|postal|country)/.test(kl) || /(כתובת|עיר|רחוב|מיקוד)/.test(key)){
+      if(rowObj[key]) parts.push(rowObj[key]);
+    }
+  });
+  return parts.join(', ');
+}
+
+/* ---------------- Wix compact Rx notation parser (e.g. "'+2.50/-0.25*55") ---------------- */
+function parseCompactDiopter(str){
+  if(str===undefined || str===null) return null;
+  let s = String(str).trim();
+  if(!s) return null;
+  if(/^pl$/i.test(s)) return 'PL';
+  const sign = s.startsWith('-') ? -1 : 1;
+  const digits = s.replace(/^[+-]/,'');
+  if(digits.includes('.')){
+    const v = parseFloat(s);
+    return isNaN(v) ? null : v;
+  }
+  const n = parseInt(digits,10);
+  if(isNaN(n)) return null;
+  return sign * (n/100); // compact notation: "125" means 1.25, "025" means 0.25
+}
+function parseWixRxString(raw){
+  if(!raw) return null;
+  let s = String(raw).trim();
+  if(s.startsWith("'")) s = s.slice(1); // Excel/Wix text-forcing apostrophe
+  s = s.trim();
+  if(!s) return null;
+  const parts = s.split('/').map(p=>p.trim()).filter(p=>p!=='');
+  if(parts.length===0) return null;
+  let sph = /^pl$/i.test(parts[0]) ? 'PL' : parseCompactDiopter(parts[0]);
+  let cyl=null, axis=null, extra='';
+  for(let i=1;i<parts.length;i++){
+    const p = parts[i];
+    const m = p.match(/^([+-]?[\d.]*)\s*[\*xX]\s*(\d+)\s*(.*)$/);
+    if(m){
+      if(m[1]) cyl = parseCompactDiopter(m[1]);
+      axis = parseInt(m[2],10);
+      if(m[3].trim()) extra += (extra?' ':'')+m[3].trim();
+    } else {
+      const numOnly = p.match(/^([+-]?[\d.]+)(.*)$/);
+      if(numOnly){
+        cyl = parseCompactDiopter(numOnly[1]);
+        if(numOnly[2].trim()) extra += (extra?' ':'')+numOnly[2].trim();
+      } else if(p) {
+        extra += (extra?' ':'')+p;
+      }
+    }
+  }
+  return {sph, cyl, axis, extra};
+}
+function fmtDiopterImport(n){
+  if(n==='PL') return 'PL';
+  if(n===null || n===undefined || isNaN(n)) return '—';
+  return (n>=0?'+':'') + n.toFixed(2);
+}
+function eyeLineImport(label, eyeParsed){
+  if(!eyeParsed) return label+': — / — x —';
+  const sph = fmtDiopterImport(eyeParsed.sph);
+  const cyl = (eyeParsed.cyl!==null && eyeParsed.cyl!==undefined) ? fmtDiopterImport(eyeParsed.cyl) : '—';
+  const axis = (eyeParsed.axis!==null && eyeParsed.axis!==undefined) ? eyeParsed.axis : '—';
+  return label+': '+sph+' / '+cyl+' x '+axis;
+}
+function parseAddField(str){
+  if(!str) return {add:null, extra:''};
+  const s = String(str).trim();
+  const m = s.match(/^([+-]?\.?\d+(?:\.\d+)?)\s*(.*)$/);
+  if(m && m[1]){
+    return {add: parseCompactDiopter(m[1]), extra: m[2].trim()};
+  }
+  return {add: null, extra: s};
+}
+function dateFromWixRow(r){
+  const d = (r['תאריך']||'').trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(d)) return d.slice(0,10);
+  const created = (r['Created At (UTC+0)']||'').trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(created)) return created.slice(0,10);
+  return todayISO();
+}
+function buildImportExam(r){
+  const rightParsed = parseWixRxString(r['ימין']);
+  const leftParsed = parseWixRxString(r['שמאל']);
+  const pd = (r['PD']||'').trim();
+  const addInfo = parseAddField(r['ADD']||'');
+  const lines = ['Rx:'];
+  lines.push(eyeLineImport('R', rightParsed));
+  lines.push(eyeLineImport('L', leftParsed));
+  lines.push('ADD: ' + (addInfo.add!==null ? fmtDiopterImport(addInfo.add) : '—'));
+  lines.push('PD: ' + (pd || '—'));
+  const text = lines.join('\n');
+  const noteParts = [];
+  if(r['MORE'] && r['MORE'].trim()) noteParts.push(r['MORE'].trim());
+  if(addInfo.extra) noteParts.push(addInfo.extra);
+  if(rightParsed && rightParsed.extra) noteParts.push('R: '+rightParsed.extra);
+  if(leftParsed && leftParsed.extra) noteParts.push('L: '+leftParsed.extra);
+  const notes = noteParts.join(' | ');
+  return { date: dateFromWixRow(r), text, notes };
+}
+function hasWixRxData(r){
+  return !!((r['שמאל']||'').trim() || (r['ימין']||'').trim() || (r['PD']||'').trim() || (r['ADD']||'').trim() || (r['MORE']||'').trim());
+}
+
+function handleWixCsvFile(e){
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const rows = parseCSV(reader.result);
+      if(rows.length===0){ alert('לא נמצאו שורות בקובץ.'); return; }
+      const existing = getCustomers();
+      const keyToCustomerId = {};
+      existing.forEach(c=>{
+        const key = (c.firstName+'|'+c.lastName+'|'+(c.phone||'')).trim().toLowerCase();
+        keyToCustomerId[key] = c.id;
+      });
+      let added = 0, skippedDup = 0, skippedNoName = 0, examsImported = 0;
+      const toAddCustomers = [];
+      const toAddExams = [];
+      rows.forEach(r=>{
+        const firstName = extractField(r, ['first name','firstname','שם פרטי']);
+        const lastName = extractField(r, ['last name','lastname','שם משפחה']);
+        const phone = normalizePhone(extractField(r, ['phone','טלפון','tel']));
+        const address = extractAddress(r);
+        const genericNotes = extractField(r, ['notes','note','הערות']);
+        if(!firstName && !lastName){ skippedNoName++; return; }
+        const key = (firstName+'|'+lastName+'|'+phone).trim().toLowerCase();
+        let customerId = keyToCustomerId[key];
+        if(customerId){
+          skippedDup++;
+        } else {
+          customerId = uid();
+          keyToCustomerId[key] = customerId;
+          toAddCustomers.push({ id: customerId, firstName: firstName||'', lastName: lastName||'', phone: phone||'', address: address||'' });
+          added++;
+        }
+        if(hasWixRxData(r)){
+          const exam = buildImportExam(r);
+          if(genericNotes && genericNotes.trim()){
+            exam.notes = exam.notes ? (exam.notes + ' | ' + genericNotes.trim()) : genericNotes.trim();
+          }
+          toAddExams.push({ id: uid(), customerId, date: exam.date, text: exam.text, notes: exam.notes });
+          examsImported++;
+        } else if(genericNotes && genericNotes.trim()){
+          toAddExams.push({ id: uid(), customerId, date: todayISO(), text: '', notes: genericNotes.trim() });
+          examsImported++;
+        }
+      });
+      if(toAddCustomers.length>0) saveCustomers(existing.concat(toAddCustomers));
+      if(toAddExams.length>0) saveExams(getExams().concat(toAddExams));
+      const resultEl = document.getElementById('wix-import-result');
+      resultEl.textContent = `יובאו ${added} לקוחות חדשים. דולגו: ${skippedDup} כפילויות, ${skippedNoName} ללא שם. בדיקות שיובאו: ${examsImported}.`;
+      renderCustomersList();
+    } catch(err){
+      alert('שגיאה בקריאת קובץ ה-CSV: ' + err.message);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+/* ---------------- API key (optional, for envelope scanning) ---------------- */
+const LS_APIKEY = 'clinica_apikey';
+function getApiKey(){ return localStorage.getItem(LS_APIKEY) || ''; }
+function saveApiKey(){
+  const v = document.getElementById('apikey-input').value.trim();
+  if(!v){ alert('נא להזין מפתח'); return; }
+  localStorage.setItem(LS_APIKEY, v);
+  document.getElementById('apikey-input').value = '';
+  renderApiKeyStatus();
+}
+function clearApiKey(){
+  localStorage.removeItem(LS_APIKEY);
+  renderApiKeyStatus();
+}
+function renderApiKeyStatus(){
+  const el = document.getElementById('apikey-status');
+  if(!el) return;
+  if(getApiKey()){ el.textContent = '✓ מפתח שמור — הסריקה האוטומטית פעילה'; el.className = 'apikey-status ok'; }
+  else { el.textContent = 'לא הוזן מפתח — הסריקה האוטומטית כבויה, אפשר להמשיך ידנית'; el.className = 'apikey-status missing'; }
+}
+function toggleApiKeyPanel(){
+  const panel = document.getElementById('apikey-panel');
+  panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
+}
+
+/* ---------------- envelope scan → exam text (optional, needs API key) ---------------- */
+function setScanLoading(on){
+  document.getElementById('scan-overlay').classList.toggle('active', !!on);
+}
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const result = reader.result;
+      const meta = result.split(',')[0];
+      const base64 = result.split(',')[1];
+      const mimeMatch = meta.match(/data:(.*);base64/);
+      resolve({base64, mimeType: mimeMatch ? mimeMatch[1] : (file.type || 'image/jpeg')});
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function handleExamScanFile(e){
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(file) scanEnvelopeIntoExam(file);
+}
+async function scanEnvelopeIntoExam(file){
+  const apiKey = getApiKey();
+  if(!apiKey){
+    alert('אין מפתח API שמור. אפשר להוסיף אחד בלחיצה על 🔑 בעמוד הבית, או להמשיך להדביק את הטקסט ידנית.');
+    return;
+  }
+  setScanLoading(true);
+  try{
+    const {base64, mimeType} = await fileToBase64(file);
+    const prompt = 'You are reading a photographed Israeli optical lab work-order envelope. Extract the prescription and reply in PLAIN TEXT ONLY (no markdown, no JSON), in English, left-to-right, in EXACTLY this fixed layout (always include every line, using "—" for anything not present):\n\n' +
+      'Date: <date found on the form as DD/MM/YYYY, or "—" if none found>\n\n' +
+      'Rx:\n' +
+      'R: <SPH> / <CYL> x <AXIS>  <PRISM if present>\n' +
+      'L: <SPH> / <CYL> x <AXIS>  <PRISM if present>\n' +
+      'ADD: <value or —>\n' +
+      'PD: <value, or "R <val>  L <val>" if monocular, or —>\n\n' +
+      'Lens: <design/type, index, material, coating — only what is legible or marked/circled on the form, or "—" if none>\n\n' +
+      'Rules to follow exactly:\n' +
+      '- SPH and CYL values are ALWAYS in quarter-diopter steps (…, -0.25, -0.50, -0.75, -1.00, -1.25, …). If a read number does not fit this pattern, correct it to the nearest valid quarter-diopter value.\n' +
+      '- CYL is always negative notation — if the form shows a CYL number with no sign or a plus sign, write it as negative.\n' +
+      '- If an eye\'s sphere is zero/plano (written as "PL", "Plano", or a dash meaning no power), write "PL" as that eye\'s SPH instead of "0.00".\n' +
+      '- If an eye is marked as "Balance" (or Hebrew "בלנס"/"באלאנס", meaning matched to the fellow eye, no separate power given), write that whole eye\'s line as "R: BALANCE" or "L: BALANCE" with no SPH/CYL/AXIS.\n' +
+      '- PD is a number roughly between 50-80mm if binocular (one total value), or roughly 20-45mm per eye if monocular (R and L separate values). Use this to decide which of the two the form is showing.\n' +
+      '- Do NOT include the patient name anywhere in the output.\n' +
+      '- Do NOT add any notes, remarks, or commentary section.\n' +
+      '- Mark any uncertain/ambiguous handwritten reading by prefixing that specific number with "~" (e.g. "~-2.00"), and add a final line "~ = uncertain reading, verify original" only if you used at least one ~ mark.';
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-5",
+        max_tokens: 600,
+        messages: [
+          { role: "user", content: [
+            {type:"image", source:{type:"base64", media_type: mimeType, data: base64}},
+            {type:"text", text: prompt}
+          ]}
+        ]
+      })
+    });
+    const data = await response.json();
+    if(!response.ok){
+      const msg = (data && data.error && data.error.message) ? data.error.message : ('שגיאת שרת ('+response.status+')');
+      throw new Error(msg);
+    }
+    let text = '';
+    (data.content||[]).forEach(b=>{ if(b.type==='text') text += b.text; });
+    text = text.trim();
+    const field = document.getElementById('exam-text-main');
+    field.value = field.value.trim() ? (field.value.trim() + '\n\n' + text) : text;
+  } catch(err){
+    alert('שגיאה בסריקה: ' + err.message);
+  } finally {
+    setScanLoading(false);
+  }
+}
+
+const BACKUP_INTERVAL_MS = 90 * 24 * 60 * 60 * 1000; // 3 months
+let backupClickCount = 0;
+let backupClickTimer = null;
+function handleBackupIconClick(){
+  backupClickCount++;
+  if(backupClickTimer) clearTimeout(backupClickTimer);
+  backupClickTimer = setTimeout(()=>{ backupClickCount = 0; }, 600);
+  if(backupClickCount >= 3){
+    backupClickCount = 0;
+    clearTimeout(backupClickTimer);
+    const jsonSection = document.getElementById('backup-json-section');
+    const panel = document.getElementById('backup-panel');
+    const hint = document.getElementById('backup-json-hint');
+    const showingJson = jsonSection.style.display !== 'none';
+    jsonSection.style.display = showingJson ? 'none' : 'block';
+    if(hint) hint.style.display = showingJson ? 'block' : 'none';
+    panel.style.display = 'block';
+    if(!showingJson) renderLastBackupDisplay();
+  } else {
+    toggleBackupPanel();
+  }
+}
+function toggleBackupPanel(){
+  const panel = document.getElementById('backup-panel');
+  panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
+}
+function renderLastBackupDisplay(){
+  const ts = getLastBackupTs();
+  const el = document.getElementById('last-backup-display');
+  if(!el) return;
+  el.textContent = ts ? new Date(ts).toLocaleDateString('he-IL') : 'מעולם לא';
+}
+function renderBackupBanner(){
+  const slot = document.getElementById('backup-banner-slot');
+  if(!slot) return;
+  const hasData = getCustomers().length > 0 || getExams().length > 0;
+  const lastTs = getLastBackupTs();
+  const now = Date.now();
+  const overdue = hasData && (!lastTs || (now - lastTs) >= BACKUP_INTERVAL_MS);
+  const snoozed = now < getSnoozeUntil();
+  if(overdue && !snoozed){
+    const monthsText = lastTs ? Math.floor((now-lastTs)/(30*24*60*60*1000)) + ' חודשים' : 'מעולם לא';
+    slot.innerHTML = `
+      <div class="backup-banner">
+        <div class="title">⚠️ מומלץ לגבות את הנתונים</div>
+        <div class="text">גיבוי אחרון: ${monthsText}. גבה עכשיו לכרטיס USB כדי לא לאבד נתונים.</div>
+        <div class="backup-row">
+          <button class="btn-primary" style="margin-top:0;" onclick="exportBackup()">גבה עכשיו</button>
+          <button class="btn-secondary" style="margin-top:0;" onclick="snoozeBackup()">הזכר לי בעוד שבוע</button>
+        </div>
+      </div>`;
+  } else {
+    slot.innerHTML = '';
+  }
+}
+function snoozeBackup(){
+  setSnoozeUntil(Date.now() + 7*24*60*60*1000);
+  renderBackupBanner();
+}
+
+/* ---------------- order book ---------------- */
+const LS_ORDERS = 'clinica_orders';
+function getOrders(){ return JSON.parse(localStorage.getItem(LS_ORDERS) || '[]'); }
+function saveOrders(a){ localStorage.setItem(LS_ORDERS, JSON.stringify(a)); }
+function renumberOrders(orders){
+  orders.sort((a,b)=> a.number - b.number);
+  orders.forEach((o,i)=>{ o.number = i+1; });
+  return orders;
+}
+function todayDateInputValue(){ return todayISO(); } // yyyy-mm-dd, matches <input type=date>
+function fmtMoney(n){
+  const v = parseFloat(n);
+  if(isNaN(v)) return '0';
+  return v.toLocaleString('he-IL', {maximumFractionDigits:2});
+}
+function orderTotals(order){
+  const paid = (order.payments||[]).reduce((s,p)=> s + (parseFloat(p.amount)||0), 0);
+  const amount = parseFloat(order.amount) || 0;
+  const debt = Math.round((amount - paid) * 100) / 100;
+  return {paid, amount, debt};
+}
+
+/* ---------------- order report (by date range or number range) ---------------- */
+let lastReportOrders = [];
+function openOrderReport(){
+  document.querySelector('input[name="report-mode"][value="date"]').checked = true;
+  renderReportModeFields();
+  document.getElementById('report-summary').innerHTML = '';
+  document.getElementById('report-results').innerHTML = '';
+  document.getElementById('report-csv-btn').style.display = 'none';
+  lastReportOrders = [];
+  showScreen('screen-order-report');
+}
+function renderReportModeFields(){
+  const mode = document.querySelector('input[name="report-mode"]:checked').value;
+  const container = document.getElementById('report-mode-fields');
+  if(mode==='date'){
+    container.innerHTML = `
+      <div class="row">
+        <div><label>מתאריך</label><input type="date" id="report-date-from"></div>
+        <div><label>עד תאריך</label><input type="date" id="report-date-to"></div>
+      </div>`;
+  } else {
+    container.innerHTML = `
+      <div class="row">
+        <div><label>ממספר</label><input type="text" id="report-num-from" inputmode="numeric" placeholder="1"></div>
+        <div><label>עד מספר</label><input type="text" id="report-num-to" inputmode="numeric" placeholder="100"></div>
+      </div>`;
+  }
+}
+function generateOrderReport(){
+  const mode = document.querySelector('input[name="report-mode"]:checked').value;
+  let orders = getOrders();
+  if(mode==='date'){
+    const from = document.getElementById('report-date-from').value;
+    const to = document.getElementById('report-date-to').value;
+    orders = orders.filter(o=> (!from || o.date>=from) && (!to || o.date<=to));
+  } else {
+    const fromN = parseInt(document.getElementById('report-num-from').value, 10);
+    const toN = parseInt(document.getElementById('report-num-to').value, 10);
+    orders = orders.filter(o=> (isNaN(fromN) || o.number>=fromN) && (isNaN(toN) || o.number<=toN));
+  }
+  orders = orders.slice().sort((a,b)=> a.number-b.number);
+  lastReportOrders = orders;
+
+  let totalAmount=0, totalPaid=0, totalDebt=0;
+  orders.forEach(o=>{
+    const t = orderTotals(o);
+    totalAmount += t.amount; totalPaid += t.paid; totalDebt += t.debt;
+  });
+  const summaryEl = document.getElementById('report-summary');
+  summaryEl.innerHTML = orders.length ? (
+    '<div class="field-hint" style="font-size:13px;"><b>'+orders.length+'</b> הזמנות &nbsp;·&nbsp; סה"כ: ₪'+fmtMoney(totalAmount)+' &nbsp;·&nbsp; שולם: ₪'+fmtMoney(totalPaid)+' &nbsp;·&nbsp; חוב: ₪'+fmtMoney(totalDebt)+'</div>'
+  ) : '<div class="empty">אין הזמנות תואמות</div>';
+
+  const resultsEl = document.getElementById('report-results');
+  resultsEl.innerHTML = '';
+  orders.forEach(o=>{
+    const t = orderTotals(o);
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.onclick = ()=>{ openOrderDetail(o.id); };
+    const statusColor = t.debt>0 ? 'var(--danger)' : 'var(--ok)';
+    div.innerHTML = '<div><div class="name">#'+o.number+' · '+(o.customerName||'')+'</div><div class="sub2">'+fmtDate(o.date)+' · '+(o.item||'')+'</div></div><div style="text-align:left; font-weight:700; color:'+statusColor+';">₪'+fmtMoney(t.amount)+'</div>';
+    resultsEl.appendChild(div);
+  });
+  document.getElementById('report-csv-btn').style.display = orders.length ? 'block' : 'none';
+}
+function downloadReportCsv(){
+  if(!lastReportOrders.length) return;
+  const header = ['Number','Date','Customer','Item','Amount','Paid','Debt','Delivered'];
+  const lines = [header.join(',')];
+  lastReportOrders.forEach(o=>{
+    const t = orderTotals(o);
+    const row = [
+      o.number,
+      o.date,
+      '"'+(o.customerName||'').replace(/"/g,'""')+'"',
+      '"'+(o.item||'').replace(/"/g,'""')+'"',
+      t.amount.toFixed(2),
+      t.paid.toFixed(2),
+      t.debt.toFixed(2),
+      o.delivered ? 'Yes' : 'No'
+    ];
+    lines.push(row.join(','));
+  });
+  const csv = '\uFEFF' + lines.join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'orders-report-' + todayISO() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+let currentOrderId = null;
+let orderCustomerTarget = 'of'; // 'of' (new order) or 'oe' (edit order)
+
+function renderOrdersList(){
+  const q = (document.getElementById('order-search-input').value || '').trim();
+  let orders = getOrders();
+  if(q){ orders = orders.filter(o => (o.customerName||'').includes(q)); }
+  orders = orders.slice().sort((a,b)=> b.number - a.number);
+  const container = document.getElementById('orders-list');
+  if(orders.length===0){
+    container.innerHTML = '<div class="empty">אין הזמנות תואמות</div>';
+    return;
+  }
+  container.innerHTML = '';
+  orders.forEach(o=>{
+    const t = orderTotals(o);
+    const statusColor = t.debt > 0 ? 'var(--danger)' : 'var(--ok)';
+    const statusText = t.debt > 0 ? ('חוב: ₪'+fmtMoney(t.debt)) : 'שולם במלואו';
+    const deliveredText = o.delivered ? '<span style="color:var(--ok);">נמסר</span>' : '<span style="color:var(--muted);">לא נמסר</span>';
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.onclick = ()=>{ openOrderDetail(o.id); };
+    div.innerHTML = `<div>
+        <div class="name">#${o.number} · ${o.customerName||'(ללא שם)'}</div>
+        <div class="sub2">${fmtDate(o.date)} · ${o.item||''} · ${deliveredText}</div>
+      </div>
+      <div style="text-align:left;">
+        <div style="font-weight:700; color:${statusColor}; font-size:13px;">${statusText}</div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+document.getElementById('order-search-input').addEventListener('input', renderOrdersList);
+
+function startNewOrder(){
+  document.getElementById('of-date').value = todayDateInputValue();
+  document.getElementById('of-customer-name').value = '';
+  document.getElementById('of-item').value = 'משקפיים';
+  document.getElementById('of-amount').value = '';
+  document.getElementById('of-paid').value = '';
+  document.querySelector('input[name="of-delivered"][value="no"]').checked = true;
+  document.getElementById('order-customer-suggestions').innerHTML = '';
+  newOrderCustomerId = null;
+  showScreen('screen-order-new');
+}
+let newOrderCustomerId = null;
+let editOrderCustomerId = null;
+
+function renderOrderCustomerSuggestions(which){
+  which = which || 'of';
+  const inputId = which==='oe' ? 'oe-customer-name' : 'of-customer-name';
+  const slotId = which==='oe' ? 'order-customer-suggestions-oe' : 'order-customer-suggestions';
+  const q = document.getElementById(inputId).value.trim();
+  const slot = document.getElementById(slotId);
+  if(!q){ slot.innerHTML=''; return; }
+  const matches = getCustomers().filter(c => (c.firstName+' '+c.lastName).includes(q)).slice(0,5);
+  if(matches.length===0){ slot.innerHTML=''; return; }
+  slot.innerHTML = matches.map(c =>
+    `<div class="list-item" style="margin-top:6px; padding:8px 12px;" onclick="pickOrderCustomer('${which}','${c.id}')">
+       <div class="name" style="font-size:14px;">${c.firstName} ${c.lastName}</div>
+       <div class="sub2">${c.phone||''}</div>
+     </div>`
+  ).join('');
+}
+function pickOrderCustomer(which, customerId){
+  const c = getCustomers().find(x=>x.id===customerId);
+  if(!c) return;
+  const inputId = which==='oe' ? 'oe-customer-name' : 'of-customer-name';
+  const slotId = which==='oe' ? 'order-customer-suggestions-oe' : 'order-customer-suggestions';
+  document.getElementById(inputId).value = c.firstName+' '+c.lastName;
+  document.getElementById(slotId).innerHTML = '';
+  if(which==='oe'){ editOrderCustomerId = c.id; } else { newOrderCustomerId = c.id; }
+}
+
+function saveNewOrder(){
+  const date = document.getElementById('of-date').value || todayDateInputValue();
+  const customerName = document.getElementById('of-customer-name').value.trim();
+  const item = document.getElementById('of-item').value.trim() || 'משקפיים';
+  const amount = document.getElementById('of-amount').value.trim();
+  const initialPaid = document.getElementById('of-paid').value.trim();
+  const delivered = document.querySelector('input[name="of-delivered"]:checked').value === 'yes';
+  if(!customerName){ alert('נא להזין שם לקוח'); return; }
+  const order = {
+    id: uid(),
+    number: getOrders().length + 1,
+    date,
+    customerId: newOrderCustomerId,
+    customerName,
+    item,
+    amount: amount || '0',
+    delivered,
+    payments: []
+  };
+  if(initialPaid && parseFloat(initialPaid) > 0){
+    order.payments.push({ amount: initialPaid, date });
+  }
+  let orders = getOrders();
+  orders.push(order);
+  saveOrders(orders);
+  showScreen('screen-order-detail');
+  openOrderDetail(order.id);
+}
+
+function openOrderDetail(orderId){
+  const order = getOrders().find(o=>o.id===orderId);
+  if(!order) return;
+  currentOrderId = orderId;
+  const t = orderTotals(order);
+  document.getElementById('od-number').textContent = order.number;
+  document.getElementById('od-customer-name').textContent = order.customerName;
+  document.getElementById('od-date').textContent = fmtDate(order.date);
+  document.getElementById('od-item-display').textContent = order.item;
+  document.getElementById('od-amount-display').textContent = '₪'+fmtMoney(t.amount);
+  document.getElementById('od-paid-display').textContent = '₪'+fmtMoney(t.paid);
+  const debtEl = document.getElementById('od-debt-display');
+  debtEl.textContent = t.debt > 0 ? ('₪'+fmtMoney(t.debt)) : 'אין חוב';
+  debtEl.style.color = t.debt > 0 ? 'var(--danger)' : 'var(--ok)';
+  const deliveredEl = document.getElementById('od-delivered-display');
+  deliveredEl.textContent = order.delivered ? 'כן' : 'לא';
+  deliveredEl.style.color = order.delivered ? 'var(--ok)' : 'var(--danger)';
+  document.getElementById('op-amount').value = '';
+  document.getElementById('op-date').value = todayDateInputValue();
+  renderOrderPayments(order);
+  showScreen('screen-order-detail');
+}
+function toggleOrderDelivered(){
+  if(!currentOrderId) return;
+  let orders = getOrders();
+  const order = orders.find(o=>o.id===currentOrderId);
+  if(!order) return;
+  order.delivered = !order.delivered;
+  saveOrders(orders);
+  openOrderDetail(currentOrderId);
+}
+function renderOrderPayments(order){
+  const list = document.getElementById('od-payments-list');
+  if(!order.payments || order.payments.length===0){
+    list.innerHTML = '<div class="empty">אין תשלומים רשומים</div>';
+    return;
+  }
+  const sorted = order.payments.slice().sort((a,b)=> b.date.localeCompare(a.date));
+  list.innerHTML = sorted.map(p =>
+    `<div class="exam-item" style="cursor:default;"><div class="exam-date">${fmtDate(p.date)}</div><div class="exam-preview">₪${fmtMoney(p.amount)}</div></div>`
+  ).join('');
+}
+function addOrderPayment(){
+  const amount = document.getElementById('op-amount').value.trim();
+  const date = document.getElementById('op-date').value || todayDateInputValue();
+  if(!amount || parseFloat(amount) <= 0){ alert('נא להזין סכום תשלום'); return; }
+  let orders = getOrders();
+  const order = orders.find(o=>o.id===currentOrderId);
+  if(!order) return;
+  order.payments = order.payments || [];
+  order.payments.push({amount, date});
+  saveOrders(orders);
+  openOrderDetail(currentOrderId);
+}
+function deleteCurrentOrder(){
+  if(!currentOrderId) return;
+  if(!confirm('למחוק את ההזמנה הזו? הפעולה לא הפיכה, ומספרי ההזמנות שאחריה יזוזו כדי לשמור על רצף.')) return;
+  let orders = getOrders();
+  orders = orders.filter(o=>o.id!==currentOrderId);
+  orders = renumberOrders(orders);
+  saveOrders(orders);
+  currentOrderId = null;
+  showScreen('screen-orders');
+}
+
+function startEditOrder(){
+  const order = getOrders().find(o=>o.id===currentOrderId);
+  if(!order) return;
+  document.getElementById('oe-number').textContent = order.number;
+  document.getElementById('oe-date').value = order.date;
+  document.getElementById('oe-customer-name').value = order.customerName;
+  document.getElementById('oe-item').value = order.item;
+  document.getElementById('oe-amount').value = order.amount;
+  document.querySelector('input[name="oe-delivered"][value="' + (order.delivered ? 'yes' : 'no') + '"]').checked = true;
+  editOrderCustomerId = order.customerId || null;
+  document.getElementById('order-customer-suggestions-oe').innerHTML = '';
+  showScreen('screen-order-edit');
+}
+function cancelEditOrder(){
+  showScreen('screen-order-detail');
+  openOrderDetail(currentOrderId);
+}
+function saveEditOrder(){
+  const date = document.getElementById('oe-date').value || todayDateInputValue();
+  const customerName = document.getElementById('oe-customer-name').value.trim();
+  const item = document.getElementById('oe-item').value.trim() || 'משקפיים';
+  const amount = document.getElementById('oe-amount').value.trim();
+  const delivered = document.querySelector('input[name="oe-delivered"]:checked').value === 'yes';
+  if(!customerName){ alert('נא להזין שם לקוח'); return; }
+  let orders = getOrders();
+  const order = orders.find(o=>o.id===currentOrderId);
+  if(!order) return;
+  order.date = date;
+  order.customerName = customerName;
+  order.customerId = editOrderCustomerId;
+  order.item = item;
+  order.amount = amount || '0';
+  order.delivered = delivered;
+  saveOrders(orders);
+  showScreen('screen-order-detail');
+  openOrderDetail(currentOrderId);
+}
+
+/* ---------------- init ---------------- */
+renderCustomersList();
+renderBackupBanner();
+renderLastBackupDisplay();
+renderApiKeyStatus();
+</script>
+</body>
+</html>
