@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול מטופלים - מרפאת עיניים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F7FB;
+    --grid-line: rgba(27,42,74,0.05);
+    --navy:#132340;
+    --navy-soft:#1B2A4A;
+    --blue:#2F6FED;
+    --blue-dark:#2456BF;
+    --white:#FFFFFF;
+    --border:#E2E8F3;
+    --text:#1B2436;
+    --muted:#6B7690;
+    --danger:#D8455B;
+    --warn:#DB9A2C;
+    --ok:#2E9E5B;
+    --loc-herzliya:#2F6FED;
+    --loc-petah:#0D9488;
+    --radius:14px;
+    --shadow: 0 2px 10px rgba(19,35,64,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Heebo',sans-serif;
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color:var(--text);
+    min-height:100vh;
+    direction:rtl;
+  }
+  .app{max-width:980px;margin:0 auto;padding:20px 16px 60px;}
+
+  /* ---------- Login ---------- */
+  .login-wrap{
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .login-card{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:36px 30px;
+    width:100%;max-width:360px;
+    text-align:center;
+  }
+  .login-card .eye-mark{
+    width:46px;height:46px;border-radius:50%;
+    background:var(--navy);
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;font-size:20px;font-weight:700;
+  }
+  .login-card h1{font-size:19px;margin:0 0 4px;color:var(--navy);}
+  .login-card p{font-size:13px;color:var(--muted);margin:0 0 22px;}
+  .login-card input{
+    width:100%;padding:12px 14px;border-radius:10px;
+    border:1px solid var(--border);font-size:15px;
+    font-family:inherit;margin-bottom:12px;text-align:center;letter-spacing:2px;
+  }
+  .login-card input:focus{outline:none;border-color:var(--blue);}
+  .pill-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--blue);color:#fff;border:none;
+    padding:11px 22px;border-radius:999px;font-family:inherit;
+    font-size:14px;font-weight:600;cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+    width:100%;
+  }
+  .pill-btn:hover{background:var(--blue-dark);}
+  .pill-btn:active{transform:scale(0.98);}
+  .pill-btn.secondary{background:var(--white);color:var(--navy);border:1px solid var(--border);}
+  .pill-btn.secondary:hover{background:#F0F3FA;}
+  .login-error{color:var(--danger);font-size:13px;margin-top:10px;min-height:16px;}
+
+  /* ---------- Header / Nav ---------- */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 4px 20px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .eye-mark{
+    width:34px;height:34px;border-radius:50%;background:var(--navy);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none;
+  }
+  .brand h1{font-size:16px;margin:0;color:var(--navy);}
+  .brand span{display:block;font-size:11px;color:var(--muted);}
+
+  nav{display:flex;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;}
+  nav button{
+    border:none;background:transparent;font-family:inherit;
+    padding:8px 16px;border-radius:999px;font-size:13px;font-weight:600;
+    color:var(--muted);cursor:pointer;transition:all .15s ease;
+  }
+  nav button.active{background:var(--navy);color:#fff;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Dashboard ---------- */
+  .cards-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;margin-bottom:26px;
+  }
+  .stat-card{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 18px;box-shadow:var(--shadow);
+  }
+  .stat-card .num{font-size:28px;font-weight:800;color:var(--navy);}
+  .stat-card .label{font-size:12.5px;color:var(--muted);margin-top:2px;}
+
+  .section{margin-bottom:28px;}
+  .section-title{
+    font-size:14.5px;font-weight:700;color:var(--navy);
+    margin:0 0 10px;display:flex;align-items:center;gap:8px;
+  }
+  .section-title .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .dot.today{background:var(--blue);}
+  .dot.charge{background:var(--warn);}
+  .dot.first{background:#7C5CBF;}
+  .dot.annual{background:var(--ok);}
+  .dot.needsched{background:#E07A3F;}
+  .dot.open{background:#2E9E5B;}
+  .dot.reminder{background:#7C5CBF;}
+
+  .list-card{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    overflow:hidden;box-shadow:var(--shadow);
+  }
+  .row-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:13px 16px;border-bottom:1px solid var(--border);gap:12px;
+  }
+  .row-item:last-child{border-bottom:none;}
+  .row-item .name{font-weight:600;font-size:14.5px;}
+  .row-item .meta{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .row-item .right{text-align:left;font-size:12.5px;color:var(--muted);white-space:nowrap;}
+  .empty-note{padding:16px;color:var(--muted);font-size:13px;text-align:center;}
+
+  .badge{
+    display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600;
+  }
+  .badge.paid{background:#E4F5EA;color:var(--ok);}
+  .badge.unpaid{background:#FBEAEC;color:var(--danger);}
+
+  /* ---------- Patients ---------- */
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .toolbar input[type=text]{
+    flex:1;min-width:160px;padding:10px 14px;border-radius:10px;
+    border:1px solid var(--border);font-family:inherit;font-size:14px;
+  }
+  .toolbar input[type=text]:focus{outline:none;border-color:var(--blue);}
+  .toolbar .pill-btn{width:auto;white-space:nowrap;}
+
+  .patient-card{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden;
+  }
+  .patient-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;cursor:pointer;gap:10px;
+  }
+  .patient-head .name{font-weight:700;font-size:15px;color:var(--navy);}
+  .patient-head .phone{font-size:12.5px;color:var(--muted);margin-top:2px;direction:ltr;text-align:right;}
+  .patient-head .chev{transition:transform .15s ease;color:var(--muted);font-size:13px;}
+  .patient-card.open .chev{transform:rotate(180deg);}
+  .patient-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
+  .patient-card.open .patient-body{display:block;}
+
+  .treat-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px;gap:10px;
+  }
+  .treat-row:last-of-type{border-bottom:none;}
+  .treat-row .t-date{font-weight:600;}
+  .treat-row .t-price{color:var(--muted);}
+  .treat-row .t-actions{display:flex;align-items:center;gap:8px;}
+  .toggle-paid{
+    border:1px solid var(--border);background:var(--white);border-radius:999px;
+    font-family:inherit;font-size:11.5px;padding:4px 10px;cursor:pointer;font-weight:600;
+  }
+  .toggle-paid.is-paid{background:#E4F5EA;color:var(--ok);border-color:#CDEBD8;}
+  .toggle-paid.is-unpaid{background:#FBEAEC;color:var(--danger);border-color:#F5D3D8;}
+  .icon-btn{
+    border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;
+    padding:2px 4px;
+  }
+  .icon-btn:hover{color:var(--danger);}
+
+  .mini-label{font-size:11.5px;color:var(--muted);margin:14px 0 6px;font-weight:600;}
+  .inline-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;}
+  .inline-form input{
+    padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;
+  }
+  .inline-form input.date{width:130px;}
+  .inline-form input.time{width:90px;}
+  .inline-form input.price{width:80px;}
+  .inline-form .pill-btn{width:auto;padding:8px 16px;font-size:12.5px;}
+  .next-appt-box{
+    background:#F0F4FC;border:1px solid #DCE6F7;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px;
+  }
+  .notes-box textarea{
+    width:100%;min-height:56px;border:1px solid var(--border);border-radius:8px;
+    padding:8px 10px;font-family:inherit;font-size:13px;resize:vertical;margin-top:6px;
+  }
+
+  /* ---------- Add patient modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(19,35,64,0.45);
+    display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
+  }
+  .overlay.active{display:flex;}
+  .modal{
+    background:var(--white);border-radius:var(--radius);padding:24px;
+    width:100%;max-width:400px;box-shadow:0 10px 40px rgba(19,35,64,0.25);
+  }
+  .modal h2{font-size:16px;margin:0 0 16px;color:var(--navy);}
+  .modal label{display:block;font-size:12.5px;color:var(--muted);margin:12px 0 5px;font-weight:600;}
+  .modal input, .modal select{
+    width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);
+    font-family:inherit;font-size:14px;background:var(--white);
+  }
+  .modal-actions{display:flex;gap:10px;margin-top:20px;}
+  .modal-actions .pill-btn{flex:1;}
+
+  /* ---------- Settings ---------- */
+  .settings-card{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow);margin-bottom:14px;
+  }
+  .settings-card label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;}
+  .settings-card p.hint{font-size:12px;color:var(--muted);margin:4px 0 12px;}
+  .settings-card input{
+    padding:9px 12px;border-radius:9px;border:1px solid var(--border);font-family:inherit;font-size:14px;width:120px;
+  }
+  .settings-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .save-msg{font-size:12.5px;color:var(--ok);margin-top:8px;min-height:16px;}
+
+  /* ---------- Calendar ---------- */
+  .cal-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .cal-title{font-size:16px;font-weight:700;color:var(--navy);}
+  .cal-nav{
+    font-size:20px;border:1px solid var(--border);background:var(--white);
+    border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+    color:var(--navy);
+  }
+  .cal-nav:hover{background:#F0F3FA;color:var(--navy);}
+  .cal-grid{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+  }
+  .cal-dow{
+    text-align:center;font-size:11.5px;color:var(--muted);font-weight:600;padding-bottom:4px;
+  }
+  .cal-cell{
+    background:var(--white);border:1px solid var(--border);border-radius:10px;
+    min-height:56px;padding:6px 5px;cursor:pointer;position:relative;
+    display:flex;flex-direction:column;align-items:flex-end;gap:4px;
+    transition:border-color .12s ease;
+  }
+  .cal-cell:hover{border-color:var(--blue);}
+  .cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
+  .cal-cell.today{border-color:var(--blue);border-width:2px;}
+  .cal-cell.selected{background:#EAF1FD;border-color:var(--blue);}
+  .cal-cell .dnum{font-size:12.5px;font-weight:600;color:var(--text);}
+  .cal-dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;}
+  .cal-dot{width:6px;height:6px;border-radius:50%;}
+  .cal-dot.past{background:var(--muted);}
+  .cal-dot.upcoming{background:var(--blue);}
+  .cal-dot.unpaid{background:var(--danger);}
+  .cal-cell.open-day{box-shadow: inset 0 3px 0 var(--ok);}
+  .cal-cell.open-day.loc-petah{box-shadow: inset 0 3px 0 var(--loc-petah);}
+  .cal-cell.open-day.loc-herzliya{box-shadow: inset 0 3px 0 var(--loc-herzliya);}
+  .cal-dot.reminder{background:#7C5CBF;}
+  .cal-dot.loc-herzliya{background:var(--loc-herzliya);}
+  .cal-dot.loc-petah{background:var(--loc-petah);}
+  .loc-badge{
+    display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;
+  }
+  .loc-badge.loc-herzliya{background:#E7EFFD;color:var(--loc-herzliya);}
+  .loc-badge.loc-petah{background:#E1F5F2;color:var(--loc-petah);}
+
+  .fab{
+    position:fixed;bottom:22px;left:22px;
+    width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;
+    border:none;font-size:26px;box-shadow:0 6px 18px rgba(47,111,237,0.4);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;z-index:20;
+  }
+  .fab:hover{background:var(--blue-dark);}
+
+  @media (max-width:560px){
+    header{flex-direction:column;align-items:flex-start;gap:12px;}
+    nav{width:100%;justify-content:space-between;}
+    nav button{flex:1;padding:8px 6px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginWrap" class="login-wrap">
+  <div class="login-card">
+    <div class="eye-mark">👁</div>
+    <h1>ניהול מטופלים</h1>
+    <p>גישה למרפאה - רופא ומזכירה בלבד</p>
+    <input type="password" id="pwInput" placeholder="סיסמה" autocomplete="off">
+    <button class="pill-btn" onclick="tryLogin()">כניסה</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="app" id="appWrap" style="display:none;">
+  <header>
+    <div class="brand">
+      <div class="eye-mark">👁</div>
+      <div>
+        <h1>ניהול מטופלים</h1>
+        <span id="todayLabel"></span>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-view="dashboard">לוח בקרה</button>
+      <button class="nav-btn" data-view="patients">מטופלים</button>
+      <button class="nav-btn" data-view="calendar">יומן</button>
+      <button class="nav-btn" data-view="reports">דוחות</button>
+      <button class="nav-btn" data-view="settings">הגדרות</button>
+    </nav>
+  </header>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="cards-grid">
+      <div class="stat-card"><div class="num" id="statReminders">0</div><div class="label">תזכורות</div></div>
+      <div class="stat-card"><div class="num" id="statToday">0</div><div class="label">טיפולים היום</div></div>
+      <div class="stat-card"><div class="num" id="statCharge">0</div><div class="label">לחיוב מחר</div></div>
+      <div class="stat-card"><div class="num" id="statNeedSched">0</div><div class="label">ממתינים לתיאום טיפול</div></div>
+      <div class="stat-card"><div class="num" id="statFirst">0</div><div class="label">ממתינים לביקורת ראשונה</div></div>
+      <div class="stat-card"><div class="num" id="statAnnual">0</div><div class="label">ממתינים לביקורת שנתית</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot reminder"></span>תזכורות</div>
+      <div class="list-card" id="listReminders"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot today"></span>טיפולים היום</div>
+      <div class="list-card" id="listToday"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot charge"></span>מחר יש טיפול - להיערך לחיוב</div>
+      <div class="list-card" id="listCharge"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot needsched"></span>נבדקים שיש לתאם להם טיפול</div>
+      <div class="list-card" id="listNeedSched"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot first"></span>זמן לתאם ביקורת ראשונה</div>
+      <div class="list-card" id="listFirst"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot annual"></span>זמן לתאם ביקורת שנתית (11 חודשים)</div>
+      <div class="list-card" id="listAnnual"></div>
+    </div>
+  </div>
+
+  <!-- PATIENTS -->
+  <div class="view" id="view-patients">
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="חיפוש לפי שם או טלפון...">
+    </div>
+    <div id="patientsList"></div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="view" id="view-calendar">
+    <div class="cal-header">
+      <button class="icon-btn cal-nav" id="calPrev" title="חודש קודם">‹</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button class="icon-btn cal-nav" id="calNext" title="חודש הבא">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="section" style="margin-top:20px;">
+      <div class="section-title" id="calDayTitle">בחרו יום כדי לראות פרטים</div>
+      <div class="list-card" id="calDayList"></div>
+    </div>
+
+    <div class="section" style="margin-top:26px;">
+      <div class="section-title"><span class="dot open"></span>ימי טיפולים פתוחים לקביעה</div>
+      <div class="list-card" id="openDaysList"></div>
+      <div class="inline-form" style="margin-top:12px;">
+        <input type="date" id="openDayDate" class="date">
+        <input type="time" id="openDayTime" class="time">
+        <select id="openDayLocation" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+          <option value="הרצליה">הרצליה</option>
+          <option value="פתח תקווה">פתח תקווה</option>
+        </select>
+        <input type="text" id="openDayNotes" placeholder="הערה (לא חובה)" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;flex:1;min-width:120px;">
+        <button class="pill-btn" id="addOpenDayBtn">פתיחת יום</button>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:26px;">
+      <div class="section-title"><span class="dot reminder"></span>תזכורות ביומן</div>
+      <div class="list-card" id="calRemindersList"></div>
+      <div class="inline-form" style="margin-top:12px;">
+        <input type="date" id="reminderDate" class="date">
+        <input type="time" id="reminderTime" class="time">
+        <input type="text" id="reminderText" placeholder="טקסט התזכורת" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;flex:1;min-width:120px;">
+        <button class="pill-btn" id="addReminderBtn">הוספת תזכורת</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="view" id="view-reports">
+    <div class="toolbar">
+      <input type="month" id="reportMonth" style="padding:10px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:14px;">
+      <button class="pill-btn secondary" id="exportCsvBtn" style="width:auto;">ייצוא ל-CSV</button>
+    </div>
+
+    <div class="cards-grid">
+      <div class="stat-card"><div class="num" id="repCount">0</div><div class="label">מספר טיפולים</div></div>
+      <div class="stat-card"><div class="num" id="repTotal">0₪</div><div class="label">סה"כ חויב</div></div>
+      <div class="stat-card"><div class="num" id="repPaid">0₪</div><div class="label">שולם</div></div>
+      <div class="stat-card"><div class="num" id="repUnpaid">0₪</div><div class="label">לא שולם</div></div>
+    </div>
+
+    <div class="list-card" id="reportList"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="view" id="view-settings">
+    <div class="settings-card">
+      <label>מספר חודשים לתזכורת ביקורת ראשונה</label>
+      <p class="hint">כמה חודשים אחרי טיפול אחרון להזכיר לתאם ביקורת ראשונה (ברירת מחדל: 3)</p>
+      <div class="settings-row">
+        <input type="number" id="firstMonthsInput" min="1" max="24">
+        <button class="pill-btn" style="width:auto;" onclick="saveSettings()">שמירה</button>
+      </div>
+      <div class="save-msg" id="settingsSaveMsg"></div>
+    </div>
+    <div class="settings-card">
+      <label>שינוי סיסמת כניסה</label>
+      <p class="hint">הסיסמה משותפת לכל מי שנכנס לאתר (אתה, הרופא, המזכירה)</p>
+      <div class="settings-row">
+        <input type="text" id="newPwInput" placeholder="סיסמה חדשה">
+        <button class="pill-btn secondary" style="width:auto;" onclick="changePassword()">עדכון סיסמה</button>
+      </div>
+      <div class="save-msg" id="pwSaveMsg"></div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="openAddModal()" title="הוספת מטופל">+</button>
+</div>
+
+<!-- ADD PATIENT MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <h2>מטופל חדש</h2>
+    <label>שם מלא</label>
+    <input type="text" id="newName" placeholder="שם ושם משפחה">
+    <label>טלפון</label>
+    <input type="text" id="newPhone" placeholder="050-1234567">
+    <label>קופת חולים</label>
+    <select id="newHmo">
+      <option value="">לא צוין</option>
+      <option value="כללית">כללית</option>
+      <option value="מכבי">מכבי</option>
+      <option value="מאוחדת">מאוחדת</option>
+      <option value="לאומית">לאומית</option>
+    </select>
+    <label>ביטוח פרטי</label>
+    <select id="newInsurance">
+      <option value="no">לא</option>
+      <option value="yes">כן</option>
+    </select>
+    <label>הערות (לא חובה)</label>
+    <input type="text" id="newNotes" placeholder="הערות כלליות">
+    <div class="modal-actions">
+      <button class="pill-btn secondary" onclick="closeAddModal()">ביטול</button>
+      <button class="pill-btn" onclick="addPatient()">הוספה</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYT50ywlWwnOaT0a2P76ncBAH5j2VY5ME",
+  authDomain: "clinic-9e83b.firebaseapp.com",
+  databaseURL: "https://clinic-9e83b-default-rtdb.firebaseio.com",
+  projectId: "clinic-9e83b",
+  storageBucket: "clinic-9e83b.firebasestorage.app",
+  messagingSenderId: "968564382958",
+  appId: "1:968564382958:web:2193c7aecc251cea5027ff"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+const dataRef = ref(db, 'clinicData');
+
+let DATA = null; // { patients: [...], settings: {...}, openDays: [...] } - synced live with Firebase
+let openPatientId = null;
+let loggedIn = false;
+
+const DEFAULT_SETTINGS = { password: '1234', firstFollowupMonths: 3 };
+
+function seedData(){
+  return {
+    settings: { ...DEFAULT_SETTINGS },
+    patients: [
+      mkPatient('שחר גרייבר','0543332247','', [
+        mkTreat('2026-05-01',480,false), mkTreat('2026-06-03',480,false)
+      ], null),
+      mkPatient('אורית ששון','050-6464535','', [
+        mkTreat('2026-05-08',850,false), mkTreat('2026-05-29',850,false)
+      ], null),
+      mkPatient('טטיאנה טריבלסקי','052-5400739','', [
+        mkTreat('2026-06-17',850,false), mkTreat('2026-07-22',850,false)
+      ], null),
+      mkPatient('מזל אזולאי','054-9722712','', [
+        mkTreat('2026-07-01',850,false), mkTreat('2026-07-22',850,false)
+      ], null),
+      mkPatient('יעל אליאב','054-345-2385','', [
+        mkTreat('2026-07-01',850,false), mkTreat('2026-07-22',850,false)
+      ], null),
+      mkPatient('גיטה ויינשטיין','052-8457516','', [
+        mkTreat('2026-07-20',850,false), mkTreat('2026-08-11',850,false)
+      ], null),
+      mkPatient('צחי יגור','054-4449422','', [], [mkAppt('2026-09-04','09:45',850,false,'טיפול')]),
+      mkPatient('בת קינר','054-5401312','', [], [mkAppt('2026-09-04','10:30',850,false,'טיפול')]),
+      mkPatient('מיכל גוטמן','052-6808159','התעניינה - לבדוק למה לא קבעה עדיין. אפשר לתאם לשישי ב-11:15 במרפאה בהרצליה', [], []),
+      mkPatient('גילה מועלם','052-4478112','רוצה בהרצליה אבל לא בשישי - כרגע אין מרפאה פתוחה', [], []),
+      mkPatient('אמנון אברהם','052-8530908','לקביעת תור בהרצליה - אחיין של פרופ\' אחירון', [], []),
+    ],
+    openDays: [
+      mkOpenDay('2026-09-04','09:45',''),
+      mkOpenDay('2026-09-09','16:30',''),
+      mkOpenDay('2026-09-18','09:45',''),
+    ],
+    reminders: []
+  };
+}
+function mkOpenDay(date,fromTime,notes,location){
+  return { id: uid(), date, fromTime: fromTime||'', notes: notes||'', location: location||'הרצליה' };
+}
+function mkReminder(date,time,text){
+  return { id: uid(), date, time: time||'', text: text||'' };
+}
+function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+function mkPatient(name,phone,notes,treatments,appointments,hmo,hasPrivateInsurance){
+  return { id: uid(), name, phone, notes: notes||'', treatments: treatments||[], appointments: appointments||[], hmo: hmo||'', hasPrivateInsurance: !!hasPrivateInsurance };
+}
+function mkAppt(date,time,price,paid,type,location){
+  return { id: uid(), date, time: time||'', price: price||0, paid: !!paid, type: type||'טיפול', location: location||'הרצליה' };
+}
+function mkTreat(date,price,paid,location){
+  return { id: uid(), date, price, paid: !!paid, location: location||'הרצליה' };
+}
+
+// הנתונים נשמרים ומסתנכרנים בזמן אמת דרך Firebase Realtime Database.
+// כל שינוי שנעשה במכשיר אחד (אתה/הרופא/המזכירה) מופיע מיידית אצל כולם.
+function normalizeData(){
+  if(!DATA.settings) DATA.settings = {...DEFAULT_SETTINGS};
+  if(DATA.settings.firstFollowupMonths == null) DATA.settings.firstFollowupMonths = DEFAULT_SETTINGS.firstFollowupMonths;
+  if(!DATA.settings.password) DATA.settings.password = DEFAULT_SETTINGS.password;
+  if(!DATA.patients) DATA.patients = [];
+  if(!DATA.openDays) DATA.openDays = [];
+  if(!DATA.reminders) DATA.reminders = [];
+  DATA.patients.forEach(p=>{
+    if(!p.appointments) p.appointments = [];
+    if(!p.treatments) p.treatments = [];
+    if(p.hmo == null) p.hmo = '';
+    if(p.hasPrivateInsurance == null) p.hasPrivateInsurance = false;
+    p.appointments.forEach(a=>{ if(!a.location) a.location = 'הרצליה'; });
+    p.treatments.forEach(t=>{ if(!t.location) t.location = 'הרצליה'; });
+  });
+  DATA.openDays.forEach(o=>{ if(!o.location) o.location = 'הרצליה'; });
+}
+
+function attachRealtimeListener(){
+  onValue(dataRef, (snapshot)=>{
+    const val = snapshot.val();
+    if(val){
+      DATA = val;
+      normalizeData();
+    } else {
+      // Firebase is empty (first time ever connecting) - seed it once
+      DATA = seedData();
+      persist();
+    }
+    if(loggedIn) refreshCurrentView();
+  }, (err)=>{
+    console.error('שגיאת חיבור ל-Firebase', err);
+    document.getElementById('loginError').textContent = 'שגיאת חיבור לשרת - בדקו את החיבור לאינטרנט';
+  });
+}
+
+async function persist(){
+  try{
+    await set(dataRef, DATA);
+  }catch(e){
+    console.error('שגיאת שמירה', e);
+  }
+}
+
+function refreshCurrentView(){
+  const activeBtn = document.querySelector('.nav-btn.active');
+  const view = activeBtn ? activeBtn.dataset.view : 'dashboard';
+  if(view==='dashboard') renderDashboard();
+  if(view==='patients') renderPatients();
+  if(view==='calendar') renderCalendar();
+  if(view==='reports') renderReport();
+  if(view==='settings') renderSettings();
+}
+
+/* ---------- Login ---------- */
+async function tryLogin(){
+  const val = document.getElementById('pwInput').value;
+  if(!DATA){
+    document.getElementById('loginError').textContent = 'טוען נתונים, נסו שוב בעוד רגע...';
+    return;
+  }
+  if(val === DATA.settings.password){
+    loggedIn = true;
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('appWrap').style.display='block';
+    initApp();
+  } else {
+    document.getElementById('loginError').textContent = 'סיסמה שגויה, נסו שוב';
+  }
+}
+document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+
+/* ---------- Nav ---------- */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    if(btn.dataset.view==='dashboard') renderDashboard();
+    if(btn.dataset.view==='patients') renderPatients();
+    if(btn.dataset.view==='calendar') renderCalendar();
+    if(btn.dataset.view==='reports') renderReport();
+    if(btn.dataset.view==='settings') renderSettings();
+  });
+});
+
+/* ---------- Date helpers ---------- */
+function todayISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function addDays(iso, n){
+  const d = new Date(iso+'T00:00:00');
+  d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function monthsBetween(iso1, iso2){
+  const d1 = new Date(iso1+'T00:00:00'), d2 = new Date(iso2+'T00:00:00');
+  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth()) + (d2.getDate()-d1.getDate())/30;
+}
+function fmtDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('he-IL', {day:'numeric', month:'numeric', year:'numeric'});
+}
+function lastTreatmentDate(p){
+  if(!p.treatments || p.treatments.length===0) return null;
+  return p.treatments.map(t=>t.date).sort().slice(-1)[0];
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  const today = todayISO();
+  const tomorrow = addDays(today,1);
+  const firstMonths = DATA.settings.firstFollowupMonths || 3;
+
+  const todayList = [];
+  const chargeList = [];
+  const needSchedList = [];
+  const firstList = [];
+  const annualList = [];
+
+  DATA.patients.forEach(p=>{
+    (p.appointments||[]).forEach(a=>{
+      if(a.date === today) todayList.push({p, a});
+      if(a.date === tomorrow) chargeList.push({p, a});
+    });
+    const last = lastTreatmentDate(p);
+    const hasFutureAppt = (p.appointments||[]).length>0;
+    const autoNeedsSched = !last && !hasFutureAppt;
+    if((autoNeedsSched || p.needSchedManual) && !p.needSchedDismissed){
+      needSchedList.push({p});
+    }
+    if(last){
+      const m = monthsBetween(last, today);
+      const dismissedThisCycle = p.reviewDismissedForDate === last;
+      if(!hasFutureAppt && m >= firstMonths && m < 11 && !dismissedThisCycle){
+        firstList.push({p, months:m});
+      }
+      if(!hasFutureAppt && m >= 11 && !dismissedThisCycle){
+        annualList.push({p, months:m});
+      }
+    }
+  });
+
+  const dueReminders = (DATA.reminders||[]).filter(r=>r.date<=today).sort((a,b)=> a.date===b.date ? (a.time||'').localeCompare(b.time||'') : a.date.localeCompare(b.date));
+
+  document.getElementById('statReminders').textContent = dueReminders.length;
+  document.getElementById('statToday').textContent = todayList.length;
+  document.getElementById('statCharge').textContent = chargeList.length;
+  document.getElementById('statNeedSched').textContent = needSchedList.length;
+  document.getElementById('statFirst').textContent = firstList.length;
+  document.getElementById('statAnnual').textContent = annualList.length;
+
+  renderRemindersList(dueReminders, today);
+
+  renderSimpleList('listToday', todayList, x=>{
+    return {left:x.p.name+' · '+x.a.type, right:(x.a.time||'')+' · '+x.p.phone+' · '+(x.a.location||'הרצליה'), patient:x.p};
+  }, 'אין תורים היום');
+
+  renderSimpleList('listCharge', chargeList, x=>{
+    return {left:x.p.name+' · '+x.a.type, right:'מחר '+(x.a.time||'')+' · '+(x.a.price||0)+'₪ · '+(x.a.location||'הרצליה'), patient:x.p};
+  }, 'אין תורים מחר');
+
+  renderNeedSchedList(needSchedList);
+
+  renderReviewList('listFirst', firstList, 'אין מטופלים שממתינים לביקורת ראשונה כרגע');
+
+  renderReviewList('listAnnual', annualList, 'אין מטופלים שממתינים לביקורת שנתית כרגע');
+}
+
+function renderRemindersList(items, today){
+  const el = document.getElementById('listReminders');
+  el.innerHTML='';
+  if(items.length===0){
+    el.innerHTML = '<div class="empty-note">אין תזכורות ממתינות</div>';
+    return;
+  }
+  items.forEach(r=>{
+    const overdue = r.date < today;
+    const row = document.createElement('div');
+    row.className='row-item';
+    const dateLabel = overdue ? 'באיחור - '+fmtDate(r.date) : (r.time||'');
+    row.innerHTML = `<div><div class="name">🔔 ${esc(r.text)}</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="right" style="${overdue?'color:var(--danger);':''}">${esc(dateLabel)}</div>
+        <button class="icon-btn" title="סימון כבוצע">✓</button>
+      </div>`;
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      DATA.reminders = DATA.reminders.filter(x=>x.id!==r.id);
+      await persist();
+      renderDashboard();
+    });
+    el.appendChild(row);
+  });
+}
+
+function renderReviewList(containerId, items, emptyText){
+  const el = document.getElementById(containerId);
+  el.innerHTML='';
+  if(items.length===0){
+    el.innerHTML = '<div class="empty-note">'+emptyText+'</div>';
+    return;
+  }
+  items.forEach(x=>{
+    const p = x.p;
+    const last = lastTreatmentDate(p);
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.innerHTML = `<div><div class="name">${esc(p.name)}</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="right">טיפול אחרון: ${fmtDate(last)} · ${esc(p.phone||'')}</div>
+        <button class="icon-btn" title="הסרה מהתזכורת">✕</button>
+      </div>`;
+    row.querySelector('.name').parentElement.style.cursor='pointer';
+    row.querySelector('.name').parentElement.addEventListener('click', ()=>{
+      document.querySelector('.nav-btn[data-view="patients"]').click();
+      openPatientId = p.id;
+      renderPatients();
+    });
+    row.querySelector('.icon-btn').addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      p.reviewDismissedForDate = last;
+      await persist();
+      renderDashboard();
+    });
+    el.appendChild(row);
+  });
+}
+
+function renderNeedSchedList(items){
+  const el = document.getElementById('listNeedSched');
+  el.innerHTML='';
+  if(items.length===0){
+    el.innerHTML = '<div class="empty-note">אין נבדקים שממתינים לתיאום טיפול כרגע</div>';
+    return;
+  }
+  items.forEach(x=>{
+    const p = x.p;
+    const row = document.createElement('div');
+    row.className='row-item';
+    const rightText = p.notes ? p.notes.slice(0,40) : (p.phone||'');
+    row.innerHTML = `<div><div class="name">${esc(p.name)}</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="right">${esc(rightText)}</div>
+        <button class="icon-btn" title="הסרה מהרשימה">✕</button>
+      </div>`;
+    row.querySelector('.name').parentElement.style.cursor='pointer';
+    row.querySelector('.name').parentElement.addEventListener('click', ()=>{
+      document.querySelector('.nav-btn[data-view="patients"]').click();
+      openPatientId = p.id;
+      renderPatients();
+    });
+    row.querySelector('.icon-btn').addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      p.needSchedDismissed = true;
+      await persist();
+      renderDashboard();
+    });
+    el.appendChild(row);
+  });
+}
+
+function renderSimpleList(containerId, items, mapFn, emptyText){
+  const el = document.getElementById(containerId);
+  el.innerHTML='';
+  if(items.length===0){
+    el.innerHTML = '<div class="empty-note">'+emptyText+'</div>';
+    return;
+  }
+  items.forEach(item=>{
+    const {left,right,patient} = mapFn(item);
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.innerHTML = '<div><div class="name">'+esc(left)+'</div></div><div class="right">'+esc(right)+'</div>';
+    row.addEventListener('click', ()=>{
+      document.querySelector('.nav-btn[data-view="patients"]').click();
+      openPatientId = patient.id;
+      renderPatients();
+    });
+    row.style.cursor='pointer';
+    el.appendChild(row);
+  });
+}
+
+/* ---------- Patients ---------- */
+function renderPatients(){
+  const container = document.getElementById('patientsList');
+  const q = (document.getElementById('searchInput').value||'').trim();
+  container.innerHTML='';
+  let list = DATA.patients.slice().sort((a,b)=>a.name.localeCompare(b.name,'he'));
+  if(q){
+    list = list.filter(p=> p.name.includes(q) || (p.phone||'').includes(q));
+  }
+  if(list.length===0){
+    container.innerHTML = '<div class="empty-note">לא נמצאו מטופלים</div>';
+    return;
+  }
+  list.forEach(p=>{
+    const card = document.createElement('div');
+    card.className='patient-card'+(openPatientId===p.id?' open':'');
+    const last = lastTreatmentDate(p);
+    const hmoLine = [p.hmo, p.hasPrivateInsurance ? 'ביטוח פרטי' : ''].filter(Boolean).join(' · ');
+    card.innerHTML = `
+      <div class="patient-head">
+        <div>
+          <div class="name">${esc(p.name)}</div>
+          <div class="phone">${esc(p.phone||'')}</div>
+          ${hmoLine ? '<div class="phone">'+esc(hmoLine)+'</div>' : ''}
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="patient-body"></div>
+    `;
+    card.querySelector('.patient-head').addEventListener('click', ()=>{
+      openPatientId = (openPatientId===p.id) ? null : p.id;
+      renderPatients();
+    });
+    if(openPatientId===p.id){
+      card.querySelector('.patient-body').appendChild(renderPatientBody(p));
+    }
+    container.appendChild(card);
+  });
+}
+document.getElementById('searchInput').addEventListener('input', renderPatients);
+
+function renderPatientBody(p){
+  const wrap = document.createElement('div');
+
+  // editable name / phone
+  const editLabel = document.createElement('div');
+  editLabel.className='mini-label';
+  editLabel.textContent='עריכת שם וטלפון';
+  wrap.appendChild(editLabel);
+
+  const editForm = document.createElement('div');
+  editForm.className='inline-form';
+  editForm.innerHTML = `
+    <input type="text" class="ename" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;min-width:140px;" value="${esc(p.name)}">
+    <input type="text" class="ephone" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;min-width:120px;" value="${esc(p.phone||'')}">
+    <button class="pill-btn" style="width:auto;padding:8px 16px;font-size:12.5px;">שמירה</button>
+  `;
+  editForm.querySelector('.pill-btn').addEventListener('click', async ()=>{
+    const newName = editForm.querySelector('.ename').value.trim();
+    const newPhone = editForm.querySelector('.ephone').value.trim();
+    if(!newName) return;
+    p.name = newName;
+    p.phone = newPhone;
+    await persist();
+    renderPatients();
+  });
+  wrap.appendChild(editForm);
+
+  // treatments history
+  const treats = document.createElement('div');
+  treats.style.marginTop='10px';
+  if(p.treatments.length===0){
+    treats.innerHTML = '<div class="empty-note" style="padding:8px 0;text-align:right;">אין עדיין טיפולים רשומים</div>';
+  } else {
+    p.treatments.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(t=>{
+      const row = document.createElement('div');
+      row.className='treat-row';
+      row.innerHTML = `
+        <div><span class="t-date">${fmtDate(t.date)}</span> <span class="t-price">· ${t.price}₪</span> ${locBadge(t.location)}</div>
+        <div class="t-actions">
+          <button class="toggle-paid ${t.paid?'is-paid':'is-unpaid'}">${t.paid?'שולם':'לא שולם'}</button>
+          <button class="icon-btn" title="מחיקה">🗑</button>
+        </div>
+      `;
+      row.querySelector('.toggle-paid').addEventListener('click', async ()=>{
+        t.paid = !t.paid;
+        await persist();
+        renderPatients();
+      });
+      row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+        p.treatments = p.treatments.filter(x=>x.id!==t.id);
+        await persist();
+        renderPatients();
+      });
+      treats.appendChild(row);
+    });
+  }
+  wrap.appendChild(treats);
+
+  // add treatment form
+  const addLabel = document.createElement('div');
+  addLabel.className='mini-label';
+  addLabel.textContent='הוספת טיפול שבוצע';
+  wrap.appendChild(addLabel);
+
+  const form = document.createElement('div');
+  form.className='inline-form';
+  form.innerHTML = `
+    <input type="date" class="date" value="${todayISO()}">
+    <input type="number" class="price" placeholder="מחיר" value="850">
+    ${locSelectHtml('הרצליה')}
+    <button class="pill-btn">הוספה</button>
+  `;
+  form.querySelector('.pill-btn').addEventListener('click', async ()=>{
+    const date = form.querySelector('.date').value;
+    const price = parseFloat(form.querySelector('.price').value)||0;
+    const location = form.querySelector('.loc-select').value;
+    if(!date) return;
+    p.treatments.push(mkTreat(date, price, false, location));
+    await persist();
+    renderPatients();
+  });
+  wrap.appendChild(form);
+
+  // upcoming appointments (טיפול / בדיקת רופא)
+  const apLabel = document.createElement('div');
+  apLabel.className='mini-label';
+  apLabel.textContent='תורים עתידיים';
+  wrap.appendChild(apLabel);
+
+  if(!p.appointments) p.appointments = [];
+
+  if(p.appointments.length>0){
+    const listWrap = document.createElement('div');
+    p.appointments.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(a=>{
+      const box = document.createElement('div');
+      box.className='next-appt-box';
+      box.style.marginBottom='8px';
+      box.innerHTML = `<strong>${esc(a.type)}</strong> · ${fmtDate(a.date)} בשעה ${esc(a.time||'')} · ${a.price||0}₪ ${locBadge(a.location)}
+        <div style="margin-top:8px;">
+          <button class="icon-btn" style="border:1px solid var(--border);border-radius:8px;padding:4px 10px;">ביטול תור</button>
+        </div>`;
+      box.querySelector('.icon-btn').addEventListener('click', async ()=>{
+        p.appointments = p.appointments.filter(x=>x.id!==a.id);
+        await persist();
+        renderPatients();
+      });
+      listWrap.appendChild(box);
+    });
+    wrap.appendChild(listWrap);
+  }
+
+  const apForm = document.createElement('div');
+  apForm.className='inline-form';
+  apForm.innerHTML = `
+    <select class="atype" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+      <option value="טיפול">טיפול</option>
+      <option value="בדיקת רופא">בדיקת רופא</option>
+    </select>
+    <input type="date" class="date">
+    <input type="time" class="time">
+    <input type="number" class="price" placeholder="מחיר">
+    ${locSelectHtml('הרצליה')}
+    <button class="pill-btn">קביעת תור</button>
+  `;
+  apForm.querySelector('.pill-btn').addEventListener('click', async ()=>{
+    const type = apForm.querySelector('.atype').value;
+    const date = apForm.querySelector('.date').value;
+    const time = apForm.querySelector('.time').value;
+    const price = parseFloat(apForm.querySelector('.price').value)||0;
+    const location = apForm.querySelector('.loc-select').value;
+    if(!date) return;
+    p.appointments.push(mkAppt(date, time, price, false, type, location));
+    await persist();
+    renderPatients();
+  });
+  wrap.appendChild(apForm);
+
+  // hmo / insurance
+  const hmoLabel = document.createElement('div');
+  hmoLabel.className='mini-label';
+  hmoLabel.textContent='קופת חולים וביטוח';
+  wrap.appendChild(hmoLabel);
+
+  const hmoForm = document.createElement('div');
+  hmoForm.className='inline-form';
+  hmoForm.innerHTML = `
+    <select class="hmo-select" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+      <option value="">לא צוין</option>
+      <option value="כללית">כללית</option>
+      <option value="מכבי">מכבי</option>
+      <option value="מאוחדת">מאוחדת</option>
+      <option value="לאומית">לאומית</option>
+    </select>
+    <select class="ins-select" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+      <option value="no">ללא ביטוח פרטי</option>
+      <option value="yes">יש ביטוח פרטי</option>
+    </select>
+  `;
+  hmoForm.querySelector('.hmo-select').value = p.hmo || '';
+  hmoForm.querySelector('.ins-select').value = p.hasPrivateInsurance ? 'yes' : 'no';
+  hmoForm.querySelector('.hmo-select').addEventListener('change', async (e)=>{
+    p.hmo = e.target.value;
+    await persist();
+    renderPatients();
+  });
+  hmoForm.querySelector('.ins-select').addEventListener('change', async (e)=>{
+    p.hasPrivateInsurance = e.target.value === 'yes';
+    await persist();
+    renderPatients();
+  });
+  wrap.appendChild(hmoForm);
+
+  // notes
+  const notesLabel = document.createElement('div');
+  notesLabel.className='mini-label';
+  notesLabel.textContent='הערות';
+  wrap.appendChild(notesLabel);
+  const notesBox = document.createElement('div');
+  notesBox.className='notes-box';
+  notesBox.innerHTML = `<textarea placeholder="הערות על המטופל...">${esc(p.notes||'')}</textarea>`;
+  const ta = notesBox.querySelector('textarea');
+  let saveTimer=null;
+  ta.addEventListener('input', ()=>{
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async ()=>{
+      p.notes = ta.value;
+      await persist();
+    }, 500);
+  });
+  wrap.appendChild(notesBox);
+
+  // add/remove from "waiting for scheduling" list (manual override, works for any patient)
+  {
+    const last = lastTreatmentDate(p);
+    const autoNeedsSched = !last && (p.appointments||[]).length===0;
+    const inNeedSchedList = (autoNeedsSched || p.needSchedManual) && !p.needSchedDismissed;
+
+    const toggleWrap = document.createElement('div');
+    toggleWrap.style.marginTop='14px';
+    if(inNeedSchedList){
+      toggleWrap.innerHTML = `<button class="pill-btn secondary" style="width:auto;">הסרה מרשימת ממתינים לתיאום</button>`;
+      toggleWrap.querySelector('.pill-btn').addEventListener('click', async ()=>{
+        p.needSchedDismissed = true;
+        await persist();
+        renderPatients();
+        renderDashboard();
+      });
+    } else {
+      toggleWrap.innerHTML = `<button class="pill-btn secondary" style="width:auto;">הוספה לרשימת ממתינים לתיאום</button>`;
+      toggleWrap.querySelector('.pill-btn').addEventListener('click', async ()=>{
+        p.needSchedManual = true;
+        p.needSchedDismissed = false;
+        await persist();
+        renderPatients();
+        renderDashboard();
+      });
+    }
+    wrap.appendChild(toggleWrap);
+  }
+
+  // delete patient
+  const delWrap = document.createElement('div');
+  delWrap.style.marginTop='16px';
+  delWrap.style.textAlign='left';
+  delWrap.innerHTML = `<button class="icon-btn" style="font-size:12px;">מחיקת מטופל</button>`;
+  delWrap.querySelector('.icon-btn').addEventListener('click', async ()=>{
+    if(confirm('למחוק את '+p.name+' לצמיתות?')){
+      DATA.patients = DATA.patients.filter(x=>x.id!==p.id);
+      openPatientId = null;
+      await persist();
+      renderPatients();
+      renderDashboard();
+    }
+  });
+  wrap.appendChild(delWrap);
+
+  return wrap;
+}
+
+/* ---------- Calendar ---------- */
+let calYear, calMonth; // calMonth: 0-11
+let calSelectedDate = null;
+const HE_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const HE_DOW = ['א','ב','ג','ד','ה','ו','ש'];
+
+function eventsForDate(iso){
+  // gathers every treatment / appointment across all patients for a given ISO date
+  const out = [];
+  DATA.patients.forEach(p=>{
+    (p.treatments||[]).forEach(t=>{
+      if(t.date===iso) out.push({patient:p, kind:'past', price:t.price, paid:t.paid, time:null, type:'טיפול', location:t.location});
+    });
+    (p.appointments||[]).forEach(a=>{
+      if(a.date===iso) out.push({patient:p, kind:'upcoming', price:a.price, paid:a.paid, time:a.time, type:a.type, location:a.location});
+    });
+  });
+  return out;
+}
+
+function renderCalendar(){
+  const today = new Date();
+  if(calYear==null){ calYear = today.getFullYear(); calMonth = today.getMonth(); }
+  document.getElementById('calTitle').textContent = HE_MONTHS[calMonth]+' '+calYear;
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML='';
+  HE_DOW.forEach(d=>{
+    const el = document.createElement('div');
+    el.className='cal-dow';
+    el.textContent=d;
+    grid.appendChild(el);
+  });
+
+  const firstOfMonth = new Date(calYear, calMonth, 1);
+  const startOffset = firstOfMonth.getDay(); // 0=Sunday
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const todayISOStr = todayISO();
+
+  for(let i=0;i<startOffset;i++){
+    const el = document.createElement('div');
+    el.className='cal-cell empty';
+    grid.appendChild(el);
+  }
+
+  for(let d=1; d<=daysInMonth; d++){
+    const iso = calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const cell = document.createElement('div');
+    cell.className='cal-cell';
+    if(iso===todayISOStr) cell.classList.add('today');
+    if(iso===calSelectedDate) cell.classList.add('selected');
+    const openDayForCell = (DATA.openDays||[]).find(o=>o.date===iso);
+    if(openDayForCell){ cell.classList.add('open-day'); cell.classList.add(locClass(openDayForCell.location)); }
+
+    const evs = eventsForDate(iso);
+    const dayReminders = (DATA.reminders||[]).filter(r=>r.date===iso);
+    let dotsHtml = '';
+    if(evs.length>0 || dayReminders.length>0){
+      const evDots = evs.slice(0,3).map(e=>{
+        let cls = locClass(e.location);
+        if(!e.paid) cls = 'unpaid';
+        return '<span class="cal-dot '+cls+'"></span>';
+      }).join('');
+      const remDots = dayReminders.length>0 ? '<span class="cal-dot reminder"></span>' : '';
+      dotsHtml = '<div class="cal-dots">' + evDots + remDots + '</div>';
+    }
+    cell.innerHTML = '<span class="dnum">'+d+'</span>'+dotsHtml;
+    cell.addEventListener('click', ()=>{
+      calSelectedDate = iso;
+      renderCalendar();
+      renderCalDay(iso);
+    });
+    grid.appendChild(cell);
+  }
+
+  if(calSelectedDate && calSelectedDate.slice(0,7)===(calYear+'-'+String(calMonth+1).padStart(2,'0'))){
+    renderCalDay(calSelectedDate);
+  } else {
+    document.getElementById('calDayTitle').textContent = 'בחרו יום כדי לראות פרטים';
+    document.getElementById('calDayList').innerHTML = '';
+  }
+
+  renderOpenDaysList();
+  renderCalRemindersList();
+}
+
+function renderCalDay(iso){
+  document.getElementById('calDayTitle').textContent = fmtDate(iso);
+  const evs = eventsForDate(iso);
+  const openDay = (DATA.openDays||[]).find(o=>o.date===iso);
+  const dayReminders = (DATA.reminders||[]).filter(r=>r.date===iso).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const el = document.getElementById('calDayList');
+  el.innerHTML='';
+
+  if(openDay){
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.innerHTML = '<div><div class="name">פתוח לקביעת תורים החל מ-'+esc(openDay.fromTime||'')+' '+locBadge(openDay.location)+'</div>'+(openDay.notes?'<div class="meta">'+esc(openDay.notes)+'</div>':'')+'</div>';
+    el.appendChild(row);
+  }
+
+  dayReminders.forEach(r=>{
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.innerHTML = '<div><div class="name">🔔 '+esc(r.text)+'</div></div><div class="right">'+esc(r.time||'')+'</div>';
+    el.appendChild(row);
+  });
+
+  if(evs.length===0 && !openDay && dayReminders.length===0){
+    el.innerHTML = '<div class="empty-note">אין טיפולים רשומים ביום זה</div>';
+    return;
+  }
+  evs.forEach(e=>{
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.style.cursor='pointer';
+    const rightText = (e.type?e.type+' · ':'') + (e.time? e.time+' · ':'') + (e.price||0)+'₪' + (e.paid?' · שולם':' · לא שולם');
+    row.innerHTML = '<div><div class="name">'+esc(e.patient.name)+' '+locBadge(e.location)+'</div></div><div class="right">'+esc(rightText)+'</div>';
+    row.addEventListener('click', ()=>{
+      document.querySelector('.nav-btn[data-view="patients"]').click();
+
+      openPatientId = e.patient.id;
+      renderPatients();
+    });
+    el.appendChild(row);
+  });
+}
+
+document.getElementById('calPrev').addEventListener('click', ()=>{
+  calMonth--;
+  if(calMonth<0){ calMonth=11; calYear--; }
+  renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click', ()=>{
+  calMonth++;
+  if(calMonth>11){ calMonth=0; calYear++; }
+  renderCalendar();
+});
+
+function renderOpenDaysList(){
+  const el = document.getElementById('openDaysList');
+  if(!el) return;
+  el.innerHTML='';
+  const today = todayISO();
+  const upcoming = (DATA.openDays||[]).filter(o=>o.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+  if(upcoming.length===0){
+    el.innerHTML = '<div class="empty-note">אין ימי טיפולים פתוחים מוגדרים</div>';
+    return;
+  }
+  upcoming.forEach(o=>{
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.innerHTML = `<div><div class="name">${fmtDate(o.date)} - החל מ-${esc(o.fromTime||'')} ${locBadge(o.location)}</div>${o.notes?'<div class="meta">'+esc(o.notes)+'</div>':''}</div>
+      <button class="icon-btn" title="מחיקה">🗑</button>`;
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      DATA.openDays = DATA.openDays.filter(x=>x.id!==o.id);
+      await persist();
+      renderCalendar();
+    });
+    el.appendChild(row);
+  });
+}
+
+document.getElementById('addOpenDayBtn').addEventListener('click', async ()=>{
+  const date = document.getElementById('openDayDate').value;
+  const time = document.getElementById('openDayTime').value;
+  const location = document.getElementById('openDayLocation').value;
+  const notes = document.getElementById('openDayNotes').value.trim();
+  if(!date) return;
+  DATA.openDays.push(mkOpenDay(date, time, notes, location));
+  await persist();
+  document.getElementById('openDayDate').value='';
+  document.getElementById('openDayTime').value='';
+  document.getElementById('openDayNotes').value='';
+  renderCalendar();
+});
+
+function renderCalRemindersList(){
+  const el = document.getElementById('calRemindersList');
+  if(!el) return;
+  el.innerHTML='';
+  const today = todayISO();
+  const upcoming = (DATA.reminders||[]).filter(r=>r.date>=today).sort((a,b)=> a.date===b.date ? (a.time||'').localeCompare(b.time||'') : a.date.localeCompare(b.date));
+  if(upcoming.length===0){
+    el.innerHTML = '<div class="empty-note">אין תזכורות מוגדרות</div>';
+    return;
+  }
+  upcoming.forEach(r=>{
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.innerHTML = `<div><div class="name">🔔 ${esc(r.text)}</div><div class="meta">${fmtDate(r.date)}${r.time?' · '+esc(r.time):''}</div></div>
+      <button class="icon-btn" title="מחיקה">🗑</button>`;
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      DATA.reminders = DATA.reminders.filter(x=>x.id!==r.id);
+      await persist();
+      renderCalendar();
+      renderDashboard();
+    });
+    el.appendChild(row);
+  });
+}
+
+document.getElementById('addReminderBtn').addEventListener('click', async ()=>{
+  const date = document.getElementById('reminderDate').value;
+  const time = document.getElementById('reminderTime').value;
+  const text = document.getElementById('reminderText').value.trim();
+  if(!date || !text) return;
+  DATA.reminders.push(mkReminder(date, time, text));
+  await persist();
+  document.getElementById('reminderDate').value='';
+  document.getElementById('reminderTime').value='';
+  document.getElementById('reminderText').value='';
+  renderCalendar();
+  renderDashboard();
+});
+
+/* ---------- Reports ---------- */
+function currentReportMonth(){
+  const input = document.getElementById('reportMonth');
+  if(!input.value){
+    const now = new Date();
+    input.value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  }
+  return input.value; // 'YYYY-MM'
+}
+
+function renderReport(){
+  const ym = currentReportMonth();
+  const rows = [];
+  DATA.patients.forEach(p=>{
+    (p.treatments||[]).forEach(t=>{
+      if(t.date && t.date.slice(0,7)===ym){
+        rows.push({patient:p, treatment:t});
+      }
+    });
+  });
+  rows.sort((a,b)=>a.treatment.date.localeCompare(b.treatment.date));
+
+  const total = rows.reduce((s,r)=>s+(r.treatment.price||0),0);
+  const paid = rows.filter(r=>r.treatment.paid).reduce((s,r)=>s+(r.treatment.price||0),0);
+  const unpaid = total - paid;
+
+  document.getElementById('repCount').textContent = rows.length;
+  document.getElementById('repTotal').textContent = total+'₪';
+  document.getElementById('repPaid').textContent = paid+'₪';
+  document.getElementById('repUnpaid').textContent = unpaid+'₪';
+
+  const el = document.getElementById('reportList');
+  el.innerHTML='';
+  if(rows.length===0){
+    el.innerHTML = '<div class="empty-note">אין טיפולים רשומים בחודש זה</div>';
+    return;
+  }
+  rows.forEach(r=>{
+    const row = document.createElement('div');
+    row.className='row-item';
+    row.style.cursor='pointer';
+    const rightText = (r.treatment.price||0)+'₪' + (r.treatment.paid?' · שולם':' · לא שולם');
+    row.innerHTML = '<div><div class="name">'+esc(r.patient.name)+' '+locBadge(r.treatment.location)+'</div><div class="meta">'+fmtDate(r.treatment.date)+'</div></div><div class="right">'+esc(rightText)+'</div>';
+    row.addEventListener('click', ()=>{
+      document.querySelector('.nav-btn[data-view="patients"]').click();
+      openPatientId = r.patient.id;
+      renderPatients();
+    });
+    el.appendChild(row);
+  });
+}
+
+document.getElementById('reportMonth').addEventListener('change', renderReport);
+
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const ym = currentReportMonth();
+  const rows = [];
+  DATA.patients.forEach(p=>{
+    (p.treatments||[]).forEach(t=>{
+      if(t.date && t.date.slice(0,7)===ym){
+        rows.push({patient:p, treatment:t});
+      }
+    });
+  });
+  rows.sort((a,b)=>a.treatment.date.localeCompare(b.treatment.date));
+
+  let csv = '\uFEFF' + ['תאריך','שם מטופל','טלפון','מחיר','שולם','קליניקה'].join(',') + '\n';
+  rows.forEach(r=>{
+    const line = [
+      r.treatment.date,
+      '"'+(r.patient.name||'').replace(/"/g,'""')+'"',
+      r.patient.phone||'',
+      r.treatment.price||0,
+      r.treatment.paid?'כן':'לא',
+      r.treatment.location||'הרצליה'
+    ].join(',');
+    csv += line+'\n';
+  });
+
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'דוח_טיפולים_'+ym+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* ---------- Add patient modal ---------- */
+function openAddModal(){
+  document.getElementById('newName').value='';
+  document.getElementById('newPhone').value='';
+  document.getElementById('newHmo').value='';
+  document.getElementById('newInsurance').value='no';
+  document.getElementById('newNotes').value='';
+  document.getElementById('addOverlay').classList.add('active');
+}
+function closeAddModal(){
+  document.getElementById('addOverlay').classList.remove('active');
+}
+async function addPatient(){
+  const name = document.getElementById('newName').value.trim();
+  const phone = document.getElementById('newPhone').value.trim();
+  const hmo = document.getElementById('newHmo').value;
+  const hasPrivateInsurance = document.getElementById('newInsurance').value === 'yes';
+  const notes = document.getElementById('newNotes').value.trim();
+  if(!name) return;
+  DATA.patients.push(mkPatient(name, phone, notes, [], [], hmo, hasPrivateInsurance));
+  await persist();
+  closeAddModal();
+  document.querySelector('.nav-btn[data-view="patients"]').click();
+  renderPatients();
+}
+
+/* ---------- Settings ---------- */
+function renderSettings(){
+  document.getElementById('firstMonthsInput').value = DATA.settings.firstFollowupMonths;
+  document.getElementById('newPwInput').value='';
+  document.getElementById('settingsSaveMsg').textContent='';
+  document.getElementById('pwSaveMsg').textContent='';
+}
+async function saveSettings(){
+  const v = parseInt(document.getElementById('firstMonthsInput').value,10);
+  if(!v || v<1) return;
+  DATA.settings.firstFollowupMonths = v;
+  await persist();
+  document.getElementById('settingsSaveMsg').textContent='נשמר בהצלחה';
+  renderDashboard();
+}
+async function changePassword(){
+  const v = document.getElementById('newPwInput').value.trim();
+  if(!v){ return; }
+  DATA.settings.password = v;
+  await persist();
+  document.getElementById('pwSaveMsg').textContent='הסיסמה עודכנה';
+  document.getElementById('newPwInput').value='';
+}
+
+/* ---------- utils ---------- */
+function locClass(location){
+  return location==='פתח תקווה' ? 'loc-petah' : 'loc-herzliya';
+}
+function locBadge(location){
+  return '<span class="loc-badge '+locClass(location)+'">'+esc(location||'הרצליה')+'</span>';
+}
+function locSelectHtml(selected){
+  const sel = selected||'הרצליה';
+  return `<select class="loc-select" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+    <option value="הרצליה" ${sel==='הרצליה'?'selected':''}>הרצליה</option>
+    <option value="פתח תקווה" ${sel==='פתח תקווה'?'selected':''}>פתח תקווה</option>
+  </select>`;
+}
+function esc(s){
+  return (s||'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---------- init ---------- */
+async function initApp(){
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  renderDashboard();
+  renderPatients();
+  renderSettings();
+}
+
+attachRealtimeListener();
+
+window.tryLogin = tryLogin;
+window.openAddModal = openAddModal;
+window.closeAddModal = closeAddModal;
+window.addPatient = addPatient;
+window.saveSettings = saveSettings;
+window.changePassword = changePassword;
+</script>
+</body>
+</html>
